@@ -107,7 +107,7 @@ class FlopsWrapper(ExternalCode):
         ifite = self.getValue('input:option:Program_Control:ifite')
         mywts = self.getValue('input:wtin:Basic:mywts')
 
-        sb.add_container("input.option.Program_Control")
+        sb.add_container("input:option.Program_Control")
 
         sb.add_comment("\n  ! Plot files for XFLOPS Graphical Interface Postprocessor (MSMPLOT)")
         sb.add_var("input:option:Plot_Files:ixfl")
@@ -119,11 +119,1809 @@ class FlopsWrapper(ExternalCode):
         sb.add_var("input:option:Plot_Files:ipolp")
         sb.add_var("input:option:Plot_Files:polalt")
 
+        nmach = len(self.getValue('input:option:Plot_Files:pmach'))
+        if nmach > 0:
+            sb.add_newvar("nmach", nmach)
+            sb.add_var("input:option:Plot_Files:pmach")
+
+        sb.add_comment("\n  ! Engine Performance Data Plot File (THRPLOT)")
+        sb.add_var("input:option:Plot_Files:ipltth")
+
+        sb.add_comment("\n  ! Design History Plot File (HISPLOT)")
+        sb.add_var("input:option:Plot_Files:iplths")
+
+        ipltps = len(self.getValue("input:option:Excess_Power_Plot:pltnz"))
+        if ipltps > 0:
+            sb.add_comment("\n  ! Excess Power Plot File (PSPLOT)")
+            sb.add_newvar("ipltps", ipltps)
+            sb.add_container("input:option:Excess_Power_Plot")
+
+        # Plotfile names
+        sb.add_comment("\n  ! Plotfile Names")
+        if self.getValue("input:option:Plot_Files:cnfile"):
+            sb.add_var("input:option:Plot_Files:cnfile")
+        if self.getValue("input:option:Plot_Files:msfile"):
+            sb.add_var("input:option:Plot_Files:msfile")
+        if self.getValue("input:option:Plot_Files:crfile"):
+            sb.add_var("input:option:Plot_Files:crfile")
+        if self.getValue("input:option:Plot_Files:tofile") :
+            sb.add_var("input:option:Plot_Files:tofile")
+        if self.getValue("input:option:Plot_Files:nofile"):
+            sb.add_var("input:option:Plot_Files:nofile")
+        if self.getValue("input:option:Plot_Files:apfile") :
+            sb.add_var("input:option:Plot_Files:apfile")
+        if self.getValue("input:option:Plot_Files:thfile") :
+            sb.add_var("input:option:Plot_Files:thfile ")
+        if self.getValue("input:option:Plot_Files:hsfile") :
+            sb.add_var("input:option:Plot_Files:hsfile")
+        if self.getValue("input:option:Plot_Files:psfile") :
+            sb.add_var("input:option:Plot_Files:psfile")
+
+        #-------------------
+        # Namelist &WTIN
+        #-------------------
+
+        sb.add_group('WTIN')
+
+        sb.add_comment("\n  ! Geometric, Weight, Balance and Inertia Data")
+        sb.add_container("input:wtin:Basic")
+
+        sb.add_comment("\n  ! Special Option for Operating Weight Empty Calculations")
+        sb.add_container("input:wtin:OEW_Calculations")
+
+        sb.add_comment("\n  ! Wing Data")
+        sb.add_container("input:wtin:Wing_Data")
+
+        netaw = len(self.getValue("input:wtin:Detailed_Wing:etaw"))
+
+        if netaw > 0:
+            sb.add_comment("\n  ! Detailed Wing Data")
+            sb.add_newvar("netaw", netaw)
+            sb.add_var("input:wtin:Detailed_Wing:etaw")
+            sb.add_var("input:wtin:Detailed_Wing:chd")
+            sb.add_var("input:wtin:Detailed_Wing:toc")
+            sb.add_var("input:wtin:Detailed_Wing:swl")
+            sb.add_var("input:wtin:Detailed_Wing:etae")
+            sb.add_var("input:wtin:Detailed_Wing:pctl")
+            sb.add_var("input:wtin:Detailed_Wing:arref")
+            sb.add_var("input:wtin:Detailed_Wing:tcref")
+            sb.add_var("input:wtin:Detailed_Wing:nstd")
+
+            pdist = self.getValue("input:wtin:Detailed_Wing:pdist")
+            sb.add_var("input:wtin:Detailed_Wing:pdist")
+            if pdist < 0.0001:
+                sb.add_var("input:wtin:Detailed_Wing:etap")
+                sb.add_var("input:wtin:Detailed_Wing:pval")
+
+        sb.add_comment("\n  ! Tails, Fins, Canards")
+        sb.add_comment("\n  ! Horizontal Tail Data")
+        sb.add_var("input:wtin:Tails_Fins:sht")
+        sb.add_var("input:wtin:Tails_Fins:swpht")
+        sb.add_var("input:wtin:Tails_Fins:arht")
+        sb.add_var("input:wtin:Tails_Fins:trht")
+        sb.add_var("input:wtin:Tails_Fins:tcht")
+        sb.add_var("input:wtin:Tails_Fins:hht")
+
+        nvert = self.getValue("input:wtin:Tails_Fins:nvert")
+        if nvert != 0:
+            sb.add_comment("\n  ! Vertical Tail Data")
+            sb.add_var("input:wtin:Tails_Fins:nvert")
+            sb.add_var("input:wtin:Tails_Fins:svt")
+            sb.add_var("input:wtin:Tails_Fins:swpvt")
+            sb.add_var("input:wtin:Tails_Fins:arvt")
+            sb.add_var("input:wtin:Tails_Fins:trvt")
+            sb.add_var("input:wtin:Tails_Fins:tcvt")
+
+        nfin = self.getValue("input:wtin:Tails_Fins:nfin")
+        if nfin != 0:
+            sb.add_comment("\n  ! Fin Data")
+            sb.add_var("input:wtin:Tails_Fins:nfin")
+            sb.add_var("input:wtin:Tails_Fins:sfin")
+            sb.add_var("input:wtin:Tails_Fins:arfin")
+            sb.add_var("input:wtin:Tails_Fins:trfin")
+            sb.add_var("input:wtin:Tails_Fins:swpfin")
+            sb.add_var("input:wtin:Tails_Fins:tcfin")
+
+        scan = self.getValue("input:wtin:Tails_Fins:scan")
+        if scan != 0:
+            sb.add_comment("\n  ! Canard Data")
+            sb.add_var("input:wtin:Tails_Fins:scan")
+            sb.add_var("input:wtin:Tails_Fins:swpcan")
+            sb.add_var("input:wtin:Tails_Fins:arcan")
+            sb.add_var("input:wtin:Tails_Fins:trcan")
+            sb.add_var("input:wtin:Tails_Fins:tccan")
+
+        sb.add_comment("\n  ! Fuselage Data")
+        sb.add_container("input:wtin:Fuselage")
+
+        sb.add_comment("\n  ! Landing Gear Data")
+        sb.add_container("input:wtin:Landing_Gear")
+
+        sb.add_comment("\n  ! Propulsion System Data")
+        sb.add_container("input:wtin:Propulsion")
+
+        sb.add_comment("\n  ! Fuel System Data")
+        sb.add_var("input:wtin:Fuel_System:ntank")
+        sb.add_var("input:wtin:Fuel_System:fulwmx")
+        sb.add_var("input:wtin:Fuel_System:fulden")
+        sb.add_var("input:wtin:Fuel_System:fulfmx")
+        sb.add_var("input:wtin:Fuel_System:ifufu")
+        sb.add_var("input:wtin:Fuel_System:fulaux")
+
+        fuscla = self.getValue("input:wtin:Fuel_System:fuscla")
+        if fuscla > 0.000001:
+            sb.add_comment("\n  ! Special method for scaling wing fuel capacity")
+            sb.add_var("input:wtin:Fuel_System:fuelrf")
+            sb.add_var("input:wtin:Fuel_System:fswref")
+            sb.add_var("input:wtin:Fuel_System:fuscla")
+            sb.add_var("input:wtin:Fuel_System:fusclb")
+
+        sb.add_comment("\n  ! Crew and Payload Data")
+        sb.add_container("input:wtin:Crew_Payload")
+
+        sb.add_comment("\n  ! Override Parameters")
+        sb.add_container("input:wtin:Override")
+
+        sb.add_comment("\n  ! Center of Gravity (C.G.) Data")
+        sb.add_container("input:wtin:Center_of_Gravity")
+
+        inrtia = self.getValue("input:wtin:Inertia:inrtia")
+        if inrtia != 0:
+            sb.add_comment("\n  ! Inertia Data")
+            sb.add_newvar("inrtia", inrtia)
+            sb.add_var("input:wtin:Inertia:zht")
+            sb.add_var("input:wtin:Inertia:zvt")
+            sb.add_var("input:wtin:Inertia:zfin")
+            sb.add_var("input:wtin:Inertia:yfin")
+            sb.add_var("input:wtin:Inertia:zef")
+            sb.add_var("input:wtin:Inertia:yef")
+            sb.add_var("input:wtin:Inertia:zea")
+            sb.add_var("input:wtin:Inertia:yea")
+            sb.add_var("input:wtin:Inertia:zbw")
+            sb.add_var("input:wtin:Inertia:zap")
+            sb.add_var("input:wtin:Inertia:zrvt")
+            sb.add_var("input:wtin:Inertia:ymlg")
+            sb.add_var("input:wtin:Inertia:yfuse")
+            sb.add_var("input:wtin:Inertia:yvert")
+            sb.add_var("input:wtin:Inertia:swtff")
+            sb.add_var("input:wtin:Inertia:tcr")
+            sb.add_var("input:wtin:Inertia:tct")
+            sb.add_var("input:wtin:Inertia:incpay")
+
+            l = len(self.getValue("input:wtin:Inertia:tx"))
+            sb.add_newvar("itank", l)
+            if l > 0:
+                sb.add_var("input:wtin:Inertia:tx")
+                sb.add_var("input:wtin:Inertia:ty")
+                sb.add_var("input:wtin:Inertia:tz")
+
+            j = len(self.getValue("input:wtin:Inertia:tl"))
+            if j > 0:
+                sb.add_var("input:wtin:Inertia:tl")
+                sb.add_var("input:wtin:Inertia:tw")
+                sb.add_var("input:wtin:Inertia:td")
+
+            j = self.getValue("input:wtin:Inertia:tf.shape")[0]
+            sb.add_newvar("nfcon", j)
+            if l*j > 0:
+                sb.add_var("input:wtin:Inertia:tf")
+
+        #-------------------
+        # Namelist &FUSEIN
+        #-------------------
+
+        # Namelist &FUSEIN is only required if XL=0 or IFITE=3.
+        xl = self.getValue("input:wtin:Fuselage:xl")
+        if xl < 0.0000001 or ifite == 3:
+
+            sb.add_group('FUSEIN')
+            sb.add_comment("\n  ! Fuselage Design Data")
+            sb.add_container("input:fusein:Basic")
+            sb.add_container("input:fusein:BWB")
+
+        #-------------------
+        # Namelist &CONFIN
+        #-------------------
+
+        sb.add_group('CONFIN')
+        sb.add_container("input:confin:Basic")
+
+        # MC Flops wrapper didn't write these out if iopt was less than 3
+        # I changed it to match expected behavior when comparing manual FLOPS
+        # if iopt >= 3:
+        sb.add_comment("\n  ! Objective Function Definition")
+        sb.add_container("input:confin:Objective")
+
+        sb.add_comment("\n  ! Design Variables")
+        sb.add_var("input:confin:Design_Variables:gw")
+        sb.add_var("input:confin:Design_Variables:ar")
+        sb.add_var("input:confin:Design_Variables:thrust")
+        sb.add_var("input:confin:Design_Variables:sw")
+        sb.add_var("input:confin:Design_Variables:tr")
+        sb.add_var("input:confin:Design_Variables:sweep")
+        sb.add_var("input:confin:Design_Variables:tca")
+        sb.add_var("input:confin:Design_Variables:vcmn")
+        sb.add_var("input:confin:Design_Variables:ch")
+        sb.add_var("input:confin:Design_Variables:varth")
+        sb.add_var("input:confin:Design_Variables:rotvel")
+        sb.add_var("input:confin:Design_Variables:plr")
+
+        igenen = self.getValue("input:engdin:Basic:igenen")
+        if igenen in (1, -2):
+            sb.add_comment("\n  ! Engine Design Variables")
+            sb.add_var("input:confin:Design_Variables:etit")
+            sb.add_var("input:confin:Design_Variables:eopr")
+            sb.add_var("input:confin:Design_Variables:efpr")
+            sb.add_var("input:confin:Design_Variables:ebpr")
+            sb.add_var("input:confin:Design_Variables:ettr")
+            sb.add_var("input:confin:Design_Variables:ebla")
+
+        #-------------------
+        # Namelist &AERIN
+        #-------------------
+
+        sb.add_group('AERIN')
+
+        myaero = self.getValue("input:aerin:Basic:myaero")
+        iwave = self.getValue("input:aerin:Basic:iwave")
+        if myaero != 0:
+            sb.add_comment("\n  ! Externally Computed Aerodynamics")
+            sb.add_var("input:aerin:Basic:myaero")
+            sb.add_var("input:aerin:Basic:iwave")
+            if iwave != 0:
+                sb.add_var("input:aerin.Basic:fwave")
+            sb.add_var("input:aerin.Basic:itpaer")
+            sb.add_var("input:aerin.Basic:ibo")
+        else:
+            sb.add_comment("\n  ! Internally Computed Aerodynamics")
+            sb.add_container("input:aerin:Internal_Aero")
+
+        sb.add_container("input:aerin:Takeoff_Landing")
+
+        #-------------------
+        # Namelist &COSTIN
+        #-------------------
+
+        # Namelist &COSTIN is only required if ICOST=1.
+        if icost != 0:
+            sb.add_group('COSTIN')
+
+            sb.add_comment("\n  ! Cost Calculation Data")
+            sb.add_container("input:costin:Basic")
+            sb.add_comment("\n  ! Mission Performance Data")
+            sb.add_container("input:costin.Mission_Performance")
+            sb.add_comment("\n  ! Cost Technology Parameters")
+            sb.add_container("input:costin:Cost_Technology")
+
+        #-------------------
+        # Namelist &ENGDIN
+        #-------------------
+
+        # Namelist &ENGDIN is only required in IANAL=3 or 4 or INENG=1.
+        if ianal in (3, 4) or ineng == 1:
+            sb.add_group('ENGDIN')
+
+            sb.add_comment("\n  ! Engine Deck Control, Scaling and Usage Data")
+            sb.add_var("input:engdin:Basic:ngprt")
+            sb.add_var("input:engdin:Basic:igenen")
+            sb.add_var("input:engdin:Basic:extfac")
+            sb.add_var("input:engdin:Basic:fffsub")
+            sb.add_var("input:engdin:Basic:fffsup")
+            sb.add_var("input:engdin:Basic:idle")
+            sb.add_var("input:engdin:Basic:noneg")
+            sb.add_var("input:engdin:Basic:fidmin")
+            sb.add_var("input:engdin:Basic:fidmax")
+            sb.add_var("input:engdin:Basic:ixtrap")
+            sb.add_var("input:engdin:Basic:ifill")
+            sb.add_var("input:engdin:Basic:maxcr")
+            sb.add_var("input:engdin:Basic:nox")
+
+            npcode =  len(self.getValue("input:engdin:Basic:pcode"))
+            if npcode > 0:
+                sb.add_newvar("npcode", npcode)
+                sb.add_var("input:engdin:Basic:pcode")
+
+            sb.add_var("input:engdin:Basic:boost")
+            sb.add_var("input:engdin:Basic:igeo")
+            sb.add_var("input:engdin:Special_Options:dffac")
+            sb.add_var("input:engdin:Special_Options:fffac")
+
+            if igenen in (1, -2):
+                j =  len(self.getValue("input:engdin:Special_Options:emach"))
+                l =  self.getValue("input:engdin:Special_Options:alt").shape[0]
+                if j > 0:
+                    # TODO - Find out about fake 2d for new FLOPS double prop
+                    # capability.
+                    sb.add_var("input:engdin:Special_Options:emach")
+                    if l*j > 0:
+                        # TODO - Find out about fake 3d for new FLOPS double prop
+                        # capability.
+                        sb.add_var("input:engdin:Special_Options:alt")
+
+            insdrg =  self.getValue("input:engdin:Special_Options:insdrg")
+            if insdrg != 0:
+                sb.add_comment("\n  ! Nozzle installation drag using table look-up")
+                sb.add_newvar("insdrg", insdrg)
+                sb.add_var("input:engdin:Special_Options:nab")
+                sb.add_var("input:engdin:Special_Options:nabref")
+                sb.add_var("input:engdin:Special_Options:a10")
+                sb.add_var("input:engdin:Special_Options:a10ref")
+                sb.add_var("input:engdin:Special_Options:a9ref")
+                sb.add_var("input:engdin:Special_Options:xnoz")
+                sb.add_var("input:engdin:Special_Options:xnref")
+                sb.add_var("input:engdin:Special_Options:rcrv")
+
+                # TODO - rawInputFile( cdfile, "ENDRAG" );
+                #cdfile.open
+
+            # Write out the eifile. This is a new addition.
+            if self.getValue("input:engdin:eifile"):
+                sb.add_var("input:engdin:eifile")
 
 
+            #----------------------
+            # Namelist Engine deck
+            #----------------------
+
+            # Insert the engine deck into the flops input file
+
+            # If IGENEN=0 the engine deck is part of the input file, otherwise it is an
+            # external file.
+
+            engine_deck  = self.getValue("input:engine_deck:engdek")
+            if igenen in (0, -2):
+                # engine_deck contains the raw engine deck
+                sb.add_group(engine_deck)
+            else:
+                # engine_deck contains the name of the engine deck file
+                if engine_deck:
+                    sb.add_var("input:engine_deck:engdek")
+
+        #-------------------
+        # Namelist &ENGINE
+        #-------------------
+
+        # Namelist &ENGINE is only required if IGENEN=-2 or 1.
+        if igenen in (-2, 1):
+
+            sb.add_group('ENGINE')
+
+            nginwt =  self.getValue("input:engine:Engine_Weight:nginwt")
+            ieng = self.getValue("input:engine:Basic:ieng")
+
+            sb.add_var("input:engine:Basic:ieng")
+            sb.add_var("input:engine:Basic:iprint")
+            sb.add_var("input:engine:Basic:gendek")
+            sb.add_var("input:engine:Basic:ithrot")
+            sb.add_var("input:engine:Basic:npab")
+            sb.add_var("input:engine:Basic:npdry")
+            sb.add_var("input:engine:Basic:xidle")
+            sb.add_var("input:engine:Basic:nitmax")
+
+            if self.getValue("input:engine:Basic:xmmax") > 0:
+                sb.add_var("input:engine:Basic:xmmax")
+            if self.getValue("input:engine:Basic:amax") > 0:
+                sb.add_var("input:engine:Basic:amax")
+            if self.getValue("input:engine:Basic:xminc") > 0:
+                sb.add_var("input:engine:Basic:xminc")
+            if self.getValue("input:engine:Basic:ainc") > 0:
+                sb.add_var("input:engine:Basic:ainc")
+            if self.getValue("input:engine:Basic:qmin") > 0:
+                sb.add_var("input:engine:Basic:qmin")
+            if self.getValue("input:engine:Basic:qmax") > 0:
+                sb.add_var("input:engine:Basic:qmax")
+
+            sb.add_newvar("nginwt", nginwt)
+            sb.add_container("input:engine:Noise_Data")
+
+            if self.getValue("input:engine:Design_Point:desfn") > 0:
+                sb.add_var("input:engine:Design_Point:desfn")
+            if self.getValue("input:engine:Design_Point:xmdes") > 0:
+                sb.add_var("input:engine:Design_Point:xmdes")
+            if self.getValue("input:engine:Design_Point:xades") > 0:
+                sb.add_var("input:engine:Design_Point:xades")
+
+            sb.add_var("input:engine:Design_Point:oprdes")
+            sb.add_var("input:engine:Design_Point:fprdes")
+            sb.add_var("input:engine:Design_Point:bprdes")
+            sb.add_var("input:engine:Design_Point:tetdes")
+            sb.add_var("input:engine:Design_Point:ttrdes")
+            sb.add_var("input:engine:Other:hpcpr")
+            sb.add_var("input:engine:Other:aburn")
+            sb.add_var("input:engine:Other:dburn")
+            sb.add_var("input:engine:Other:effab")
+            sb.add_var("input:engine:Other:tabmax")
+            sb.add_var("input:engine:Other:ven")
+            sb.add_var("input:engine:Other:costbl")
+            sb.add_var("input:engine:Other:fanbl")
+            sb.add_var("input:engine:Other:hpext")
+            sb.add_var("input:engine:Other:wcool")
+            sb.add_var("input:engine:Other:fhv")
+            sb.add_var("input:engine:Other:dtce")
+            sb.add_var("input:engine:Other:alc")
+            sb.add_var("input:engine:Other:year")
+            sb.add_comment("\n  ! Installation effects")
+            sb.add_var("input:engine:Other:boat")
+            sb.add_var("input:engine:Other:ajmax")
+
+            if self.getValue("input:engine:Other:spill"):
+                sb.add_comment("\n  ! Installation effects")
+                sb.add_var("input:engine:Other:spill")
+                sb.add_var("input:engine:Other:lip")
+                sb.add_var("input:engine:Other:blmax")
+                sb.add_var("input:engine:Other:spldes")
+                sb.add_var("input:engine:Other:aminds")
+                sb.add_var("input:engine:Other:alinds")
+
+            sb.add_var("input:engine:Other:etaprp")
+            sb.add_var("input:engine:Other:shpowa")
+            sb.add_comment("\n  ! Engine operating constraints")
+            sb.add_var("input:engine:Other:cdtmax")
+            sb.add_var("input:engine:Other:cdpmax")
+            sb.add_var("input:engine:Other:vjmax")
+            sb.add_var("input:engine:Other:stmin")
+            sb.add_var("input:engine:Other:armax")
+            sb.add_var("input:engine:Other:limcd")
+
+            if nginwt != 0:
+                sb.add_comment("\n  ! Engine Weight Calculation Data")
+                sb.add_var("input:engine:Engine_Weight.iwtprt")
+                sb.add_var("input:engine:Engine_Weight.iwtplt")
+                sb.add_var("input:engine:Engine_Weight.gratio")
+                sb.add_var("input:engine:Engine_Weight.utip1")
+                sb.add_var("input:engine:Engine_Weight.rh2t1")
+                sb.add_var("input:engine:Engine_Weight.igvw")
+                sb.add_var("input:engine:Engine_Weight.trbrpm")
+                sb.add_var("input:engine:Engine_Weight.trban2")
+                sb.add_var("input:engine:Engine_Weight.trbstr")
+                sb.add_var("input:engine:Engine_Weight.cmpan2")
+                sb.add_var("input:engine:Engine_Weight.cmpstr")
+                sb.add_var("input:engine:Engine_Weight.vjpnlt")
+                sb.add_var("input:engine:Engine_Weight.wtebu")
+                sb.add_var("input:engine:Engine_Weight.wtcon")
+
+            if ieng == 101:
+                sb.add_var("input:engine:IC_Engine.ncyl")
+                sb.add_var("input:engine:IC_Engine.deshp")
+                sb.add_var("input:engine:IC_Engine.alcrit")
+                sb.add_var("input:engine:IC_Engine.sfcmax")
+                sb.add_var("input:engine:IC_Engine.sfcmin")
+                sb.add_var("input:engine:IC_Engine.pwrmin")
+                sb.add_var("input:engine:IC_Engine.engspd")
+                sb.add_var("input:engine:IC_Engine.prpspd")
+
+            if ieng == 101 or igenen == -2 and nginwt > 0:
+                sb.add_var("input:engine:IC_Engine.iwc")
+                sb.add_var("input:engine:IC_Engine.ecid")
+                sb.add_var("input:engine:IC_Engine.ecr")
+
+            if ieng == 101 or igenen == -2:
+                sb.add_var("input:engine:IC_Engine.eht")
+                sb.add_var("input:engine:IC_Engine.ewid")
+                sb.add_var("input:engine:IC_Engine.elen")
+                sb.add_var("input:engine:IC_Engine.ntyp")
+                sb.add_var("input:engine:IC_Engine.af")
+                sb.add_var("input:engine:IC_Engine.cli")
+                sb.add_var("input:engine:IC_Engine.blang")
+                sb.add_var("input:engine:IC_Engine.dprop")
+                sb.add_var("input:engine:IC_Engine.nblade")
+                sb.add_var("input:engine:IC_Engine.gbloss")
+
+            nrpm =  len(self.getValue("input:engine:IC_Engine:arrpm"))
+            if nrpm > 0:
+                sb.add_comment("  ! power curve input data")
+                sb.add_newvar("nrpm", nrpm)
+                sb.add_var("input:engine:IC_Engine:arrpm")
+                sb.add_var("input:engine:IC_Engine:arpwr")
+                sb.add_var("input:engine:IC_Engine:arful")
+                if self.input.engine.IC_Engine.lfuun != 0:
+                    sb.add_var("input:engine:IC_Engine:lfuun")
+                    sb.add_var("input:engine:IC_Engine:feng")
+
+            sb.add_var("input:engine:IC_Engine:fprop")
+            sb.add_var("input:engine:IC_Engine:fgbox")
+
+            ifile = self.getValue("input:engine:ifile")
+            tfile = self.getValue("input:engine:tfile")
+
+            # The name of the engine cycle definition file to be read in is
+            # set by the value of if IENG.
+            filenames = { 0: "MYCYCL",
+                          1: "TURJET",
+                          2: "TFNSEP",
+                          3: "TFNMIX",
+                          4: "TURPRP",
+                          5: "TBYPAS",
+                          6: "TFNSP3",
+                          7: "TFNMX3",
+                          8: "TFN3SH",
+                          9: "TURJT2",
+                          101: "MYCYCL" }
+            try:
+                ifilNam = filenames[ieng]
+            except KeyError:
+                msg = "Illegal value %s for input:engine:Basic:IENG" % ieng
+                raise KeyError(msg)
+
+            # TODO - rawInputFile( ifile, ifilNam )
+            # TODO - rawInputFile( tfile, "ENGTAB" )
+            sb.add_newvar("tfile", tfile)
+            sb.add_newvar("ifile", ifilNam)
+
+            #-------------------
+            # Namelist &NACELL
+            #-------------------
+
+            # Namelist &NACELL is only required if NGINWT != 0
+            # (note:, still in IGENEN=-2 or 1.)
+            if nginwt != 0:
+
+                sb.add_group('NACELL')
+                sb.add_comment("\n  ! Data for Computation of Nacelle Weight.")
+                sb.add_container("input:nacell")
+
+        #-------------------
+        # Namelist &MISSIN
+        #-------------------
+
+        # Namelist &MISSIN is only required if IANAL=3
+
+        npcon = self.npcon
+
+        if ianal == 3:
+
+            sb.add_group('MISSIN')
+
+            sb.add_comment("\n  ! Performance Controls and Factors and Mission Segment Definition")
+            sb.add_var("input:missin:Basic:indr")
+            sb.add_var("input:missin:Basic:fact")
+            sb.add_var("input:missin:Basic:fleak")
+            sb.add_var("input:missin:Basic:fcdo")
+            sb.add_var("input:missin:Basic:fcdi")
+            sb.add_var("input:missin:Basic:fcdsub")
+            sb.add_var("input:missin:Basic:fcdsup")
+            sb.add_var("input:missin:Basic:iskal")
+            sb.add_var("input:missin:Basic:owfact")
+            sb.add_var("input:missin:Basic:iflag")
+            sb.add_var("input:missin:Basic:msumpt")
+            sb.add_var("input:missin:Basic:dtc")
+            sb.add_var("input:missin:Basic:irw")
+            sb.add_var("input:missin:Basic:rtol")
+            sb.add_var("input:missin:Basic:nhold")
+            sb.add_var("input:missin:Basic:iata")
+            sb.add_var("input:missin:Basic:tlwind")
+            sb.add_var("input:missin:Basic:dwt")
+
+            if len(self.getValue("input:missin:Basic:offdr")) > 0:
+                sb.add_var("input:missin:Basic:offdr")
+
+            sb.add_var("input:missin:Basic:idoq")
+            sb.add_newvar("npcon", npcon)
+
+            nsout =  self.getValue("input:missin:Basic:nsout")
+            if nsout > 0:
+                sb.add_comment("\n  ! Combat Radius Mission\n")
+                sb.add_newvar("nsout", nsout)
+                sb.add_var("input:missin:Basic:nsadj")
+                sb.add_var("input:missin:Basic:mirror")
+
+            i =  len(self.getValue("input:missin:Store_Drag:stma"))
+            if i > 0:
+                sb.add_comment("\n  ! Store Drags")
+                sb.add_container("input:missin:Store_Drag")
+
+            sb.add_var("input:missin:User_Weights:mywts")
+            if mywts == 1:
+                sb.add_comment("\n  ! User-Specified Weights")
+                sb.add_var("input:missin:User_Weights:rampwt")
+                sb.add_var("input:missin:User_Weights:dowe")
+                sb.add_var("input:missin:User_Weights:paylod")
+                sb.add_var("input:missin:User_Weights:fuemax")
+
+            sb.add_comment("\n  ! Ground Operations and Takeoff and Approach Allowances")
+            sb.add_container("input:missin:Ground_Operations")
+
+            if len(self.getValue("input:missin:Turn_Segments:xnz")) > 0:
+                sb.add_var("input:missin:Turn_Segments:xnz")
+            if len(self.getValue("input:missin:Turn_Segments:xcl")) > 0:
+                sb.add_var("input:missin:Turn_Segments:xcl")
+            if len(self.getValue("input:missin:Turn_Segments:xmach")) > 0:
+                sb.add_var("input:missin:Turn_Segments:xmach")
+            
+            nclimb = max( len(self.getValue("input:missin:Climb:clmmin")),
+                          len(self.getValue("input:missin:Climb:clmmax")),
+                          len(self.getValue("input:missin:Climb:clamax")),
+                          len(self.getValue("input:missin:Climb:nincl")),
+                          len(self.getValue("input:missin:Climb:fwf")),
+                          len(self.getValue("input:missin:Climb:ncrcl")),
+                          len(self.getValue("input:missin:Climb:cldcd")),
+                          len(self.getValue("input:missin:Climb:ippcl")),
+                          len(self.getValue("input:missin:Climb:maxcl")) )
+
+            # TODO - Ask Karl or Jeff about this
+            # I've removed ioc and ifeath from this. These are parameters, so
+            # their "length" should have nothing to do with how many Cruise
+            # Schedules are in the model.
+            ncruse = max( len(self.getValue("input:missin:Cruise:crmach")),
+                          len(self.getValue("input:missin:Cruise:cralt")),
+                          len(self.getValue("input:missin:Cruise:crdcd")),
+                          len(self.getValue("input:missin:Cruise:flrcr")),
+                          len(self.getValue("input:missin:Cruise:crmmin")),
+                          len(self.getValue("input:missin:Cruise:crclmx")),
+                          len(self.getValue("input:missin:Cruise:hpmin")),
+                          len(self.getValue("input:missin:Cruise:ffuel")),
+                          len(self.getValue("input:missin:Cruise:fnox")),
+                          len(self.getValue("input:missin:Cruise:feathf")),
+                          len(self.getValue("input:missin:Cruise:cdfeth")) )
+
+            nql = len(self.getValue("input:missin:Climb:qlalt"))
+            ns = len(self.getValue("input:missin:Descent:adtab"))
+
+            sb.add_comment("\n  ! Climb Schedule Definition")
+            sb.add_newvar("nclimb", nclimb)
+            sb.add_var("input:missin:Climb:clmmin")
+            sb.add_var("input:missin:Climb:clmmax")
+            sb.add_var("input:missin:Climb:clamin")
+            sb.add_var("input:missin:Climb:clamax")
+            sb.add_var("input:missin:Climb:nincl")
+            sb.add_var("input:missin:Climb:fwf")
+            sb.add_var("input:missin:Climb:ncrcl")
+            sb.add_var("input:missin:Climb:cldcd")
+            sb.add_var("input:missin:Climb:ippcl")
+            sb.add_var("input:missin:Climb:maxcl")
+            sb.add_var("input:missin:Climb:keasvc")
+
+            actab = self.getValue("input:missin:Climb:actab")
+            no = actab.shape[1]
+            if no == 0:
+                no = actab.shape[0]
+            elif no > 0:
+                noval = ""
+                for i in range(0, nclimb):
+                    if actab.shape[1] > 0:
+                        for j in range(0, actab.shape[1]):
+                            if actab[i, j] >= 0.0:
+                                n = j+1
+                                noval += n + ", "
+                            else:
+                                break
+                    else:
+                        noval += "0, "
+
+                sb.add_newvar("no", noval)
+                sb.add_var("input:missin:Climb:actab")
+                sb.add_var("input:missin:Climb:vctab")
+
+            sb.add_var("input:missin:Climb:ifaacl")
+            sb.add_var("input:missin:Climb:ifaade")
+            sb.add_var("input:missin:Climb:nodive")
+            sb.add_var("input:missin:Climb:divlim")
+            sb.add_var("input:missin:Climb:qlim")
+            sb.add_var("input:missin:Climb:spdlim")
+            if nql > 0:
+                sb.add_var("input:missin:Climb:qlalt")
+                sb.add_var("input:missin:Climb:vqlm")
+
+            sb.add_comment("\n  ! Cruise Schedule Definition\n")
+            sb.add_newvar("ncruse", ncruse)
+            sb.add_var("input:missin:Cruise:ioc")
+            sb.add_var("input:missin:Cruise:crmach")
+            sb.add_var("input:missin:Cruise:cralt")
+            sb.add_var("input:missin:Cruise:crdcd")
+            sb.add_var("input:missin:Cruise:flrcr")
+            sb.add_var("input:missin:Cruise:crmmin")
+            sb.add_var("input:missin:Cruise:crclmx")
+            sb.add_var("input:missin:Cruise:hpmin")
+            sb.add_var("input:missin:Cruise:ffuel")
+            sb.add_var("input:missin:Cruise:fnox")
+            sb.add_var("input:missin:Cruise:ifeath")
+            sb.add_var("input:missin:Cruise:feathf")
+            sb.add_var("input:missin:Cruise:cdfeth")
+            sb.add_var("input:missin:Cruise:dcwt")
+            sb.add_var("input:missin:Cruise:rcin")
+            if len(self.getValue("input:missin:Cruise:wtbm")) > 0:
+                sb.add_var("input:missin:Cruise:wtbm")
+            if len(self.getValue("input:missin:Cruise:altbm")) > 0:
+                sb.add_var("input:missin:Cruise:altbm")
+
+            sb.add_comment("\n  ! Descent Schedule Definition")
+            sb.add_var("input:missin:Descent:ivs")
+            sb.add_var("input:missin:Descent:decl")
+            sb.add_var("input:missin:Descent:demmin")
+            sb.add_var("input:missin:Descent:demmax")
+            sb.add_var("input:missin:Descent:deamin")
+            sb.add_var("input:missin:Descent:deamax")
+            sb.add_var("input:missin:Descent:ninde")
+            sb.add_var("input:missin:Descent:dedcd")
+            sb.add_var("input:missin:Descent:rdlim")
+            sb.add_var("input:missin:Descent:keasvd")
+            if ns > 0:
+                sb.add_newvar("ns", ns)
+                sb.add_var("input:missin:Descent:adtab")
+                sb.add_var("input:missin:Descent:vdtab")
+
+            sb.add_container("input:missin:Reserve")
+
+            #----------------------
+            # Mission definition
+            #----------------------
+
+            mission = self.getValue("input:mission_definition:mission")
+
+            for seg in mission:
+                sb.add_group(seg)
+
+            self.nmseg = mission.count('CLIMB') + mission.count('CRUISE') + \
+                         mission.count('REFUEL') + mission.count('RELEASE') + \
+                         mission.count('ACCEL') + mission.count('TURN') + \
+                         mission.count('COMBAT') + mission.count('HOLD') + \
+                         mission.count('DESCENT')
+
+        #-------------------
+        # Namelist &PCONIN
+        #-------------------
+
+        # One or more &PCONIN namelists may have been created by the user.
+        if npcon > 0 and ianal == 3:
+
+            for i in range(0, npcon):
+
+                sb.add_group('PCONIN')
+                sb.add_comment("\n  ! Performance Constraint")
+
+                if self.getValue("input:pconin%s:conalt" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:conalt" % (i))
+                if self.getValue("input:pconin%s:conmch" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:conmch" % (i))
+                if self.getValue("input:pconin%s:connz" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:connz" % (i))
+                if self.getValue("input:pconin%s:conpc" % (i)) > -10.:
+                    sb.add_var("input:pconin%s:conpc" % (i))
+                if self.getValue("input:pconin%s:conlim" % (i)) != -999.:
+                    sb.add_var("input:pconin%s:conlim" % (i))
+                if self.getValue("input:pconin%s:conaux" % (i)) > -1.:
+                    sb.add_var("input:pconin%s:conaux" % (i))
+                if self.getValue("input:pconin%s:neo" % (i)) >= 0:
+                    sb.add_var("input:pconin%s:neo" % (i))
+                if self.getValue("input:pconin%s:icstdg" % (i)) >= 0:
+                    sb.add_var("input:pconin%s:icstdg" % (i))
+                if self.getValue("input:pconin%s:conwt" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:conwt" % (i))
+                if self.getValue("input:pconin%s:iconsg" % (i)) >= 0:
+                    sb.add_var("input:pconin%s:iconsg" % (i))
+                if self.getValue("input:pconin%s:confm" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:confm" % (i))
+                if self.getValue("input:pconin%s:conwta" % (i)) != -999.:
+                    sb.add_var("input:pconin%s:conwta" % (i))
+                if self.getValue("input:pconin%s:icontp" % (i)) >= 0:
+                    sb.add_var("input:pconin%s:icontp" % (i))
+
+        #--------------------
+        # Aerodynamic data
+        #--------------------
+
+        # Aerodynamic data are placed in the input file if MYAERO > 0.  If MYAERO=3,
+        # insert the aerodynamic data after namelist &RFHIN (below), otherwise insert
+        # them here.
+
+        if myaero > 0 and myaero != 3 and ianal == 3:
+
+            # aerodat contains the raw aero data
+            sb.add_group(self.getValue("input:aero_data:aerodat"))
+
+        #-------------------
+        # Namelist &RFHIN
+        #-------------------
+
+        # Namelist &RFHIN is only required if MYAERO=3.
+
+        elif myaero == 3:
+
+            sb.add_group('RFHIN')
+
+            mmach = len(self.getValue("input:rfhin:tmach"))
+            sb.add_comment("  ! Aerodynamic Data for Parabolic Drag Polars")
+            sb.add_newvar("mmach", mmach)
+            sb.add_container("input:rfhin")
+
+            # If MYAERO=3, insert the aerodynamic data here.  Otherwise it may have already
+            # been inserted above.
+
+            # aerodat contains the raw aero data
+            sb.add_group(self.getValue("input:aero_data:aerodat"))
 
 
+        #-------------------
+        # Namelist &ASCLIN
+        #-------------------
 
+        # Namelist &ASCLIN is only required if MYAERO=2.
+
+        if myaero == 2:
+
+            sb.add_group('ASCLIN')
+
+            sb.add_comment("  ! Scaling Data for Lift Independent Drag")
+            sb.add_var("input:asclin:sref")
+            sb.add_var("input:asclin:tref")
+            sb.add_var("input:asclin:awetn")
+            sb.add_var("input:asclin:eltot")
+            sb.add_var("input:asclin:voltot")
+
+            if len(self.input.asclin.awett) > 0:
+                sb.add_var("input:asclin:awett")
+            if len(self.input.asclin.awetw) > 0:
+                sb.add_var("input:asclin:awetw")
+            if len(self.input.asclin.elw) > 0:
+                sb.add_var("input:asclin:elw")
+            if len(self.input.asclin.volw) > 0:
+                sb.add_var("input:asclin:volw")
+            if len(self.input.asclin.form) > 0:
+                sb.add_var("input:asclin:form")
+            if len(self.input.asclin.eql) > 0:
+                sb.add_var("input:asclin:eql")
+
+            ncdwav = len(self.getValue("input:asclin:cdwav"))
+            if ncdwav > 0:
+                sb.add_var("input:asclin:cdwav")
+                sb.add_var("input:asclin:dcdnac")
+
+        #-------------------
+        # Namelist &TOLIN
+        #-------------------
+
+        if itakof == 1 or iland == 1 or nopro == 1:
+
+            sb.add_group('TOLIN')
+
+            sb.add_var("input:tolin:Basic:apa")
+            sb.add_var("input:tolin:Basic:dtct")
+            if self.getValue("input:tolin:Basic:swref") > 0:
+                sb.add_var("input:tolin:Basic:swref")
+            if self.getValue("input:tolin:Basic:arret") > 0:
+                sb.add_var("input:tolin:Basic:arret")
+            sb.add_var("input:tolin:Basic:whgt")
+            sb.add_var("input:tolin:Basic:alprun")
+            sb.add_var("input:tolin:Basic:tinc")
+            sb.add_var("input:tolin:Basic:rollmu")
+            sb.add_var("input:tolin:Basic:brakmu")
+            sb.add_var("input:tolin:Basic:cdgear")
+            sb.add_var("input:tolin:Basic:cdeout")
+            sb.add_var("input:tolin:Basic:clspol")
+            sb.add_var("input:tolin:Basic:cdspol")
+            sb.add_var("input:tolin:Basic:incgef")
+            sb.add_var("input:tolin:Basic:argef")
+            sb.add_var("input:tolin:Basic:itime")
+
+            sb.add_comment("\n  ! Thrust Reverser")
+            sb.add_var("input:tolin:Thrust_Reverser:inthrv")
+            sb.add_var("input:tolin:Thrust_Reverser:rvfact")
+            if len(self.getValue("input:tolin:Thrust_Reverser:velrv")) > 0:
+                sb.add_var("input:tolin:Thrust_Reverser:velrv")
+                sb.add_var("input:tolin:Thrust_Reverser:thrrv")
+
+            sb.add_var("input:tolin:Thrust_Reverser:tirvrs")
+            sb.add_var("input:tolin:Thrust_Reverser:revcut")
+            sb.add_var("input:tolin:Thrust_Reverser:clrev")
+            sb.add_var("input:tolin:Thrust_Reverser:cdrev")
+
+            sb.add_comment("\n  ! Integration Intervals  (Default values will provide a precision of +/-.25 ft)")
+            sb.add_container("input:tolin.Integration_Intervals")
+
+            sb.add_comment("\n  ! Takeoff Data")
+            if self.getValue("input:tolin:Takeoff:cltom") > 0:
+                sb.add_var("input:tolin:Takeoff:cltom")
+            sb.add_var("input:tolin:Takeoff:cdmto")
+            sb.add_var("input:tolin:Takeoff:fcdmto")
+            sb.add_var("input:tolin:Takeoff:almxto")
+            if self.getValue("input.tolin:Takeoff:obsto") > 0:
+                sb.add_var("input:tolin:Takeoff:obsto")
+            sb.add_var("input:tolin:Takeoff:alpto")
+            sb.add_var("input:tolin:Takeoff:clto")
+            sb.add_var("input:tolin:Takeoff:cdto")
+            sb.add_var("input:tolin:Takeoff:inthto")
+
+            if len(self.getValue("input:tolin:Takeoff:velto")) > 0:
+                sb.add_var("input:tolin:Takeoff:velto")
+                sb.add_var("input:tolin:Takeoff:thrto")
+            if self.getValue("input:tolin:Takeoff:alprot") > -99:
+                sb.add_var("input:tolin:Takeoff:alprot")
+
+            sb.add_var("input:tolin:Takeoff:vrotat")
+            sb.add_var("input:tolin:Takeoff:vangl")
+            sb.add_var("input:tolin:Takeoff:thfact")
+            sb.add_var("input:tolin:Takeoff:ftocl")
+            sb.add_var("input:tolin:Takeoff:ftocd")
+            sb.add_var("input:tolin:Takeoff:igobs")
+            sb.add_var("input:tolin:Takeoff:tdelg")
+            sb.add_var("input:tolin:Takeoff:tigear")
+            sb.add_var("input:tolin:Takeoff:ibal")
+            sb.add_var("input:tolin:Takeoff:itxout")
+
+            sb.add_comment("\n  ! Aborted Takeoff Data")
+            sb.add_var("input:tolin:Takeoff:pilott")
+            sb.add_var("input:tolin:Takeoff:tispa")
+            sb.add_var("input:tolin:Takeoff:tibra")
+            sb.add_var("input:tolin:Takeoff:tirva")
+            sb.add_var("input:tolin:Takeoff:ispol")
+            sb.add_var("input:tolin:Takeoff:irev")
+
+            sb.add_comment("\n  ! Landing Data")
+            if self.getValue("input:tolin:Landing:clldm") > 0:
+                sb.add_var("input:tolin:Landing:clldm")
+            sb.add_var("input:tolin:Landing:cdmld")
+            if self.getValue("input:tolin:Landing:fcdmld") > 0:
+                sb.add_var("input:tolin:Landing:fcdmld")
+            sb.add_var("input:tolin:Landing:almxld")
+            sb.add_var("input:tolin:Landing:obsld")
+            sb.add_var("input:tolin:Landing:alpld")
+            sb.add_var("input:tolin:Landing:clld")
+            sb.add_var("input:tolin:Landing:cdld")
+            sb.add_var("input:tolin:Landing:inthld")
+            if len(self.getValue("input:tolin:Landing:velld")) > 0:
+                sb.add_var("input:tolin:Landing:velld")
+                sb.add_var("input:tolin:Landing:thrld")
+
+            sb.add_var("input:tolin:Landing:thrld")
+            if self.getValue("input:tolin:Landing:thdry") > 0:
+                sb.add_var("input:tolin:Landing:thdry")
+            sb.add_var("input:tolin:Landing:aprhgt")
+            sb.add_var("input:tolin:Landing:aprang")
+            sb.add_var("input:tolin:Landing:fldcl")
+            sb.add_var("input:tolin:Landing:fldcd")
+            sb.add_var("input:tolin:Landing:tdsink")
+            if self.getValue("input:tolin:Landing:vangld") > 0:
+                sb.add_var("input:tolin:Landing:vangld")
+            sb.add_var("input:tolin:Landing:noflar")
+            sb.add_var("input:tolin:Landing:tispol")
+            sb.add_var("input:tolin:Landing:ticut")
+            sb.add_var("input:tolin:Landing:tibrak")
+            sb.add_var("input:tolin:Landing:acclim")
+            if self.getValue("input:tolin:Landing:magrup") > 0:
+                sb.add_var("input:tolin:Landing:magrup")
+
+        #-------------------
+        # Namelist &PROIN
+        #-------------------
+
+        # Namelist &PROIN is only required if NOPRO=1.
+        if nopro > 0:
+
+            npol = len(self.getValue("input:proin:dflap"))
+
+            sb.add_group('PROIN')
+            sb.add_var("input:proin:npol")
+
+            if npol > 0:
+                sb.add_var("input:proin:alpro")
+                sb.add_var("input:proin:clpro")
+                sb.add_var("input:proin:cdpro")
+                sb.add_var("input:proin:dflap")
+
+            sb.add_var("input:proin:ntime")
+            sb.add_var("input:proin:ipcmax")
+            sb.add_var("input:proin:txf")
+            sb.add_var("input:proin:alpmin")
+            sb.add_var("input:proin:gamlim")
+
+            inm = self.getValue("input:proin:inm")
+            if inm == 1:
+                sb.add_var("input:proin:inm")
+                sb.add_var("input:proin:iatr")
+                sb.add_var("input:proin:fzf")
+                sb.add_var("input:proin:thclmb")
+                sb.add_var("input:proin:flapid")
+
+        #-------------------
+        # Namelist &SEGIN
+        #-------------------
+
+        # One or more &SEGIN namelists may have been created by the user.
+        #nseg = self.nseg
+        if nopro > 0 and self.nseg0 > 0:
+
+            for i in range(0, self.nseg0):
+
+                key    = self.getValue("input:segin%s:key" % (i))
+                nflap  = self.getValue("input:segin%s:nflap" % (i))
+                ifix   = self.getValue("input:segin%s:ifix" % (i))
+                engscl = self.getValue("input:segin%s:engscl" % (i))
+                afix   = self.getValue("input:segin%s:afix" % (i))
+                gfix   = self.getValue("input:segin%s:gfix" % (i))
+                vfix   = self.getValue("input:segin%s:vfix" % (i))
+                hstop  = self.getValue("input:segin%s:hstop" % (i))
+                dstop  = self.getValue("input:segin%s:dstop" % (i))
+                tstop  = self.getValue("input:segin%s:tstop" % (i))
+                vstop  = self.getValue("input:segin%s:vstop" % (i))
+                hmin   = self.getValue("input:segin%s:hmin" % (i))
+                sprate = self.getValue("input:segin%s:sprate" % (i))
+                iplr   = self.getValue("input:segin%s:iplr" % (i))
+                delt   = self.getValue("input:segin%s:delt" % (i))
+                grdaeo = self.getValue("input:segin%s:grdaeo" % (i))
+                grdoeo = self.getValue("input:segin%s:grdoeo" % (i))
+
+                sb.add_group('SEGIN')
+                sb.add_newvar("key", key)
+
+                if nflap > 0:
+                    sb.add_newvar("nflap", nflap)
+                if ifix > 0:
+                    sb.add_newvar("ifix", ifix)
+                if engscl >= 0.:
+                    sb.add_newvar("engscl", engscl)
+                if afix > -10.:
+                    sb.add_newvar("afix", afix)
+                if gfix > -10.:
+                    sb.add_newvar("gfix", gfix)
+                if vfix > 0.:
+                    sb.add_newvar("vfix", vfix)
+                if hstop > 0.:
+                    sb.add_newvar("hstop", hstop)
+                if dstop > 0.:
+                    sb.add_newvar("dstop", dstop)
+                if tstop > 0.:
+                    sb.add_newvar("tstop", tstop)
+                if vstop > 0.:
+                    sb.add_newvar("vstop", vstop)
+                if hmin > 0.:
+                    sb.add_newvar("hmin", hmin)
+                if sprate >= 0.:
+                    sb.add_newvar("sprate", sprate)
+                if iplr >= 0.:
+                    sb.add_newvar("iplr", iplr)
+                if delt > 0.:
+                    sb.add_newvar("delt", delt)
+                if grdaeo > -1.:
+                    sb.add_newvar("grdaeo", grdaeo)
+                if grdoeo > -1.:
+                    sb.add_newvar("grdoeo", grdoeo)
+
+        #-------------------
+        # Namelist &NOISIN
+        #-------------------
+
+        # Namelist &NOISIN is only required if NOISIN=1.
+        if noise == 1:
+
+            sb.add_group('NOISIN')
+
+            sb.add_comment("\n  ! Data for Noise Calculations\n  ! Noise regulation control")
+            sb.add_var("input:noisin:Basic:iepn")
+            sb.add_var("input:noisin:Basic:depnt")
+            sb.add_var("input:noisin:Basic:depns")
+            sb.add_var("input:noisin:Basic:depnl")
+            sb.add_var("input:noisin:Basic:itrade")
+
+            sb.add_comment("\n  ! Noise sources to be included")
+            ijet = self.getValue("input:noisin:Basic:ijet")
+            ifan = self.getValue("input:noisin:Basic:ifan")
+            icore = self.getValue("input:noisin:Basic:icore")
+            iturb = self.getValue("input:noisin:Basic:iturb")
+            iprop = self.getValue("input:noisin:Basic:iprop")
+            iflap = self.getValue("input:noisin:Basic:iflap")
+            iairf = self.getValue("input:noisin:Basic:iairf")
+            igear = self.getValue("input:noisin:Basic:igear")
+            ishld = self.getValue("input:noisin:Propagation:ishld")
+            ignd = self.getValue("input:noisin:Propagation:ignd")
+            if ijet > 0:
+                sb.add_newvar("ijet", ijet)
+            if ifan > 0:
+                sb.add_newvar("ifan", ifan)
+            if icore > 0:
+                sb.add_newvar("icore", icore)
+            if iturb > 0:
+                sb.add_newvar("iturb", iturb)
+            if iprop > 0:
+                sb.add_newvar("iprop", iprop)
+            if iflap > 0:
+                sb.add_newvar("iflap", iflap)
+            if iairf > 0:
+                sb.add_newvar("iairf", iairf)
+            if igear > 0:
+                sb.add_newvar("igear", igear)
+
+            sb.add_comment("\n  ! Noise Propagation Corrections")
+            sb.add_var("input:noisin:Propagation:isupp")
+            sb.add_var("input:noisin:Propagation:idop")
+            sb.add_newvar("ignd", ignd)
+            sb.add_var("input:noisin:Propagation:iatm")
+            sb.add_var("input:noisin:Propagation:iega")
+            sb.add_newvar("ishld", ishld)
+            sb.add_var("input:noisin:Propagation:deldb")
+            sb.add_var("input:noisin:Propagation:heng")
+            sb.add_var("input:noisin:Propagation:filbw")
+            sb.add_var("input:noisin:Propagation:tdi")
+            sb.add_var("input:noisin:Propagation:rh")
+
+            sb.add_comment("\n  ! Observer Locations")
+            nob = len(self.getValue("input:noisin:Observers:xo"))
+            if nob > 0:
+                sb.add_newvar("nob", nob)
+                sb.add_var("input:noisin:Observers:xo")
+                sb.add_var("input:noisin:Observers:yo")
+
+            sb.add_var("input:noisin:Observers:zo")
+            sb.add_var("input:noisin:Observers:ndprt")
+            sb.add_var("input:noisin:Observers:ifoot")
+            sb.add_var("input:noisin:Observers:igeom")
+            if self.getValue("input:noisin:Observers:thrn") > 0:
+                sb.add_var("input:noisin:Observers:thrn")
+
+            sb.add_var("input:noisin:Observers:icorr")
+            sb.add_var("input:noisin:Observers:tcorxp")
+
+            nparam = len(self.getValue("input:noisin:Engine_Parameters.aepp"))
+            if nparam > 0:
+                sb.add_comment("\n  ! Engine Noise Parameters")
+                sb.add_newvar("nparam", nparam)
+                sb.add_container("input:noisin:Engine_Parameters")
+
+            if ijet != 0:
+                sb.add_comment("\n  ! Jet Noise Input Data")
+                sb.add_var("input:noisin:Jet:inoz")
+                sb.add_var("input:noisin:Jet:iplug")
+                sb.add_var("input:noisin:Jet:islot")
+                sb.add_var("input:noisin:Jet:iaz")
+                sb.add_var("input:noisin:Jet:dbaz")
+                sb.add_var("input:noisin:Jet:ejdop")
+                sb.add_var("input:noisin:Jet:zmdc")
+                sb.add_var("input:noisin:Jet:gammac")
+                sb.add_var("input:noisin:Jet:gasrc")
+                sb.add_var("input:noisin:Jet:annht")
+                sb.add_var("input:noisin:Jet:zmdf")
+                sb.add_var("input:noisin:Jet:gammap")
+                sb.add_var("input:noisin:Jet:gasrf")
+                sb.add_var("input:noisin:Jet:annhtf")
+                if self.getValue("input:noisin:Jet:dhc") > 0:
+                    sb.add_var("input:noisin:Jet:dhc")
+                sb.add_var("input:noisin:Jet:dhf")
+                sb.add_var("input:noisin:Jet:zl2")
+                sb.add_var("input:noisin:Jet:ifwd")
+                sb.add_var("input:noisin:Jet:ishock")
+                sb.add_var("input:noisin:Jet:zjsupp")
+
+            if ijet == 5:
+                sb.add_comment("\n  ! Jet Noise Input Data for MSjet")
+                sb.add_container("input:noisin:MSJet")
+
+            if ifan > 0:
+                sb.add_comment("\n  ! Fan Noise Data")
+                sb.add_var("input:noisin:Fan:igv")
+                sb.add_var("input:noisin:Fan:ifd")
+                sb.add_var("input:noisin:Fan:iexh")
+                sb.add_var("input:noisin:Fan:nfh")
+
+                if self.getValue("input:noisin:Fan:nstg") > 0:
+                    sb.add_var("input:noisin:Fan:nstg")
+
+                sb.add_var("input:noisin:Fan:suppin")
+                sb.add_var("input:noisin:Fan:suppex")
+                sb.add_var("input:noisin:Fan:methtip")
+                sb.add_var("input:noisin:Fan:icomb")
+                sb.add_var("input:noisin:Fan:decmpt")
+                sb.add_var("input:noisin:Fan:gammaf")
+
+                if self.getValue("input:noisin:Fan:nbl") > 0:
+                    sb.add_var("input:noisin:Fan:nbl")
+                if self.getValue("input:noisin:Fan:nvan") > 0:
+                    sb.add_var("input:noisin:Fan:nvan")
+                if self.getValue("input:noisin:Fan:fandia") > 0:
+                    sb.add_var("input:noisin:Fan:fandia")
+                if self.getValue("input:noisin:Fan:fanhub") > 0:
+                    sb.add_var("input:noisin:Fan:fanhub")
+                if self.getValue("input:noisin:Fan:tipmd") > 0:
+                    sb.add_var("input:noisin:Fan:tipmd")
+
+                sb.add_var("input:noisin:Fan:rss")
+                sb.add_var("input:noisin:Fan:efdop")
+                sb.add_var("input:noisin:Fan:faneff")
+
+                if self.getValue("input:noisin:Fan:nbl2") > 0:
+                    sb.add_var("input:noisin:Fan:nbl2")
+                if self.getValue("input:noisin:Fan:nvan2") > 0:
+                    sb.add_var("input:noisin:Fan:nvan2")
+                if self.getValue("input:noisin:Fan:fand2") > 0:
+                    sb.add_var("input:noisin:Fan:fand2")
+                if self.getValue("input:noisin:Fan:tipmd2") > 0:
+                    sb.add_var("input:noisin:Fan:tipmd2")
+
+                sb.add_var("input:noisin:Fan:rss2")
+                sb.add_var("input:noisin:Fan:efdop2")
+                sb.add_var("input:noisin:Fan:fanef2")
+
+                if self.getValue("input:noisin:Fan:trat") > 0:
+                    sb.add_var("input:noisin:Fan:trat")
+                if igenen not in [1, -2] and self.getValue("input:noisin:Fan:prat") > 0:
+                    sb.add_var("input:noisin:Fan:prat")
+
+            if icore > 0:
+                sb.add_comment("\n  ! Core Noise Data")
+                sb.add_var("input:noisin:Core:csupp")
+                sb.add_var("input:noisin:Core:gamma")
+                sb.add_var("input:noisin:Core:imod")
+                if self.getValue("input:noisin:Core:dtemd") > 0:
+                    sb.add_var("input:noisin:Core:dtemd")
+                sb.add_var("input:noisin:Core:ecdop")
+
+            if iturb > 0:
+                sb.add_comment("\n  ! Core Noise Data")
+                sb.add_var("input:noisin:Turbine:tsupp")
+                if self.getValue("input:noisin:Turbine:tbndia") > 0:
+                    sb.add_var("input:noisin:Turbine:tbndia")
+                sb.add_var("input:noisin:Turbine:gear")
+                sb.add_var("input:noisin:Turbine:cs")
+                if self.getValue("input:noisin:Turbine:nblr") > 0:
+                    sb.add_var("input:noisin:Turbine:nblr")
+                sb.add_var("input:noisin:Turbine:ityptb")
+                sb.add_var("input:noisin:Turbine:etdop")
+
+            if iprop > 0:
+                sb.add_comment("\n  ! Propeller Noise Data")
+                sb.add_container("input:noisin:Propeller")
+
+            if ishld > 0:
+                sb.add_comment("\n  ! Shielding Effects Data")
+                sb.add_container("input:noisin:Shielding")
+
+            if iflap > 0:
+                sb.add_comment("\n  ! Flap Noise Data")
+                sb.add_container("input:noisin:Flap_Noise")
+
+            if iairf > 0:
+                sb.add_comment("\n  ! Flap Noise Data")
+                sb.add_container("input:noisin:Airframe")
+
+            if ignd > 0:
+                sb.add_comment("\n  ! Ground Reflection Effects Data")
+                sb.add_var("input:noisin:Ground_Effects.itone")
+
+                nht = len(self.getValue("input:noisin:Ground_Effects.dk"))
+                if nht > 0:
+                    sb.add_newvar("nht", nht)
+                    sb.add_var("input:noisin:Ground_Effects.dk")
+
+        #-------------------
+        # Namelist &SYNTIN
+        #-------------------
+
+        # Namelist &SYNTIN is only required if IOPT=3.
+        if iopt == 3:
+
+            sb.add_group('SYNTIN')
+
+            if self.getValue("input:syntin:Variables:desrng") > 0:
+                sb.add_var("input:syntin:Variables:desrng")
+            if self.getValue("input:syntin:Variables:vappr") > 0:
+                sb.add_var("input:syntin:Variables:vappr")
+            if self.getValue("input:syntin:Variables:flto") > 0:
+                sb.add_var("input:syntin:Variables:flto")
+            if self.getValue("input:syntin:Variables:flldg")> 0:
+                sb.add_var("input:syntin:Variables:flldg")
+
+            sb.add_var("input:syntin:Variables:exfcap")
+            if igenen == 1:
+                if self.getValue("input:syntin:Variables:cdtmax") > 0:
+                    sb.add_var("input:syntin:Variables:cdtmax")
+                if self.getValue("input:syntin:Variables:cdpmax") > 0:
+                    sb.add_var("input:syntin:Variables:cdpmax")
+                if self.getValue("input:syntin:Variables:vjmax") > 0:
+                    sb.add_var("input:syntin:Variables:vjmax")
+                if self.getValue("input:syntin:Variables:stmin") > 0:
+                    sb.add_var("input:syntin:Variables:stmin")
+                if self.getValue("input:syntin:Variables:armax") > 0:
+                    sb.add_var("input:syntin:Variables:armax")
+
+            sb.add_var("input:syntin:Variables:gnox")
+            sb.add_var("input:syntin:Variables:roclim")
+            sb.add_var("input:syntin:Variables:dhdtlm")
+            sb.add_var("input:syntin:Variables:tmglim")
+            sb.add_var("input:syntin:Variables:ig")
+            sb.add_var("input:syntin:Variables:ibfgs")
+            sb.add_var("input:syntin:Variables:itfine")
+
+            sb.add_comment("\n  ! Optimization Control")
+            sb.add_var("input:syntin.Optimization_Control.ndd")
+            sb.add_var("input:syntin.Optimization_Control.rk")
+            sb.add_var("input:syntin.Optimization_Control.fdd")
+
+            if self.getValue("input:syntin.Optimization_Control.nlin") > 0:
+                sb.add_var("input:syntin.Optimization_Control.nlin")
+
+            sb.add_var("input:syntin.Optimization_Control.nstep")
+            sb.add_var("input:syntin.Optimization_Control.ef")
+            sb.add_var("input:syntin.Optimization_Control.eps")
+            sb.add_var("input:syntin.Optimization_Control.amult")
+            sb.add_var("input:syntin.Optimization_Control.dep")
+            sb.add_var("input:syntin.Optimization_Control.accux")
+            sb.add_var("input:syntin.Optimization_Control.glm")
+
+            if len(self.getValue("input:syntin.Optimization_Control.gfact")) > 0:
+                sb.add_var("input:syntin.Optimization_Control.gfact")
+
+            sb.add_var("input:syntin.Optimization_Control.autscl")
+            sb.add_var("input:syntin.Optimization_Control.icent")
+            sb.add_var("input:syntin.Optimization_Control.rhomin")
+            sb.add_var("input:syntin.Optimization_Control.rhomax")
+            sb.add_var("input:syntin.Optimization_Control.rhodel")
+            sb.add_var("input:syntin.Optimization_Control.itmax")
+            sb.add_var("input:syntin.Optimization_Control.jprnt")
+            sb.add_var("input:syntin.Optimization_Control.rdfun")
+            sb.add_var("input:syntin.Optimization_Control.adfun")
+
+        #-------------------
+        # Namelist &RERUN
+        #-------------------
+
+        # One or more &RERUN namelists may have been created by the user.
+
+        #nrerun = self.nrerun
+        if self.nrern0 > 0:
+
+            for i in range(0, self.nrern0):
+
+                sb.add_group('RERUN')
+
+                re_desrng = self.getValue("input:rerun%s:desrng" % (i))
+                re_mywts  = self.getValue("input:rerun%s:mywts" % (i))
+                re_rampwt = self.getValue("input:rerun%s:rampwt" % (i))
+                re_dowe   = self.getValue("input:rerun%s:dowe" % (i))
+                re_paylod = self.getValue("input:rerun%s:paylod" % (i))
+                re_fuemax = self.getValue("input:rerun%s:fuemax" % (i))
+                re_itakof = self.getValue("input:rerun%s:itakof" % (i))
+                re_iland  = self.getValue("input:rerun%s:iland" % (i))
+                re_nopro  = self.getValue("input:rerun%s:nopro" % (i))
+                re_noise  = self.getValue("input:rerun%s:noise" % (i))
+                re_icost  = self.getValue("input:rerun%s:icost" % (i))
+                re_wsr    = self.getValue("input:rerun%s:wsr" % (i))
+                re_twr    = self.getValue("input:rerun%s:twr" % (i))
+
+                if re_desrng > 0.:
+                    sb.add_var("input:rerun%s:desrng" % (i))
+                if re_mywts >= 0:
+                    sb.add_var("input:rerun%s:mywts" % (i))
+                if re_rampwt >= 0.:
+                    sb.add_var("input:rerun%s:rampwt" % (i))
+                if re_dowe > 0.:
+                    sb.add_var("input:rerun%s:dowe" % (i))
+                if re_paylod > 0.:
+                    sb.add_var("input:rerun%s:paylod" % (i))
+                if re_fuemax > 0.:
+                    sb.add_var("input:rerun%s:fuemax" % (i))
+                if re_itakof == 0:
+                    sb.add_var("input:rerun%s:itakof" % (i))
+                if re_iland == 0:
+                    sb.add_var("input:rerun%s:iland" % (i))
+                if re_nopro == 0:
+                    sb.add_var("input:rerun%s:nopro" % (i))
+                if re_noise == 0:
+                    sb.add_var("input:rerun%s:noise" % (i))
+                if re_icost == 0:
+                    sb.add_var("input:rerun%s:icost" % (i))
+                if re_wsr == 0.:
+                    sb.add_var("input:rerun%s:wsr" % (i))
+                if re_twr == 0.:
+                    sb.add_var("input:rerun%s:twr" % (i))
+
+                re_indr   = self.getValue("input:rerun%s:missin:Basic:indr" % (i))
+                re_fact   = self.getValue("input:rerun%s:missin:Basic:fact" % (i))
+                re_fleak  = self.getValue("input:rerun%s:missin:Basic:fleak" % (i))
+                re_fcdo   = self.getValue("input:rerun%s:missin:Basic:fcdo" % (i))
+                re_fcdi   = self.getValue("input:rerun%s:missin:Basic:fcdi" % (i))
+                re_fcdsub = self.getValue("input:rerun%s:missin:Basic:fcdsub" % (i))
+                re_fcdsup = self.getValue("input:rerun%s:missin:Basic:fcdsup" % (i))
+                re_iskal  = self.getValue("input:rerun%s:missin:Basic:iskal" % (i))
+                re_owfact = self.getValue("input:rerun%s:missin:Basic:owfact" % (i))
+                re_iflag  = self.getValue("input:rerun%s:missin:Basic:iflag" % (i))
+                re_msumpt = self.getValue("input:rerun%s:missin:Basic:msumpt" % (i))
+                re_dtc    = self.getValue("input:rerun%s:missin:Basic:dtc" % (i))
+                re_irw    = self.getValue("input:rerun%s:missin:Basic:irw" % (i))
+                re_rtol   = self.getValue("input:rerun%s:missin:Basic:rtol" % (i))
+                re_nhold  = self.getValue("input:rerun%s:missin:Basic:nhold" % (i))
+                re_iata   = self.getValue("input:rerun%s:missin:Basic:iata" % (i))
+                re_tlwind = self.getValue("input:rerun%s:missin:Basic:tlwind" % (i))
+
+                sb.add_group('MISSIN')
+
+                if re_indr != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:indr" % (i))
+                if re_fact != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fact" % (i))
+                if re_fleak != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fleak" % (i))
+                if re_fcdo != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fcdo" % (i))
+                if re_fcdi != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fcdi" % (i))
+                if re_fcdsub != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fcdsub" % (i))
+                if re_fcdsup != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fcdsup" % (i))
+                if re_iskal != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:iskal" % (i))
+                if re_owfact != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:owfact" % (i))
+                if re_iflag != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:iflag" % (i))
+                if re_msumpt != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:msumpt" % (i))
+                if re_dtc != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:dtc" % (i))
+                if re_irw != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:irw" % (i))
+                if re_rtol != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:rtol" % (i))
+                if re_nhold != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:nhold" % (i))
+                if re_iata != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:iata" % (i))
+                if re_tlwind != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:tlwind" % (i))
+
+                re_dwt    = self.getValue("input:rerun%s:missin:Basic:dwt" % (i))
+                re_offdr  = self.getValue("input:rerun%s:missin:Basic:offdr" % (i))
+                re_idoq   = self.getValue("input:rerun%s:missin:Basic:idoq" % (i))
+                re_nsout  = self.getValue("input:rerun%s:missin:Basic:nsout" % (i))
+                re_nsadj  = self.getValue("input:rerun%s:missin:Basic:nsadj" % (i))
+                re_mirror = self.getValue("input:rerun%s:missin:Basic:mirror" % (i))
+                re_stma   = self.getValue("input:rerun%s:missin:Store_Drag:stma" % (i))
+                re_cdst   = self.getValue("input:rerun%s:missin:Store_Drag:cdst" % (i))
+                re_istcl  = self.getValue("input:rerun%s:missin:Store_Drag:istcl" % (i))
+                re_istcr  = self.getValue("input:rerun%s:missin:Store_Drag:istcr" % (i))
+                re_istde  = self.getValue("input:rerun%s:missin:Store_Drag:istde" % (i))
+                re_mywts  = self.getValue("input:rerun%s:missin:User_Weights:mywts" % (i))
+                re_rampwt = self.getValue("input:rerun%s:missin:User_Weights:rampwt" % (i))
+                re_dowe   = self.getValue("input:rerun%s:missin:User_Weights:dowe" % (i))
+                re_paylod = self.getValue("input:rerun%s:missin:User_Weights:paylod" % (i))
+                re_fuemax = self.getValue("input:rerun%s:missin:User_Weights:fuemax" % (i))
+                re_takotm = self.getValue("input:rerun%s:missin:Ground_Operations:takotm" % (i))
+                re_taxotm = self.getValue("input:rerun%s:missin:Ground_Operations:taxotm" % (i))
+                re_apprtm = self.getValue("input:rerun%s:missin:Ground_Operations:apprtm" % (i))
+                re_appfff = self.getValue("input:rerun%s:missin:Ground_Operations:appfff" % (i))
+                re_taxitm = self.getValue("input:rerun%s:missin:Ground_Operations:taxitm" % (i))
+                re_ittff  = self.getValue("input:rerun%s:missin:Ground_Operations:ittff" % (i))
+                re_takoff = self.getValue("input:rerun%s:missin:Ground_Operations:takoff" % (i))
+                re_txfufl = self.getValue("input:rerun%s:missin:Ground_Operations:txfufl" % (i))
+                re_ftkofl = self.getValue("input:rerun%s:missin:Ground_Operations:ftkofl" % (i))
+                re_ftxofl = self.getValue("input:rerun%s:missin:Ground_Operations:ftxofl" % (i))
+                re_ftxifl = self.getValue("input:rerun%s:missin:Ground_Operations:ftxifl" % (i))
+                re_faprfl = self.getValue("input:rerun%s:missin:Ground_Operations:faprfl" % (i))
+                re_xnz    = self.getValue("input:rerun%s:missin:Turn_Segments:xnz" % (i))
+                re_xcl    = self.getValue("input:rerun%s:missin:Turn_Segments:xcl" % (i))
+                re_xmach  = self.getValue("input:rerun%s:missin:Turn_Segments:xmach" % (i))
+                re_nclimb = self.getValue("input:rerun%s:missin:Climb:nclimb" % (i))
+                re_clmmin = self.getValue("input:rerun%s:missin:Climb:clmmin" % (i))
+                re_clmmax = self.getValue("input:rerun%s:missin:Climb:clmmax" % (i))
+                re_clamin = self.getValue("input:rerun%s:missin:Climb:clamin" % (i))
+                re_clamax = self.getValue("input:rerun%s:missin:Climb:clamax" % (i))
+                re_nincl  = self.getValue("input:rerun%s:missin:Climb:nincl" % (i))
+                re_fwf    = self.getValue("input:rerun%s:missin:Climb:fwf" % (i))
+                re_ncrcl  = self.getValue("input:rerun%s:missin:Climb:ncrcl" % (i))
+                re_cldcd  = self.getValue("input:rerun%s:missin:Climb:cldcd" % (i))
+                re_ippcl  = self.getValue("input:rerun%s:missin:Climb:ippcl" % (i))
+                re_maxcl  = self.getValue("input:rerun%s:missin:Climb:maxcl" % (i))
+                re_no     = self.getValue("input:rerun%s:missin:Climb:no" % (i))
+                re_keasvc = self.getValue("input:rerun%s:missin:Climb:keasvc" % (i))
+                re_actab  = self.getValue("input:rerun%s:missin:Climb:actab" % (i))
+                re_vctab  = self.getValue("input:rerun%s:missin:Climb:vctab" % (i))
+                re_ifaacl = self.getValue("input:rerun%s:missin:Climb:ifaacl" % (i))
+                re_ifaade = self.getValue("input:rerun%s:missin:Climb:ifaade" % (i))
+                re_nodive = self.getValue("input:rerun%s:missin:Climb:nodive" % (i))
+                re_divlim = self.getValue("input:rerun%s:missin:Climb:divlim" % (i))
+                re_qlim   = self.getValue("input:rerun%s:missin:Climb:qlim" % (i))
+                re_spdlim = self.getValue("input:rerun%s:missin:Climb:spdlim" % (i))
+                re_qlalt  = self.getValue("input:rerun%s:missin:Climb:qlalt" % (i))
+                re_vqlm   = self.getValue("input:rerun%s:missin:Climb:vqlm" % (i))
+                re_ioc    = self.getValue("input:rerun%s:missin:Cruise:ioc" % (i))
+                re_crmach = self.getValue("input:rerun%s:missin:Cruise:crmach" % (i))
+                re_cralt  = self.getValue("input:rerun%s:missin:Cruise:cralt" % (i))
+                re_crdcd  = self.getValue("input:rerun%s:missin:Cruise:crdcd" % (i))
+                re_flrcr  = self.getValue("input:rerun%s:missin:Cruise:flrcr" % (i))
+                re_crmmin = self.getValue("input:rerun%s:missin:Cruise:crmmin" % (i))
+                re_crclmx = self.getValue("input:rerun%s:missin:Cruise:crclmx" % (i))
+                re_hpmin  = self.getValue("input:rerun%s:missin:Cruise:hpmin" % (i))
+                re_ffuel  = self.getValue("input:rerun%s:missin:Cruise:ffuel" % (i))
+                re_fnox   = self.getValue("input:rerun%s:missin:Cruise:fnox" % (i))
+                re_ifeath = self.getValue("input:rerun%s:missin:Cruise:ifeath" % (i))
+                re_feathf = self.getValue("input:rerun%s:missin:Cruise:feathf" % (i))
+                re_cdfeth = self.getValue("input:rerun%s:missin:Cruise:cdfeth" % (i))
+                re_dcwt   = self.getValue("input:rerun%s:missin:Cruise:dcwt" % (i))
+                re_rcin   = self.getValue("input:rerun%s:missin:Cruise:rcin" % (i))
+                re_wtbm   = self.getValue("input:rerun%s:missin:Cruise:wtbm" % (i))
+                re_altbm  = self.getValue("input:rerun%s:missin:Cruise:altbm" % (i))
+                re_ivs    = self.getValue("input:rerun%s:missin:Descent:ivs" % (i))
+                re_decl   = self.getValue("input:rerun%s:missin:Descent:decl" % (i))
+                re_demmin = self.getValue("input:rerun%s:missin:Descent:demmin" % (i))
+                re_demmax = self.getValue("input:rerun%s:missin:Descent:demmax" % (i))
+                re_deamin = self.getValue("input:rerun%s:missin:Descent:deamin" % (i))
+                re_deamax = self.getValue("input:rerun%s:missin:Descent:deamax" % (i))
+                re_ninde  = self.getValue("input:rerun%s:missin:Descent:ninde" % (i))
+                re_dedcd  = self.getValue("input:rerun%s:missin:Descent:dedcd" % (i))
+                re_rdlim  = self.getValue("input:rerun%s:missin:Descent:rdlim" % (i))
+                re_ns     = self.getValue("input:rerun%s:missin:Descent:ns" % (i))
+                re_irs    = self.getValue("input:rerun%s:missin:Reserve:irs" % (i))
+                re_resrfu = self.getValue("input:rerun%s:missin:Reserve:resrfu" % (i))
+                re_restrp = self.getValue("input:rerun%s:missin:Reserve:restrp" % (i))
+                re_timmap = self.getValue("input:rerun%s:missin:Reserve:timmap" % (i))
+                re_altran = self.getValue("input:rerun%s:missin:Reserve:altran" % (i))
+                re_nclres = self.getValue("input:rerun%s:missin:Reserve:nclres" % (i))
+                re_ncrres = self.getValue("input:rerun%s:missin:Reserve:ncrres" % (i))
+                re_sremch = self.getValue("input:rerun%s:missin:Reserve:sremch" % (i))
+                re_eremch = self.getValue("input:rerun%s:missin:Reserve:eremch" % (i))
+                re_srealt = self.getValue("input:rerun%s:missin:Reserve:srealt" % (i))
+                re_erealt = self.getValue("input:rerun%s:missin:Reserve:erealt" % (i))
+                re_holdtm = self.getValue("input:rerun%s:missin:Reserve:holdtm" % (i))
+                re_ncrhol = self.getValue("input:rerun%s:missin:Reserve:ncrhol" % (i))
+                re_ihopos = self.getValue("input:rerun%s:missin:Reserve:ihopos" % (i))
+                re_icron  = self.getValue("input:rerun%s:missin:Reserve:icron" % (i))
+                re_thold  = self.getValue("input:rerun%s:missin:Reserve:thold" % (i))
+                re_ncrth  = self.getValue("input:rerun%s:missin:Reserve:ncrth" % (i))
+
+                if re_dwt != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:dwt" % (i))
+                if len(re_offdr) > 0:
+                    sb.add_var("input:rerun%s:missin:Basic:offdr" % (i))
+                if re_idoq != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:idoq" % (i))
+                if re_nsout != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:nsout" % (i))
+                if re_nsadj != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:nsadj" % (i))
+                if re_mirror != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:mirror" % (i))
+                if len(re_stma) > 0:
+                    sb.add_var("input:rerun%s:missin:Store_Drag.stma" % (i))
+                if len(re_cdst) > 0:
+                    sb.add_var("input:rerun%s:missin:Store_Drag.cdst" % (i))
+                if len(re_istcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Store_Drag.istcl" % (i))
+                if len(re_istcr) > 0:
+                    sb.add_var("input:rerun%s:missin:Store_Drag.istcr" % (i))
+                if re_istde != -999:
+                    sb.add_var("input:rerun%s:missin:Store_Drag.istde" % (i))
+                if re_mywts != -999:
+                    sb.add_var("input:rerun%s:missin:User_Weights.mywts" % (i))
+                if re_rampwt != -999.:
+                    sb.add_var("input:rerun%s:missin:User_Weights.rampwt" % (i))
+                if re_dowe != -999.:
+                    sb.add_var("input:rerun%s:missin:User_Weights.dowe" % (i))
+                if re_paylod != -999.:
+                    sb.add_var("input:rerun%s:missin:User_Weights.paylod" % (i))
+                if re_fuemax != -999.:
+                    sb.add_var("input:rerun%s:missin:User_Weights.fuemax" % (i))
+                if re_takotm != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.takotm" % (i))
+                if re_taxotm != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.taxotm" % (i))
+                if re_apprtm != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.apprtm" % (i))
+                if re_appfff != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.appfff" % (i))
+                if re_taxitm != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.taxitm" % (i))
+                if re_ittff != -999:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.ittff" % (i))
+                if re_takoff != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.takoff" % (i))
+                if re_txfufl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.txfufl" % (i))
+                if re_ftkofl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.ftkofl" % (i))
+                if re_ftxofl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.ftxofl" % (i))
+                if re_ftxifl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.ftxifl" % (i))
+                if re_faprfl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations.faprfl" % (i))
+                if len(re_xnz) > 0:
+                    sb.add_var("input:rerun%s:missin:Turn_Segments.xnz" % (i))
+                if len(re_xcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Turn_Segments.xcl" % (i))
+                if len(re_xmach) > 0:
+                    sb.add_var("input:rerun%s:missin:Turn_Segments.xmach" % (i))
+                if re_nclimb > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:nclimb" % (i))
+                if len(re_clmmin) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:clmmin" % (i))
+                if len(re_clmmax) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:clmmax" % (i))
+                if len(re_clamin) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:clamin" % (i))
+                if len(re_clamax) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:clamax" % (i))
+                if len(re_nincl) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:nincl" % (i))
+                if len(re_fwf) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:fwf" % (i))
+                if len(re_ncrcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:ncrcl" % (i))
+                if len(re_cldcd) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:cldcd" % (i))
+                if len(re_ippcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:ippcl" % (i))
+                if len(re_maxcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:maxcl" % (i))
+                if len(re_no) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:no" % (i))
+                if re_keasvc != -999:
+                    sb.add_var("input:rerun%s:missin:Climb:keasvc" % (i))
+                if len(re_actab) > 0:
+                    sb.add_var2d("input:rerun%s:missin:Climb:actab" % (i))
+                if len(re_vctab) > 0:
+                    sb.add_var2d("input:rerun%s:missin:Climb:vctab" % (i))
+                if re_ifaacl != -999:
+                    sb.add_var("input:rerun%s:missin:Climb:ifaacl" % (i))
+                if re_ifaade != -999:
+                    sb.add_var("input:rerun%s:missin:Climb:ifaade" % (i))
+                if re_nodive != -999:
+                    sb.add_var("input:rerun%s:missin:Climb:nodive" % (i))
+                if re_divlim != -999.:
+                    sb.add_var("input:rerun%s:missin:Climb:divlim" % (i))
+                if re_qlim != -999.:
+                    sb.add_var("input:rerun%s:missin:Climb:qlim" % (i))
+                if re_spdlim != -999.:
+                    sb.add_var("input:rerun%s:missin:Climb:spdlim" % (i))
+                if len(re_qlalt) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:qlalt" % (i))
+                if len(re_vqlm) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:vqlm" % (i))
+                if len(re_ioc) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:ioc" % (i))
+                if len(re_crmach) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:crmach" % (i))
+                if len(re_cralt) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:cralt" % (i))
+                if len(re_crdcd) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:crdcd" % (i))
+                if len(re_flrcr) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:flrcr" % (i))
+                if len(re_crmmin) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:crmmin" % (i))
+                if len(re_crclmx) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:crclmx" % (i))
+                if len(re_hpmin) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:hpmin" % (i))
+                if len(re_ffuel) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:ffuel" % (i))
+                if len(re_fnox) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:fnox" % (i))
+                if len(re_ifeath) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:ifeath" % (i))
+                if len(re_feathf) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:feathf" % (i))
+                if len(re_cdfeth) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:cdfeth" % (i))
+                if re_dcwt != -999.:
+                    sb.add_var("input:rerun%s:missin:Cruise:dcwt" % (i))
+                if re_rcin != -999.:
+                    sb.add_var("input:rerun%s:missin:Cruise:rcin" % (i))
+                if len(re_wtbm) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:wtbm" % (i))
+                if len(re_altbm) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:altbm" % (i))
+                if re_ivs != -999:
+                    sb.add_var("input:rerun%s:missin:Descent:ivs" % (i))
+                if re_decl != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:decl" % (i))
+                if re_demmin != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:demmin" % (i))
+                if re_demmax != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:demmax" % (i))
+                if re_deamin != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:deamin" % (i))
+                if re_deamax != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:deamax" % (i))
+                if re_ninde != -999:
+                    sb.add_var("input:rerun%s:missin:Descent:ninde" % (i))
+                if re_dedcd != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:dedcd" % (i))
+                if re_rdlim != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:rdlim" % (i))
+
+                ns = len(self.getValue("input:rerun%s:missin:Descent:adtab" % (i)))
+                if  ns > 0:
+                    sb.add_comment("\n  ! Input Descent Schedule\n")
+                    sb.add_newvar('ns', ns)
+                    sb.add_var("input:rerun%s:missin:Descent:keasvd" % (i))
+                    sb.add_var("input:rerun%s:missin:Descent:adtab" % (i))
+                    sb.add_var("input:rerun%s:missin:Descent:vdtab" % (i))
+
+                if re_irs != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:irs" % (i))
+                if re_resrfu != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:resrfu" % (i))
+                if re_restrp != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:restrp" % (i))
+                if re_timmap != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:timmap" % (i))
+                if re_altran != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:altran" % (i))
+                if re_nclres != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:nclres" % (i))
+                if re_ncrres != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:ncrres" % (i))
+                if re_sremch != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:sremch" % (i))
+                if re_eremch != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:eremch" % (i))
+                if re_srealt != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:srealt" % (i))
+                if re_erealt != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:erealt" % (i))
+                if re_holdtm != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:holdtm" % (i))
+                if re_ncrhol != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:ncrhol" % (i))
+                if re_ihopos != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:ihopos" % (i))
+                if re_icron != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:icron" % (i))
+                if re_thold != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:thold" % (i))
+                if re_ncrth != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:ncrth" % (i))
+                sb.add_newvar("NPCON", self.npcons0[i])
+
+                # Insert the new mission definition.
+                #infile = self.getValue("input:rerun%s:mission" % (i)).open()
+                #mission = infile.read()
+                #infile.close()
+                #sb.add_comment(mission)
+
+                # Get the mission definition
+
+                mission = self.getValue("input:rerun%s:mission_definition" % i)
+
+                for seg in mission:
+                    sb.add_group(seg)
+
+                # Insert the &PCONIN namelists
+                for j in range(0, self.npcons0[i]):
+
+                    re_conalt = self.getValue("input:rerun%s:pconin%s:conalt" % (i, j))
+                    re_conmch = self.getValue("input:rerun%s:pconin%s:conmch" % (i, j))
+                    re_connz  = self.getValue("input:rerun%s:pconin%s:connz" % (i, j))
+                    re_conpc  = self.getValue("input:rerun%s:pconin%s:conpc" % (i, j))
+                    re_conlim = self.getValue("input:rerun%s:pconin%s:conlim" % (i, j))
+                    re_conaux = self.getValue("input:rerun%s:pconin%s:conaux" % (i, j))
+                    re_neo    = self.getValue("input:rerun%s:pconin%s:neo" % (i, j))
+                    re_icstdg = self.getValue("input:rerun%s:pconin%s:icstdg" % (i, j))
+                    re_conwt  = self.getValue("input:rerun%s:pconin%s:conwt" % (i, j))
+                    re_iconsg = self.getValue("input:rerun%s:pconin%s:iconsg" % (i, j))
+                    re_confm  = self.getValue("input:rerun%s:pconin%s:confm" % (i, j))
+                    re_conwta = self.getValue("input:rerun%s:pconin%s:conwta" % (i, j))
+                    re_icontp = self.getValue("input:rerun%s:pconin%s:icontp" % (i, j))
+
+                    sb.add_group('PCONIN')
+
+                    if  re_conalt >= 0.:
+                        sb.add_newvar("CONALT", re_conalt)
+                    if  re_conmch >= 0.:
+                        sb.add_newvar("CONMCH", re_conmch)
+                    if  re_connz >= 0.:
+                        sb.add_newvar("CONNZ", re_connz)
+                    if  re_conpc > -10.:
+                        sb.add_newvar("CONPC", re_conpc)
+                    if  re_conlim != -999.:
+                        sb.add_newvar("CONLIM", re_conlim)
+                    if  re_conaux > -1.:
+                        sb.add_newvar("CONAUX", re_conaux)
+                    if  re_neo >= 0:
+                        sb.append("NEO", re_neo)
+                    if  re_icstdg >= 0:
+                        sb.add_newvar("ICSTDG", re_icstdg)
+                    if  re_conwt >= 0.:
+                        sb.add_newvar("CONWT", re_conwt)
+                    if  re_iconsg >= 0:
+                        sb.add_newvar("ICONSG", re_iconsg)
+                    if  re_confm >= 0.:
+                        sb.add_newvar("CONFM", re_confm)
+                    if  re_conwta != -999.:
+                        sb.add_newvar("CONWTA", re_conwta)
+                    if  re_icontp >= 0:
+                        sb.add_newvar("ICONTP", re_icontp)
+
+        # Generate the input file for FLOPS
+        sb.generate()
 
 
     def loadInputVars(self):
@@ -241,6 +2039,30 @@ class FlopsWrapper(ExternalCode):
         self.FlopsWrapper_input_wtin_Crew_Payload()
         self.FlopsWrapper_input_wtin_Center_of_Gravity()
         self.FlopsWrapper_input_wtin_Basic()
+
+
+
+    def FlopsWrapper_input_option_Plot_Files(self):
+        """Container for input:option:Plot_Files"""
+        strChain = 'input:option:Plot_Files:'
+
+    # OpenMDAO Public Variables
+        self.add_param(strChain+'ixfl',val=0,optionsVal=(0,1), desc='Generate mission summary plot files', aliases=('No', 'Yes'),typerVar='Enum')
+        self.add_param(strChain+'npfile',val=0,optionsVal=(0,1,2), desc='Output takeoff and climb profiles for use with ANOPP preprocessor (andin)', aliases=('No', 'Yes', 'XFlops'),typerVar='Enum')
+        self.add_param(strChain+'ipolp',val=0,optionsVal=(0,1,2), desc='Drag polar plot data', aliases=('None', 'Drag polars at existing Mach numbers', 'User specified Mach numbers'),typerVar='Enum')
+        self.add_param(strChain+'polalt',val=0.0, units='ft', desc='Altitude for drag polar plots',typerVar='Float')
+        self.add_param(strChain+'pmach',val=array([]), desc='Mach numbers for drag polar plot data',typerVar='Array')
+        self.add_param(strChain+'ipltth',val=0,optionsVal=(0,1,2), desc='Generate engine plot data', aliases=('None', 'Initial engine', 'Final scaled engine'),typerVar='Enum')
+        self.add_param(strChain+'iplths',val=0,optionsVal=(0,1), desc='Design history plot data', aliases=('No', 'Yes'),typerVar='Enum')
+        self.add_param(strChain+'cnfile',val='', desc='Contour or thumbprint plot data filename',typeVar='Str')
+        self.add_param(strChain+'msfile',val='', desc='Mission summary data filename',typeVar='Str')
+        self.add_param(strChain+'crfile',val='', desc='Cruise schedule summary data filename',typeVar='Str')
+        self.add_param(strChain+'tofile',val='', desc='Takeoff and landing aerodynamic and thrust data filename',typeVar='Str')
+        self.add_param(strChain+'nofile',val='', desc='Takeoff and climb profile data filename',typeVar='Str')
+        self.add_param(strChain+'apfile',val='', desc='Drag polar plot data filename',typeVar='Str')
+        self.add_param(strChain+'thfile',val='', desc='Engine plot data filename',typeVar='Str')
+        self.add_param(strChain+'hsfile',val='', desc='Design history plot filename',typeVar='Str')
+        self.add_param(strChain+'psfile',val='', desc='Excess power and load factor plot data filename',typeVar='Str')
 
 
 
@@ -443,18 +2265,18 @@ class FlopsWrapper(ExternalCode):
         strChain = 'input:wtin:Detailed_Wing:'
 
     # OpenMDAO Public Variables
-        self.add_param(strChain+'etaw',val=numpy_float64, desc='Wing station location - fraction of semispan or distance from fuselage centerline.  Typically, goes from 0. to 1.  Input fixed distances (>1.1) are not scaled with changes in span.',typerVar='Array')
-        self.add_param(strChain+'chd',val=numpy_float64, desc='Chord length - fraction of semispan or actual chord.   Actual chord lengths (>5.) are not scaled.',typerVar='Array')
-        self.add_param(strChain+'toc',val=numpy_float64, desc='Thickness - chord ratio',typerVar='Array')
-        self.add_param(strChain+'swl',val=numpy_float64, units='deg', desc='Sweep of load path.  Typically parallel to rear spar tending toward max t/c of airfoil.  The Ith value is used between wing stations I and I+1.',typerVar='Array')
+        self.add_param(strChain+'etaw',val=array([]), desc='Wing station location - fraction of semispan or distance from fuselage centerline.  Typically, goes from 0. to 1.  Input fixed distances (>1.1) are not scaled with changes in span.',typerVar='Array')
+        self.add_param(strChain+'chd',val=array([]), desc='Chord length - fraction of semispan or actual chord.   Actual chord lengths (>5.) are not scaled.',typerVar='Array')
+        self.add_param(strChain+'toc',val=array([]), desc='Thickness - chord ratio',typerVar='Array')
+        self.add_param(strChain+'swl',val=array([]), units='deg', desc='Sweep of load path.  Typically parallel to rear spar tending toward max t/c of airfoil.  The Ith value is used between wing stations I and I+1.',typerVar='Array')
         self.add_param(strChain+'etae',val=array([0.3, 0.6, 0.0, 0.0]), dtype=numpy_float64, desc='Engine locations - fraction of semispan or distance from fuselage centerline.  Actual distances are not scaled with changes in span.  NEW/2 values are input',typerVar='Array')
         self.add_param(strChain+'pctl',val=1.0, desc='Fraction of load carried by defined wing',typerVar='Float')
         self.add_param(strChain+'arref',val=0.0, desc='Reference aspect ratio (Default = AR in &CONFIN)',typerVar='Float')
         self.add_param(strChain+'tcref',val=0.0, desc='Reference thickness-chord ratio (Default = TCA in &CONFIN)',typerVar='Float')
         self.add_param(strChain+'nstd',val=50, desc='Number of integration stations',typerVar='Int')
         self.add_param(strChain+'pdist',val=2.0, desc='Pressure distribution indicator\n= 0., Input distribution - see below\n= 1., Triangular distribution\n= 2., Elliptical distribution\n= 3., Rectangular distribution PDIST is a continuous variable, i.e., a value of 1.5 would be half way between triangular and elliptical.\nCAUTION - the constants in the wing weight calculations were correlated with existing aircraft assuming an elliptical distribution.  Use the default value unless you have a good reason not to.',typerVar='Float')
-        self.add_param(strChain+'etap',val=numpy_float64, desc='Fraction of wing semispan',typerVar='Array')
-        self.add_param(strChain+'pval',val=numpy_float64, desc='Relative spanwise pressure at ETAP(J)',typerVar='Array')
+        self.add_param(strChain+'etap',val=array([]), desc='Fraction of wing semispan',typerVar='Array')
+        self.add_param(strChain+'pval',val=array([]), desc='Relative spanwise pressure at ETAP(J)',typerVar='Array')
 
 
     def FlopsWrapper_input_wtin_Crew_Payload(self):
@@ -533,8 +2355,8 @@ class FlopsWrapper(ExternalCode):
     # OpenMDAO Public Variables
         self.add_param(strChain+'inthrv',val=-1, desc='= -1, Use takeoff thrust\n=  0, Input thrust values will be used\n=  1, Input values will be scaled\n>  1, Scaled engine deck for the (INTHRV-1)th power setting will be used',typerVar='Int')
         self.add_param(strChain+'rvfact',val=0.0, desc='Fraction of thrust reversed - net  (Real values should be negative)',typerVar='Float')
-        self.add_param(strChain+'velrv',val=numpy_float64, units='ft/s', desc='Velocities for reverse thrust',typerVar='Array')
-        self.add_param(strChain+'thrrv',val=numpy_float64, units='lb', desc='Thrust values',typerVar='Array')
+        self.add_param(strChain+'velrv',val=array([]), units='ft/s', desc='Velocities for reverse thrust',typerVar='Array')
+        self.add_param(strChain+'thrrv',val=array([]), units='lb', desc='Thrust values',typerVar='Array')
         self.add_param(strChain+'tirvrs',val=5.0, units='s', desc='Time after touchdown to reverse thrust',typerVar='Float')
         self.add_param(strChain+'revcut',val=-1000.0, units='nmi', desc='Cutoff velocity for thrust reverser',typerVar='Float')
         self.add_param(strChain+'clrev',val=0.0, desc='Change in lift coefficient due to thrust reverser',typerVar='Float')
@@ -555,8 +2377,8 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'clto',val=array([-100.0]), dtype=numpy_float64, desc='Lift coefficients for takeoff polar.  These are not generated internally',typerVar='Array')
         self.add_param(strChain+'cdto',val=array([-100.0]), dtype=numpy_float64, desc='Drag coefficients for takeoff polar.  These are not generated internally',typerVar='Array')
         self.add_param(strChain+'inthto',val=0, desc='= 0, Input thrust values will be used\n= 1, The input values will be scaled\n> 1, Scaled engine data deck for the (INTHTO-1)th power setting will be used',typerVar='Int')
-        self.add_param(strChain+'velto',val=numpy_float64, units='ft/s', desc='Velocities for takeoff thrust',typerVar='Array')
-        self.add_param(strChain+'thrto',val=numpy_float64, units='lb', desc='Thrust values',typerVar='Array')
+        self.add_param(strChain+'velto',val=array([]), units='ft/s', desc='Velocities for takeoff thrust',typerVar='Array')
+        self.add_param(strChain+'thrto',val=array([]), units='lb', desc='Thrust values',typerVar='Array')
         self.add_param(strChain+'alprot',val=-100.0, desc='Maximum angle of attack during rotation phase of takeoff (Default = ALMXTO)',typerVar='Float')
         self.add_param(strChain+'vrotat',val=1.05, desc='Minimum rotation start speed, knots or fraction of Vstall',typerVar='Float')
         self.add_param(strChain+'vangl',val=2.0, units='deg/s', desc='Rotation rate',typerVar='Float')
@@ -586,12 +2408,12 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'fcdmld',val=-1.0, desc='Fraction of CDMLD due to wing (Default = FCDMTO)',typerVar='Float')
         self.add_param(strChain+'almxld',val=25.0, units='deg', desc='Maximum angle of attack during landing',typerVar='Float')
         self.add_param(strChain+'obsld',val=50.0, units='ft', desc='Landing obstacle height',typerVar='Float')
-        self.add_param(strChain+'alpld',val=numpy_float64, units='deg', desc='Angles of attack for landing polar',typerVar='Array')
-        self.add_param(strChain+'clld',val=numpy_float64, desc='Lift coefficients for landing polar.  These are not generated internally',typerVar='Array')
-        self.add_param(strChain+'cdld',val=numpy_float64, desc='Drag coefficients for landing polar.  These are not generated internally',typerVar='Array')
+        self.add_param(strChain+'alpld',val=array([]), units='deg', desc='Angles of attack for landing polar',typerVar='Array')
+        self.add_param(strChain+'clld',val=array([]), desc='Lift coefficients for landing polar.  These are not generated internally',typerVar='Array')
+        self.add_param(strChain+'cdld',val=array([]), desc='Drag coefficients for landing polar.  These are not generated internally',typerVar='Array')
         self.add_param(strChain+'inthld',val=0, desc='= 0, Input thrust values will be used\n= 1, The input values will be scaled\n> 1, Scaled engine data deck will be used',typerVar='Int')
-        self.add_param(strChain+'velld',val=numpy_float64, units='ft/s', desc='Velocities for landing',typerVar='Array')
-        self.add_param(strChain+'thrld',val=numpy_float64, units='lb', desc='Thrust values',typerVar='Array')
+        self.add_param(strChain+'velld',val=array([]), units='ft/s', desc='Velocities for landing',typerVar='Array')
+        self.add_param(strChain+'thrld',val=array([]), units='lb', desc='Thrust values',typerVar='Array')
         self.add_param(strChain+'thdry',val=-1.0, units='lb', desc='Maximum dry thrust at missed appproach for fighters (Default = takeoff thrust)',typerVar='Float')
         self.add_param(strChain+'aprhgt',val=100.0, units='ft', desc='Height above ground for start of approach',typerVar='Float')
         self.add_param(strChain+'aprang',val=-3.0, units='deg', desc='Approach flight path angle',typerVar='Float')
@@ -685,7 +2507,7 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'dep',val=0.001, desc='One-dimensional search convergence criterion on step size as a fraction of move distance',typerVar='Float')
         self.add_param(strChain+'accux',val=3.0e-4, desc='One-dimensional search convergence criterion on step size as a fraction of initial design variable value',typerVar='Float')
         self.add_param(strChain+'glm',val=0.0, desc='Value of G at which constraint switches to quadratic extended form, a value of .002 is recommended',typerVar='Float')
-        self.add_param(strChain+'gfact',val=numpy_float64, desc='Scaling factor for each behavioral constraint',typerVar='Array')
+        self.add_param(strChain+'gfact',val=array([]), desc='Scaling factor for each behavioral constraint',typerVar='Array')
         self.add_param(strChain+'autscl',val=1.0, desc='Design variable scale factor exponent.  Scale factors for design variables default to VALUE ** AUTSCL',typerVar='Float')
         self.add_param(strChain+'icent',val=0,optionsVal=(0,1), desc='Type of differencing to be used in gradient calculations', aliases=('Forward', 'Central'),typerVar='Enum')
         self.add_param(strChain+'rhomin',val=0.0, desc='Starting value for RHO, a scalar multiplying factor used in the KS function.  (Default is computed internally)',typerVar='Float')
@@ -704,12 +2526,12 @@ class FlopsWrapper(ExternalCode):
         strChain = 'input:rfhin:'
 
     # OpenMDAO Public Variables
-        self.add_param(strChain+'tmach',val=numpy_float64, desc='Mach numbers in increasing order',typerVar='Array')
-        self.add_param(strChain+'cdmin',val=numpy_float64, desc='Minimum drag for each Mach number.\nThe lift dependent drag coefficient for the Ith Mach number is computed from:\n\nCD = CDMIN(I) + CK(I) * [CL - CLB(I)] ** 2\n+ C1SW(I) * (SW/REFAS - REFBS) ** EXPS\n+ C1TH(I) * (THRUST/REFAT - REFBT) ** EXPT\n\nwhere SW and THRUST are the current values for the wing area and for the thrust per engine, and CL is the lift coefficient.',typerVar='Array')
-        self.add_param(strChain+'ck',val=numpy_float64, desc='Drag-due-to-lift factors for each Mach number',typerVar='Array')
-        self.add_param(strChain+'clb',val=numpy_float64, desc='Lift coefficients corresponding to each CDMIN',typerVar='Array')
-        self.add_param(strChain+'c1sw',val=numpy_float64, desc='Coefficient for wing area term for each Mach number.  May be a drag coefficient or D/Q depending on the values of REFAS, REFBS and EXPS.',typerVar='Array')
-        self.add_param(strChain+'c1th',val=numpy_float64, desc='Coefficient for thrust term for each Mach number.  May be a drag coefficient or D/Q depending on the values of REFAT, REFBT and EXPT.',typerVar='Array')
+        self.add_param(strChain+'tmach',val=array([]), desc='Mach numbers in increasing order',typerVar='Array')
+        self.add_param(strChain+'cdmin',val=array([]), desc='Minimum drag for each Mach number.\nThe lift dependent drag coefficient for the Ith Mach number is computed from:\n\nCD = CDMIN(I) + CK(I) * [CL - CLB(I)] ** 2\n+ C1SW(I) * (SW/REFAS - REFBS) ** EXPS\n+ C1TH(I) * (THRUST/REFAT - REFBT) ** EXPT\n\nwhere SW and THRUST are the current values for the wing area and for the thrust per engine, and CL is the lift coefficient.',typerVar='Array')
+        self.add_param(strChain+'ck',val=array([]), desc='Drag-due-to-lift factors for each Mach number',typerVar='Array')
+        self.add_param(strChain+'clb',val=array([]), desc='Lift coefficients corresponding to each CDMIN',typerVar='Array')
+        self.add_param(strChain+'c1sw',val=array([]), desc='Coefficient for wing area term for each Mach number.  May be a drag coefficient or D/Q depending on the values of REFAS, REFBS and EXPS.',typerVar='Array')
+        self.add_param(strChain+'c1th',val=array([]), desc='Coefficient for thrust term for each Mach number.  May be a drag coefficient or D/Q depending on the values of REFAT, REFBT and EXPT.',typerVar='Array')
         self.add_param(strChain+'refas',val=1.0, desc='Wing area reference value',typerVar='Float')
         self.add_param(strChain+'refbs',val=0.0, desc='Wing area base value',typerVar='Float')
         self.add_param(strChain+'exps',val=1.0, desc='Wing area term exponent',typerVar='Float')
@@ -724,9 +2546,9 @@ class FlopsWrapper(ExternalCode):
 
     # OpenMDAO Public Variables
         self.add_param(strChain+'npol',val=0, desc='Number of drag polars to be printed out (Default = size of dflap)',typerVar='Int')
-        self.add_param(strChain+'alpro',val=numpy_float64, units='deg', desc='Angles of attack for each drag polar',typerVar='Array')
-        self.add_param(strChain+'clpro',val=numpy_float64, desc='Lift coefficients for each drag polar',typerVar='Array')
-        self.add_param(strChain+'cdpro',val=numpy_float64, desc='Drag coefficients for each drag polar',typerVar='Array')
+        self.add_param(strChain+'alpro',val=array([]), units='deg', desc='Angles of attack for each drag polar',typerVar='Array')
+        self.add_param(strChain+'clpro',val=array([]), desc='Lift coefficients for each drag polar',typerVar='Array')
+        self.add_param(strChain+'cdpro',val=array([]), desc='Drag coefficients for each drag polar',typerVar='Array')
         self.add_param(strChain+'dflap',val=array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), dtype=numpy_float64, units='deg', desc='Flap deflection corresponding to each drag polar.  Used only for output',typerVar='Array')
         self.add_param(strChain+'ntime',val=0,optionsVal=(1,0), desc='Option for printing detailed takeoff and climb profiles for noise', aliases=('Print', 'No print'),typerVar='Enum')
         self.add_param(strChain+'ipcmax',val=1, desc='Maximum engine power code (This variable could be used, for example, to limit takeoff and climb to dry power settings on an afterburning engine.)',typerVar='Int')
@@ -758,29 +2580,7 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'ifite',val=0,optionsVal=(0,1,2,3), desc='Weight equations', aliases=('Transports', 'Fighter/attack', 'General aviation', 'Blended wing body'),typerVar='Enum')
 
 
-    def FlopsWrapper_input_option_Plot_Files(self):
-        """Container for input:option:Plot_Files"""
-        strChain = 'input:option:Plot_Files:'
 
-    # OpenMDAO Public Variables
-        self.add_param(strChain+'ixfl',val=0,optionsVal=(0,1), desc='Generate mission summary plot files', aliases=('No', 'Yes'),typerVar='Enum')
-        self.add_param(strChain+'npfile',val=0,optionsVal=(0,1,2), desc='Output takeoff and climb profiles for use with ANOPP preprocessor (andin)', aliases=('No', 'Yes', 'XFlops'),typerVar='Enum')
-        self.add_param(strChain+'ipolp',val=0,optionsVal=(0,1,2), desc='Drag polar plot data', aliases=('None', 'Drag polars at existing Mach numbers', 'User specified Mach numbers'),typerVar='Enum')
-        self.add_param(strChain+'polalt',val=0.0, units='ft', desc='Altitude for drag polar plots',typerVar='Float')
-        self.add_param(strChain+'pmach',val=numpy_float64, desc='Mach numbers for drag polar plot data',typerVar='Array')
-        self.add_param(strChain+'ipltth',val=0,optionsVal=(0,1,2), desc='Generate engine plot data', aliases=('None', 'Initial engine', 'Final scaled engine'),typerVar='Enum')
-        self.add_param(strChain+'iplths',val=0,optionsVal=(0,1), desc='Design history plot data', aliases=('No', 'Yes'),typerVar='Enum')
-        '''        
-        nfile = Str(desc='Contour or thumbprint plot data filename')
-        msfile = Str(desc='Mission summary data filename')
-        crfile = Str(desc='Cruise schedule summary data filename')
-        tofile = Str(desc='Takeoff and landing aerodynamic and thrust data filename')
-        nofile = Str(desc='Takeoff and climb profile data filename')
-        apfile = Str(desc='Drag polar plot data filename')
-        thfile = Str(desc='Engine plot data filename')
-        hsfile = Str(desc='Design history plot filename')
-        psfile = Str(desc='Excess power and load factor plot data filename')
-        '''
 
     def FlopsWrapper_input_option_Excess_Power_Plot(self):
         """Container for input:option:Excess_Power_Plot"""
@@ -793,13 +2593,13 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'ymax',val=40000.0, units='ft', desc='Maximum altitude for plots',typerVar='Float')
         self.add_param(strChain+'ymin',val=0.0, units='ft', desc='Minimum altitude for plots',typerVar='Float')
         self.add_param(strChain+'yinc',val=10000.0, units='ft', desc='Altitude increment for plots',typerVar='Float')
-        self.add_param(strChain+'pltnz',val=numpy_float64, desc='Nz at which Ps contours are plotted (or Nz)',typerVar='Array')
-        self.add_param(strChain+'pltpc',val=numpy_float64, desc='Engine power (fraction if =< 1; else setting)',typerVar='Array')
+        self.add_param(strChain+'pltnz',val=array([]), desc='Nz at which Ps contours are plotted (or Nz)',typerVar='Array')
+        self.add_param(strChain+'pltpc',val=array([]), desc='Engine power (fraction if =< 1; else setting)',typerVar='Array')
         self.add_param(strChain+'ipstdg',val=numpy_int64, desc='Store drag schedule (see Namelist &MISSIN)',typerVar='Array')
-        self.add_param(strChain+'pltwt',val=numpy_float64, units='lb', desc='Fixed weight',typerVar='Array')
+        self.add_param(strChain+'pltwt',val=array([]), units='lb', desc='Fixed weight',typerVar='Array')
         self.add_param(strChain+'ipltsg',val=numpy_int64, desc='Weight at start of mission segment IPLTSG is used',typerVar='Array')
-        self.add_param(strChain+'pltfm',val=numpy_float64, desc='Fraction of fuel burned',typerVar='Array')
-        self.add_param(strChain+'pltwta',val=numpy_float64, units='lb', desc='Delta weight',typerVar='Array')
+        self.add_param(strChain+'pltfm',val=array([]), desc='Fraction of fuel burned',typerVar='Array')
+        self.add_param(strChain+'pltwta',val=array([]), units='lb', desc='Delta weight',typerVar='Array')
 
 
 
@@ -809,7 +2609,7 @@ class FlopsWrapper(ExternalCode):
         strChain = 'input:noisin:Turbine:'
 
     # OpenMDAO Public Variables
-        self.add_param(strChain+'tsupp',val=numpy_float64, desc='Turbine suppression spectrum',typerVar='Array')
+        self.add_param(strChain+'tsupp',val=array([]), desc='Turbine suppression spectrum',typerVar='Array')
         self.add_param(strChain+'tbndia',val=-1.0, units='ft', desc='Diameter of last-stage turbine',typerVar='Float')
         self.add_param(strChain+'gear',val=1.0, desc='Gear ratio:  turbine RPM/fan RPM',typerVar='Float')
         self.add_param(strChain+'cs',val=0.0, desc='Stator chord to rotor spacing ratio',typerVar='Float')
@@ -850,7 +2650,7 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'ivor',val=1,optionsVal=(1,0), desc='Calculate vortex noise component', aliases=('Vortex noise', 'No vortex noise'),typerVar='Enum')
         self.add_param(strChain+'irot',val=1,optionsVal=(1,0), desc='Calculate rotational noise component', aliases=('Rotational noise', 'No rotational noise'),typerVar='Enum')
         self.add_param(strChain+'ipdir',val=0,optionsVal=(1,0), desc='Apply Boeing directivity correction', aliases=('Yes', 'No'),typerVar='Enum')
-        self.add_param(strChain+'psupp',val=numpy_float64, desc='Propeller noise suppression spectrum',typerVar='Array')
+        self.add_param(strChain+'psupp',val=array([]), desc='Propeller noise suppression spectrum',typerVar='Array')
 
 
     def FlopsWrapper_input_noisin_Propagation(self):
@@ -876,8 +2676,8 @@ class FlopsWrapper(ExternalCode):
         strChain = 'input:noisin:Observers:'
 
     # OpenMDAO Public Variables
-        self.add_param(strChain+'xo',val=numpy_float64, units='ft', desc='X-coordinates of observers',typerVar='Array')
-        self.add_param(strChain+'yo',val=numpy_float64, units='ft', desc='Y-coordinates of observers',typerVar='Array')
+        self.add_param(strChain+'xo',val=array([]), units='ft', desc='X-coordinates of observers',typerVar='Array')
+        self.add_param(strChain+'yo',val=array([]), units='ft', desc='Y-coordinates of observers',typerVar='Array')
         self.add_param(strChain+'zo',val=0.0, units='ft', desc='Height of all observers above the ground',typerVar='Float')
         self.add_param(strChain+'ndprt',val=1,optionsVal=(1,0), desc='Print observer noise histories',typerVar='Enum')
         self.add_param(strChain+'ifoot',val=0,optionsVal=(1,0), desc='Print noise levels of input observers in countour format to file NSPLOT for subsequent plotting of the noise footprint', aliases=('Print', 'No print'),typerVar='Enum')
@@ -901,11 +2701,11 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'s1j',val=0.0, desc='Tube centerline spacing to tube diameter ratio (IY9=2,5)',typerVar='Float')
         self.add_param(strChain+'a6',val=0.0, desc='Ratio of ejector inlet area to nozzle (total or annulus) area (input zero for no ejector) (IY9=2,3,5,6)',typerVar='Float')
         self.add_param(strChain+'zl9',val=0.0, desc='Ratio of ejector length to suppressor nozzle equivalent diameter (IY9=2,3,5,6)',typerVar='Float')
-        self.add_param(strChain+'a',val=numpy_float64, desc='A(0): Ejector treatment faceplate thickness, in\nA(1): Ejector treatment hole diameter, in\nA(2): Ejector treatment cavity depth, in\nA(3): Ejector treatment open area ratio\n(IY9=2,3,5,6)',typerVar='Array')
+        self.add_param(strChain+'a',val=array([]), desc='A(0): Ejector treatment faceplate thickness, in\nA(1): Ejector treatment hole diameter, in\nA(2): Ejector treatment cavity depth, in\nA(3): Ejector treatment open area ratio\n(IY9=2,3,5,6)',typerVar='Array')
 
     # TODO - rr and rx are units of 'Rayl' (rayleigh)
-        self.add_param(strChain+'rr',val=numpy_float64, desc='Ejector treatment specific resistance (59 values required) (IY9=2,3,5,6)',typerVar='Array')
-        self.add_param(strChain+'rx',val=numpy_float64, desc='Ejector treatment specific reactance (59 values required) (IY9=2,3,5,6)',typerVar='Array')
+        self.add_param(strChain+'rr',val=array([]), desc='Ejector treatment specific resistance (59 values required) (IY9=2,3,5,6)',typerVar='Array')
+        self.add_param(strChain+'rx',val=array([]), desc='Ejector treatment specific reactance (59 values required) (IY9=2,3,5,6)',typerVar='Array')
         self.add_param(strChain+'r4',val=0.0, units='inch', desc='Outer circumferential flow dimension (IY9=3,6)',typerVar='Float')
         self.add_param(strChain+'r6',val=0.0, units='inch', desc='Inner circumferential flow dimension (IY9=3,6)',typerVar='Float')
         self.add_param(strChain+'ss',val=0.0, units='inch', desc='Outer circumferential element dimension (IY9=3,6)',typerVar='Float')
@@ -940,31 +2740,31 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'zl2',val=0.0, units='ft', desc='Axial distance from the outer exit plane to the exit plane of the inner nozzle.  Used for IJET=3,4',typerVar='Float')
         self.add_param(strChain+'ifwd',val=0,optionsVal=(1,0), desc='Forward velocity effects on source.  Used for IJET=1,2,3,4,5', aliases=('Yes', 'No'),typerVar='Enum')
         self.add_param(strChain+'ishock',val=1,optionsVal=(1,0), desc='Calculate shock noise.  Used for IJET=1,2,3,4,5', aliases=('Shock noise', 'No shock'),typerVar='Enum')
-        self.add_param(strChain+'zjsupp',val=numpy_float64, desc='Jet suppression spectrum.  Used for IJET=1,2,3,4,5',typerVar='Array')
+        self.add_param(strChain+'zjsupp',val=array([]), desc='Jet suppression spectrum.  Used for IJET=1,2,3,4,5',typerVar='Array')
 
 
     def FlopsWrapper_input_noisin_Ground_Effects(self):
         """Container for input:noisin:Ground_Effects"""
         strChain = 'input:noisin:Ground_Effects:'
 
-    # OpenMDAO Public Variables
+        # OpenMDAO Public Variables
         self.add_param(strChain+'itone',val=0,optionsVal=(1,0), desc='1/3-octave bands exceeding adjacent bands by 3 dB or more are approximated as tones', aliases=('Yes', 'No'),typerVar='Enum')
         #self.add_param(strChain+'nht',val=0, desc='Number of heights to be used to approximate a distributed source by multiple sources',typerVar='Int')
-        self.add_param(strChain+'dk',val=numpy_float64, units='ft', desc='Heights of multiple sources from source center',typerVar='Array')
+        self.add_param(strChain+'dk',val=array([]), units='ft', desc='Heights of multiple sources from source center',typerVar='Array')
 
 
     def FlopsWrapper_input_noisin_Flap_Noise(self):
         """Container for input:noisin:Flap_Noise"""
         strChain = 'input:noisin:Flap_Noise:'
 
-    # OpenMDAO Public Variables
+        # OpenMDAO Public Variables
         self.add_param(strChain+'ilnoz',val=0,optionsVal=(2,1,0), desc='Nozzle type', aliases=('Coaxial, mixed flow', 'Coaxial, separate flow', 'Circular'),typerVar='Enum')
         self.add_param(strChain+'insens',val=0,optionsVal=(1,0), desc='Configuration with noise levels insensitive to flap angle', aliases=('Yes', 'No'),typerVar='Enum')
         self.add_param(strChain+'ac1',val=0.0, units='ft*ft', desc='Core (primary) nozzle area',typerVar='Float')
         self.add_param(strChain+'af1',val=0.0, units='ft*ft', desc='Fan (secondary) nozzle area',typerVar='Float')
         self.add_param(strChain+'bpr',val=0.0, desc='Bypass ratio, for mixed flow coaxial nozzle',typerVar='Float')
         self.add_param(strChain+'wingd',val=0.0, desc='Ratio of wing chord to total nozzle diameter, used for large BPR designs when WINGD < 3',typerVar='Float')
-        self.add_param(strChain+'flsupp',val=numpy_float64, desc='Flap noise suppression spectrum',typerVar='Array')
+        self.add_param(strChain+'flsupp',val=array([]), desc='Flap noise suppression spectrum',typerVar='Array')
         self.add_param(strChain+'eldop',val=0.0, desc='Exponent on source motion (Doppler) amplification on flap noise',typerVar='Float')
 
 
@@ -972,14 +2772,14 @@ class FlopsWrapper(ExternalCode):
         """Container for input:noisin:Fan"""
         strChain = 'input:noisin:Fan:'
 
-    # OpenMDAO Public Variables
+        # OpenMDAO Public Variables
         self.add_param(strChain+'igv',val=0,optionsVal=(1,0), desc='Inlet guide vane option', aliases=('Inlet guide vane', 'No IGV'),typerVar='Enum')
         self.add_param(strChain+'ifd',val=0,optionsVal=(1,0), desc='Inlet flow distortion option during ground run', aliases=('Inlet flow distortion', 'No distortion'),typerVar='Enum')
         self.add_param(strChain+'iexh',val=2,optionsVal=(0,1,2), desc='Fan inlet, exhaust noise options', aliases=('Inlet only', 'Exhaust only', 'Both inlet & exhaust'),typerVar='Enum')
         self.add_param(strChain+'nfh',val=10, desc='Number of harmonics to be considered in blade-passing tone',typerVar='Int')
         self.add_param(strChain+'nstg',val=-1, desc='Number of fan stages',typerVar='Int')
-        self.add_param(strChain+'suppin',val=numpy_float64, desc='Fan inlet suppression spectrum',typerVar='Array')
-        self.add_param(strChain+'suppex',val=numpy_float64, desc='Fan exhaust suppression spectrum',typerVar='Array')
+        self.add_param(strChain+'suppin',val=array([]), desc='Fan inlet suppression spectrum',typerVar='Array')
+        self.add_param(strChain+'suppex',val=array([]), desc='Fan exhaust suppression spectrum',typerVar='Array')
         self.add_param(strChain+'methtip',val=1,optionsVal=(1,2,3), desc='Method for calculation of relative tip Mach number', aliases=('ANOPP method', 'Clark', 'Use ATIPM'),typerVar='Enum')
         self.add_param(strChain+'icomb',val=1,optionsVal=(1,0), desc='Option to include combination tones if relative tip Mach number is supersonic', aliases=('Combination tones', 'No combination tones'),typerVar='Enum')
         self.add_param(strChain+'decmpt',val=0.0, desc='Decrement to apply to combination tones',typerVar='Float')
@@ -1007,44 +2807,44 @@ class FlopsWrapper(ExternalCode):
         """Container for input:noisin:Engine_Parameters"""
         strChain = 'input:noisin:Engine_Parameters:'
 
-    # OpenMDAO Public Variables
-        self.add_param(strChain+'aepp',val=numpy_float64, desc='Throttle settings as a fraction of net thrust',typerVar='Array')
-        self.add_param(strChain+'avc',val=numpy_float64, units='ft/s', desc='Core/primary exhaust jet velocity (ideally expanded velocity; exclude friction and expansion alterations).  Used for IJET=1,2,3,4,6',typerVar='Array')
-        self.add_param(strChain+'avf',val=numpy_float64, units='ft/s', desc='Fan/secondary exhaust jet velocity (ideally expanded velocity; exclude friction and expansion alterations).  Used for IJET=1,2,3,4',typerVar='Array')
-        self.add_param(strChain+'atc',val=numpy_float64, units='degR', desc='Core/primary jet exhaust total temperature.  Used for IJET=1,2,3,4,6',typerVar='Array')
-        self.add_param(strChain+'atf',val=numpy_float64, units='degR', desc='Fan/secondary jet exhaust total temperature.  Used for IJET=1,2,3,4',typerVar='Array')
-        self.add_param(strChain+'aac',val=numpy_float64, units='ft*ft', desc='Core jet nozzle exhaust area.  For IJET=1,2,6, AAC represents exit area; for IJET=3,4, AAC represents throat area.',typerVar='Array')
-        self.add_param(strChain+'aaf',val=numpy_float64, units='ft*ft', desc='Fan jet nozzle exhaust area.  For IJET=1 or IJET=2, AAF represents exit area; for IJET=3,4, AAF represents throat area.',typerVar='Array')
-        self.add_param(strChain+'adj',val=numpy_float64, units='ft', desc='Core outer diameter; at the equivalent throat if the nozzle is C-D.   Used only for IJET=3,4',typerVar='Array')
-        self.add_param(strChain+'adj2',val=numpy_float64, units='ft', desc='Fan outer diameter; at the equivalent throat if the nozzle is C-D.  Used only for IJET=3,4',typerVar='Array')
-        self.add_param(strChain+'ahj',val=numpy_float64, units='ft', desc='Core annulus height; at the equivalent throat if the nozzle is C-D.  Used only for IJET=3,4',typerVar='Array')
-        self.add_param(strChain+'ahj2',val=numpy_float64, units='ft', desc='Fan annulus height; at the equivalent throat if the nozzle is C-D.  Used only for IJET=3,4',typerVar='Array')
-        self.add_param(strChain+'afuel',val=numpy_float64, units='lb/s', desc='Fuel flow.  Used if ICORE, ITURB=1; and IJET=1,2 and only if calculating GAMMAC and GASRC.',typerVar='Array')
-        self.add_param(strChain+'atipm',val=numpy_float64, desc='Fan first-stage relative tip Mach number.  These are approximated if not input.  Used if IFAN=1',typerVar='Array')
-        self.add_param(strChain+'atipm2',val=numpy_float64, desc='Fan second-stage relative tip Mach number.  These are approximated if not input.  Used if IFAN=1',typerVar='Array')
-        self.add_param(strChain+'awafan',val=numpy_float64, units='lb/s', desc='Total engine airflow.  Used if IFAN=1',typerVar='Array')
-        self.add_param(strChain+'adelt',val=numpy_float64, units='degR', desc='Fan temperature rise.  Used if IFAN=1',typerVar='Array')
-        self.add_param(strChain+'afpr',val=numpy_float64, desc='Fan pressure ratio.  This is not needed if ADELT is input.  Otherwise, values for ADELT will be calculated using AFANEF and AFANF2 values.',typerVar='Array')
-        self.add_param(strChain+'afanef',val=numpy_float64, desc='Fan first-stage efficiency.  These are required if AFPR is supplied rather than ADELT.',typerVar='Array')
-        self.add_param(strChain+'afanf2',val=numpy_float64, desc='Fan second-stage efficiency.  These are required if AFPR is supplied rather than ADELT.',typerVar='Array')
-        self.add_param(strChain+'arpm',val=numpy_float64, units='rpm', desc='Fan or turbine speed.  Used if IFAN, ITURB=1',typerVar='Array')
-        self.add_param(strChain+'awcore',val=numpy_float64, units='lb/s', desc='Burner and turbine airflow.  Used if ICORE or ITURB=1 and IJET=1,2 and only if calculating GAMMAC and GASRC.',typerVar='Array')
-        self.add_param(strChain+'ap3',val=numpy_float64, units='psf', desc='Burner inlet pressure.  Used if ICORE=1',typerVar='Array')
-        self.add_param(strChain+'at3',val=numpy_float64, units='degR', desc='Burner inlet temperature.  Used if ICORE=1',typerVar='Array')
-        self.add_param(strChain+'at4',val=numpy_float64, units='degR', desc='Burner exit static temperature.  These are approximated from the fuel/air ratio if not input.  Used if ICORE=1',typerVar='Array')
-        self.add_param(strChain+'aturts',val=numpy_float64, units='ft/s', desc='Turbine last stage rotor relative tip speed.  These are approximated if not input.  Used if ITURB=1',typerVar='Array')
-        self.add_param(strChain+'atctur',val=numpy_float64, units='degR', desc='Turbine exit temperature.  These are assumed the same as ATC if not supplied.  Used if ITURB=1',typerVar='Array')
-        self.add_param(strChain+'aepwr',val=numpy_float64, units='hp', desc='Horsepower supplied to propeller.  Used if IPROP=1',typerVar='Array')
-        self.add_param(strChain+'athrst',val=numpy_float64, units='lb', desc='Propeller thrust.  Used if IPROP=1',typerVar='Array')
-        self.add_param(strChain+'amsp9',val=numpy_float64, desc='Nozzle pressure ratio: entance total to ambient static.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
-        self.add_param(strChain+'amstt3',val=numpy_float64, units='degR', desc='Nozzle exit total temperature.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
-        self.add_param(strChain+'amsa9',val=numpy_float64, units='ft*ft', desc='Nozzle exit area.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
-        self.add_param(strChain+'amsa7',val=numpy_float64, desc='Nozzle ejector chute area ratio.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
-        self.add_param(strChain+'amsaa8',val=numpy_float64, units='ft*ft', desc='Inner nozzle flow area.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
-        self.add_param(strChain+'amstt4',val=numpy_float64, units='degR', desc='Inner nozzle exit total temperature.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
-        self.add_param(strChain+'amsp4',val=numpy_float64, desc='Inner nozzle pressure ratio: entrance total to ambient static.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
-        self.add_param(strChain+'amstt5',val=numpy_float64, units='degR', desc='Outer nozzle exit total temperature.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
-        self.add_param(strChain+'amsp5',val=numpy_float64, desc='Outer nozzle pressure ratio: entrance total to ambient static.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
+        # OpenMDAO Public Variables
+        self.add_param(strChain+'aepp',val=array([]), desc='Throttle settings as a fraction of net thrust',typerVar='Array')
+        self.add_param(strChain+'avc',val=array([]), units='ft/s', desc='Core/primary exhaust jet velocity (ideally expanded velocity; exclude friction and expansion alterations).  Used for IJET=1,2,3,4,6',typerVar='Array')
+        self.add_param(strChain+'avf',val=array([]), units='ft/s', desc='Fan/secondary exhaust jet velocity (ideally expanded velocity; exclude friction and expansion alterations).  Used for IJET=1,2,3,4',typerVar='Array')
+        self.add_param(strChain+'atc',val=array([]), units='degR', desc='Core/primary jet exhaust total temperature.  Used for IJET=1,2,3,4,6',typerVar='Array')
+        self.add_param(strChain+'atf',val=array([]), units='degR', desc='Fan/secondary jet exhaust total temperature.  Used for IJET=1,2,3,4',typerVar='Array')
+        self.add_param(strChain+'aac',val=array([]), units='ft*ft', desc='Core jet nozzle exhaust area.  For IJET=1,2,6, AAC represents exit area; for IJET=3,4, AAC represents throat area.',typerVar='Array')
+        self.add_param(strChain+'aaf',val=array([]), units='ft*ft', desc='Fan jet nozzle exhaust area.  For IJET=1 or IJET=2, AAF represents exit area; for IJET=3,4, AAF represents throat area.',typerVar='Array')
+        self.add_param(strChain+'adj',val=array([]), units='ft', desc='Core outer diameter; at the equivalent throat if the nozzle is C-D.   Used only for IJET=3,4',typerVar='Array')
+        self.add_param(strChain+'adj2',val=array([]), units='ft', desc='Fan outer diameter; at the equivalent throat if the nozzle is C-D.  Used only for IJET=3,4',typerVar='Array')
+        self.add_param(strChain+'ahj',val=array([]), units='ft', desc='Core annulus height; at the equivalent throat if the nozzle is C-D.  Used only for IJET=3,4',typerVar='Array')
+        self.add_param(strChain+'ahj2',val=array([]), units='ft', desc='Fan annulus height; at the equivalent throat if the nozzle is C-D.  Used only for IJET=3,4',typerVar='Array')
+        self.add_param(strChain+'afuel',val=array([]), units='lb/s', desc='Fuel flow.  Used if ICORE, ITURB=1; and IJET=1,2 and only if calculating GAMMAC and GASRC.',typerVar='Array')
+        self.add_param(strChain+'atipm',val=array([]), desc='Fan first-stage relative tip Mach number.  These are approximated if not input.  Used if IFAN=1',typerVar='Array')
+        self.add_param(strChain+'atipm2',val=array([]), desc='Fan second-stage relative tip Mach number.  These are approximated if not input.  Used if IFAN=1',typerVar='Array')
+        self.add_param(strChain+'awafan',val=array([]), units='lb/s', desc='Total engine airflow.  Used if IFAN=1',typerVar='Array')
+        self.add_param(strChain+'adelt',val=array([]), units='degR', desc='Fan temperature rise.  Used if IFAN=1',typerVar='Array')
+        self.add_param(strChain+'afpr',val=array([]), desc='Fan pressure ratio.  This is not needed if ADELT is input.  Otherwise, values for ADELT will be calculated using AFANEF and AFANF2 values.',typerVar='Array')
+        self.add_param(strChain+'afanef',val=array([]), desc='Fan first-stage efficiency.  These are required if AFPR is supplied rather than ADELT.',typerVar='Array')
+        self.add_param(strChain+'afanf2',val=array([]), desc='Fan second-stage efficiency.  These are required if AFPR is supplied rather than ADELT.',typerVar='Array')
+        self.add_param(strChain+'arpm',val=array([]), units='rpm', desc='Fan or turbine speed.  Used if IFAN, ITURB=1',typerVar='Array')
+        self.add_param(strChain+'awcore',val=array([]), units='lb/s', desc='Burner and turbine airflow.  Used if ICORE or ITURB=1 and IJET=1,2 and only if calculating GAMMAC and GASRC.',typerVar='Array')
+        self.add_param(strChain+'ap3',val=array([]), units='psf', desc='Burner inlet pressure.  Used if ICORE=1',typerVar='Array')
+        self.add_param(strChain+'at3',val=array([]), units='degR', desc='Burner inlet temperature.  Used if ICORE=1',typerVar='Array')
+        self.add_param(strChain+'at4',val=array([]), units='degR', desc='Burner exit static temperature.  These are approximated from the fuel/air ratio if not input.  Used if ICORE=1',typerVar='Array')
+        self.add_param(strChain+'aturts',val=array([]), units='ft/s', desc='Turbine last stage rotor relative tip speed.  These are approximated if not input.  Used if ITURB=1',typerVar='Array')
+        self.add_param(strChain+'atctur',val=array([]), units='degR', desc='Turbine exit temperature.  These are assumed the same as ATC if not supplied.  Used if ITURB=1',typerVar='Array')
+        self.add_param(strChain+'aepwr',val=array([]), units='hp', desc='Horsepower supplied to propeller.  Used if IPROP=1',typerVar='Array')
+        self.add_param(strChain+'athrst',val=array([]), units='lb', desc='Propeller thrust.  Used if IPROP=1',typerVar='Array')
+        self.add_param(strChain+'amsp9',val=array([]), desc='Nozzle pressure ratio: entance total to ambient static.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
+        self.add_param(strChain+'amstt3',val=array([]), units='degR', desc='Nozzle exit total temperature.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
+        self.add_param(strChain+'amsa9',val=array([]), units='ft*ft', desc='Nozzle exit area.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
+        self.add_param(strChain+'amsa7',val=array([]), desc='Nozzle ejector chute area ratio.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
+        self.add_param(strChain+'amsaa8',val=array([]), units='ft*ft', desc='Inner nozzle flow area.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
+        self.add_param(strChain+'amstt4',val=array([]), units='degR', desc='Inner nozzle exit total temperature.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
+        self.add_param(strChain+'amsp4',val=array([]), desc='Inner nozzle pressure ratio: entrance total to ambient static.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
+        self.add_param(strChain+'amstt5',val=array([]), units='degR', desc='Outer nozzle exit total temperature.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
+        self.add_param(strChain+'amsp5',val=array([]), desc='Outer nozzle pressure ratio: entrance total to ambient static.  Used for M*S code jet predictions, IJET=5',typerVar='Array')
 
 
     def FlopsWrapper_input_noisin_Core(self):
@@ -1052,7 +2852,7 @@ class FlopsWrapper(ExternalCode):
         strChain = 'input:noisin:Core:'
 
         # OpenMDAO Public Variables
-        self.add_param(strChain+'csupp',val=numpy_float64, desc='Core suppression spectrum',typerVar='Array')
+        self.add_param(strChain+'csupp',val=array([]), desc='Core suppression spectrum',typerVar='Array')
         self.add_param(strChain+'gamma',val=1.4, desc='Specific heat ratio;  required if using AP3 rather than AT3',typerVar='Float')
         self.add_param(strChain+'imod',val=0,optionsVal=(1,0), desc='Use modified core level prediction', aliases=('Yes', 'No'),typerVar='Enum')
         self.add_param(strChain+'dtemd',val=-1.0, units='degR', desc='Design turbine temperature drop',typerVar='Float')
@@ -1094,8 +2894,8 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'ilg',val=0,optionsVal=(1,0), desc='Nose and main landing gear noise', aliases=('Landing gear noise', 'No landing gear noise'),typerVar='Enum')
         self.add_param(strChain+'ng',val=numpy_int64, desc='NG(0):  Number of nose gear trucks\nNG(1):  Number of main gear trucks',typerVar='Array')
         self.add_param(strChain+'nw',val=numpy_int64, desc='NW(0):  Number of wheels per nose gear truck\nNW(1):  Number of wheels per main gear truck',typerVar='Array')
-        self.add_param(strChain+'dw',val=numpy_float64, units='ft', desc='DW(0):  Diameter of nose gear tires\nDW(1):  Diameter of main gear tires',typerVar='Array')
-        self.add_param(strChain+'cg',val=numpy_float64, desc='CG(0):  Ratio of nose strut length to DW(0)\nCG(1):  Ratio of main strut length to DW(1)',typerVar='Array')
+        self.add_param(strChain+'dw',val=array([]), units='ft', desc='DW(0):  Diameter of nose gear tires\nDW(1):  Diameter of main gear tires',typerVar='Array')
+        self.add_param(strChain+'cg',val=array([]), desc='CG(0):  Ratio of nose strut length to DW(0)\nCG(1):  Ratio of main strut length to DW(1)',typerVar='Array')
 
 
 
@@ -1152,9 +2952,9 @@ class FlopsWrapper(ExternalCode):
         strChain = 'input:missin:Turn_Segments:'
 
         # OpenMDAO Public Variables
-        self.add_param(strChain+'xnz',val=numpy_float64, units='g', desc='Maximum turn load factor at each Mach number',typerVar='Array')
-        self.add_param(strChain+'xcl',val=numpy_float64, desc='Maximum turn lift coefficient at each Mach number',typerVar='Array')
-        self.add_param(strChain+'xmach',val=numpy_float64, desc='Mach number array corresponding to both XNZ and XCL',typerVar='Array')
+        self.add_param(strChain+'xnz',val=array([]), units='g', desc='Maximum turn load factor at each Mach number',typerVar='Array')
+        self.add_param(strChain+'xcl',val=array([]), desc='Maximum turn lift coefficient at each Mach number',typerVar='Array')
+        self.add_param(strChain+'xmach',val=array([]), desc='Mach number array corresponding to both XNZ and XCL',typerVar='Array')
 
 
     def FlopsWrapper_input_missin_Store_Drag(self):
@@ -1162,8 +2962,8 @@ class FlopsWrapper(ExternalCode):
         strChain = 'input:missin:Store_Drag:'
 
         # OpenMDAO Public Variables
-        self.add_param(strChain+'stma',val=numpy_float64, desc='Mach number schedule for store drags.  Store drags can also be assessed in ACCEL and TURN segments of the mission as covered in the Segment Definition Cards section, in PS and NZ plots (see Namelist &OPTION), and in performance constraints (see Namelist &PCONIN)',typerVar='Array')
-        self.add_param(strChain+'cdst',val=numpy_float64, desc='Corresponding drag coefficients or D/q',typerVar='Array')
+        self.add_param(strChain+'stma',val=array([]), desc='Mach number schedule for store drags.  Store drags can also be assessed in ACCEL and TURN segments of the mission as covered in the Segment Definition Cards section, in PS and NZ plots (see Namelist &OPTION), and in performance constraints (see Namelist &PCONIN)',typerVar='Array')
+        self.add_param(strChain+'cdst',val=array([]), desc='Corresponding drag coefficients or D/q',typerVar='Array')
         self.add_param(strChain+'istcl',val=numpy_int64, desc='Store drag condition applied to climb schedule K\n= 0, No store drag for climb schedule K',typerVar='Array')
         self.add_param(strChain+'istcr',val=numpy_int64, desc='Store drag condition applied to cruise schedule K\n= 0, No store drag for cruise schedule K',typerVar='Array')
         self.add_param(strChain+'istde',val=0, desc='Store drag condition applied to descent schedule\n= 0, No store drag for descent schedule',typerVar='Int')
@@ -1228,8 +3028,8 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'rdlim',val=-99999.0, units='ft/min', desc='Limiting or constant rate of descent.  Must be negative',typerVar='Float')
         self.add_param(strChain+'ns',val=0, desc='Number of altitudes for q limit schedule (Default = 0 - QLIM is used, Maximum = 20 )',typerVar='Int')
         self.add_param(strChain+'keasvd',val=0,optionsVal=(0,1), desc='= 1, VDTAB is in knots equivalent airspeed (keas)\n\n= 0, VDTAB is true airspeed or Mach number (Default)', aliases=('VDTAB is Mach number', 'VDTAB in knots'),typerVar='Enum')
-        self.add_param(strChain+'adtab',val=numpy_float64, units='ft', desc='Descent altitude schedule.  If only part of the descent profile is specified, the portion of the profile outside the energy range defined by values of ADTAB and VDTAB will be optimized for the descent schedule.',typerVar='Array')
-        self.add_param(strChain+'vdtab',val=numpy_float64, desc='Descent speed schedule, kts or Mach number',typerVar='Array')
+        self.add_param(strChain+'adtab',val=array([]), units='ft', desc='Descent altitude schedule.  If only part of the descent profile is specified, the portion of the profile outside the energy range defined by values of ADTAB and VDTAB will be optimized for the descent schedule.',typerVar='Array')
+        self.add_param(strChain+'vdtab',val=array([]), desc='Descent speed schedule, kts or Mach number',typerVar='Array')
 
 
     def FlopsWrapper_input_missin_Cruise(self):
@@ -1253,8 +3053,8 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'cdfeth',val=array([0.0]), dtype=numpy_float64, desc='Drag coefficient increase due to feathered engines',typerVar='Array')
         self.add_param(strChain+'dcwt',val=1.0, units='lb', desc='Weight increment used to compute cruise tables (Default = the greater of 1. or DWT/20)',typerVar='Float')
         self.add_param(strChain+'rcin',val=100.0, units='ft/min', desc='Instantaneous rate of climb for ceiling calculation',typerVar='Float')
-        self.add_param(strChain+'wtbm',val=numpy_float64, desc='Array of weights for specification of max. allowable altitude for low sonic boom configurations (must be in ascending order) Since linear interpolation/extrapolation is used, data should cover the entire expected weight range.',typerVar='Array')
-        self.add_param(strChain+'altbm',val=numpy_float64, units='ft', desc='Corresponding array of maximum altitudes',typerVar='Array')
+        self.add_param(strChain+'wtbm',val=array([]), desc='Array of weights for specification of max. allowable altitude for low sonic boom configurations (must be in ascending order) Since linear interpolation/extrapolation is used, data should cover the entire expected weight range.',typerVar='Array')
+        self.add_param(strChain+'altbm',val=array([]), units='ft', desc='Corresponding array of maximum altitudes',typerVar='Array')
 
 
     def FlopsWrapper_input_missin_Climb(self):
@@ -1283,8 +3083,8 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'qlim',val=0.0, units='psf', desc='Constant dynamic pressure limit.  Applied at all climb and descent points not covered by the variable dynamic pressure limit below.',typerVar='Float')
         self.add_param(strChain+'spdlim',val=0.0, desc='Maximum speed at 10,000 ft, used only for IFAACL = 2, kts or Mach number  (Default is computed from\n  a) the variable dynamic pressure limit below, if applicable,\n  b) QLIM above, if QLIM > 0., or\n  c) a dynamic pressure of 450 psf, in that order)',typerVar='Float')
         self.add_param(strChain+'nql',val=0, desc='Number of altitudes for q limit schedule (Default = 0 - QLIM is used, Maximum = 20 )',typerVar='Int')
-        self.add_param(strChain+'qlalt',val=numpy_float64, units='ft', desc='Altitudes, in increasing order, for variable dynamic pressure limit schedule',typerVar='Array')
-        self.add_param(strChain+'vqlm',val=numpy_float64, units='psf', desc='Corresponding dynamic pressure limits',typerVar='Array')
+        self.add_param(strChain+'qlalt',val=array([]), units='ft', desc='Altitudes, in increasing order, for variable dynamic pressure limit schedule',typerVar='Array')
+        self.add_param(strChain+'vqlm',val=array([]), units='psf', desc='Corresponding dynamic pressure limits',typerVar='Array')
 
 
     def FlopsWrapper_input_missin_Basic(self):
@@ -1310,7 +3110,7 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'iata',val=1,optionsVal=(1,0), desc='Option to adjust range for ATA Traffic Allowance', aliases=('Yes', 'No'),typerVar='Enum')
         self.add_param(strChain+'tlwind',val=0.0, units='nmi', desc='Velocity of tail wind (Input negative value for head wind)',typerVar='Float')
         self.add_param(strChain+'dwt',val=1.0, units='lb', desc='Gross weight increment for performance tables (Default is internally computed)',typerVar='Float')
-        self.add_param(strChain+'offdr',val=numpy_float64, units='nmi', desc='Off design range.  Note: This simply performs the defined mission with the sized airplane with a different design range.  If more changes are desired or if additional analyses are required (e.g., cost analysis), use Namelist &RERUN.  If OFFDR is used with a cost analysis, costs will be computed for the last design range.',typerVar='Array')
+        self.add_param(strChain+'offdr',val=([]), units='nmi', desc='Off design range.  Note: This simply performs the defined mission with the sized airplane with a different design range.  If more changes are desired or if additional analyses are required (e.g., cost analysis), use Namelist &RERUN.  If OFFDR is used with a cost analysis, costs will be computed for the last design range.',typerVar='Array')
         self.add_param(strChain+'idoq',val=0,optionsVal=(1,0), desc='Form for drag increments', aliases=('D/q', 'Drag coefficients'),typerVar='Enum')
         self.add_param(strChain+'nsout',val=0, desc='Last segment number in outbound leg (Combat Radius Mission - Iterates until outbound leg and inbound leg are equal.  IRW must be equal to 2, and there must be at least two cruise segments).  If NSOUT = 0, radius is not calculated',typerVar='Int')
         self.add_param(strChain+'nsadj',val=0, desc='Cruise segment in outbound leg to be adjusted for radius calculation (Default = NSOUT).  Note: Make sure that the NSADJ Cruise segment is terminated on total rather than segment distance in the Mission Definition Data.',typerVar='Int')
@@ -1437,9 +3237,9 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'dprop',val=6.375, units='ft', desc='Propeller diameter',typerVar='Float')
         self.add_param(strChain+'nblade',val=0, desc='Number of blades',typerVar='Int')
         self.add_param(strChain+'gbloss',val=0.02, desc='Gearbox losses, fraction. If PRPSPD = ENGSPD, there are no losses.',typerVar='Float')
-        self.add_param(strChain+'arrpm',val=numpy_float64, units='rpm', desc='Rotational speed (descending order)',typerVar='Array')
-        self.add_param(strChain+'arpwr',val=numpy_float64, units='hp', desc='Engine shaft power at ARRPM(I)',typerVar='Array')
-        self.add_param(strChain+'arful',val=numpy_float64, desc='Engine fuel requirements at ARRPM(I) (Required only if LFUUN is not equal to zero)',typerVar='Array')
+        self.add_param(strChain+'arrpm',val=array([]), units='rpm', desc='Rotational speed (descending order)',typerVar='Array')
+        self.add_param(strChain+'arpwr',val=array([]), units='hp', desc='Engine shaft power at ARRPM(I)',typerVar='Array')
+        self.add_param(strChain+'arful',val=array([]), desc='Engine fuel requirements at ARRPM(I) (Required only if LFUUN is not equal to zero)',typerVar='Array')
         self.add_param(strChain+'lfuun',val=0,optionsVal=(0,1,2,3), desc='Fuel input type indicator', aliases=('Fuel flows are computed from SFCMAX SFCMIN and PWRMIN', 'Brake specific fuel consumption values are input in ARFUL', 'Actual fuel flows are input in ARFUL (lb/hr)', 'Actual fuel flows are input in ARFUL (gal/hr)'),typerVar='Enum')
         self.add_param(strChain+'feng',val=1.0, desc='Scale factor on engine weight',typerVar='Float')
         self.add_param(strChain+'fprop',val=1.0, desc='Scale factor on propeller weight',typerVar='Float')
@@ -1520,7 +3320,7 @@ class FlopsWrapper(ExternalCode):
         # OpenMDAO Public Variables
         self.add_param(strChain+'dffac',val=0.0, desc='Fuel flow scaling constant term.\nThe engine fuel flow scale factor for ENGSKAL = THRUST/THRSO is\nENGSKAL*[1. + DFFAC + FFFAC*(1. - ENGSKAL)]',typerVar='Float')
         self.add_param(strChain+'fffac',val=0.0, desc='Fuel flow scaling linear term.\nThe engine fuel flow scale factor for ENGSKAL = THRUST/THRSO is\nENGSKAL*[1. + DFFAC + FFFAC*(1. - ENGSKAL)]',typerVar='Float')
-        self.add_param(strChain+'emach',val=numpy_float64, desc='Array of Mach numbers in descending order at which engine data are to be generated (Default computed internally, Do not zero fill)',typerVar='Array')
+        self.add_param(strChain+'emach',val=array([]), desc='Array of Mach numbers in descending order at which engine data are to be generated (Default computed internally, Do not zero fill)',typerVar='Array')
         self.add_param(strChain+'alt',val=zeros(shape=(0,0)), dtype=numpy_float64, units='ft', desc='Arrays of altitudes in descending order, one set for each Mach number, at which engine data are to be generated (Default computed internally, do not zero fill).  Altitudes and numbers of altitudes do not have to be consistent between Mach numbers.',typerVar='Array')
         self.add_param(strChain+'insdrg',val=0,optionsVal=(0,1,2,3), desc='Nozzle installation drag scaling switch', aliases=('No drag scaling', 'Scale with A10', 'Calculate using A10', 'Calculate for Cd=0 at A9=A9ref'),typerVar='Enum')
         self.add_param(strChain+'nab',val=6969, desc='Table number in CDFILE to be used for afterbody drag',typerVar='Int')
@@ -1551,7 +3351,7 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'ifill',val=2, desc='Option for filling in part power data\n=0, No part power data will be generated\n> 0, Part power cruise data will be filled in for Mach-altitude points for which IFILL (or fewer) thrust levels have been input\nFor NPCODE > 1, data will be filled in for each specified power code that is not input for each Mach-altitude point.',typerVar='Int')
         self.add_param(strChain+'maxcr',val=2, desc='Maximum power setting used for cruise',typerVar='Int')
         self.add_param(strChain+'nox',val=0,optionsVal=(0,1,2,3), desc='Option for NOx emissions data.  If IGENEN=-2, NOx emissions data are replaced with engine shaft speed, rpm', aliases=('Do not use', 'Indices in engine deck or generated', 'Emissions lb/hr in engine deck', 'Another parameter in engine deck'),typerVar='Enum')
-        self.add_param(strChain+'pcode',val=numpy_float64, desc='Power codes to be used in sorting the Engine Deck.  Values correspond to thrust levels in descending order, i.e., climb, maximum continuous, part power cruise settings, and flight idle.  Actual values are arbitrary (they are just used as labels), but only points in the Engine Deck with corresponding values for PC will be used.',typerVar='Array')
+        self.add_param(strChain+'pcode',val=array([]), desc='Power codes to be used in sorting the Engine Deck.  Values correspond to thrust levels in descending order, i.e., climb, maximum continuous, part power cruise settings, and flight idle.  Actual values are arbitrary (they are just used as labels), but only points in the Engine Deck with corresponding values for PC will be used.',typerVar='Array')
         self.add_param(strChain+'boost',val=0.0, desc='> 0., Scale factor for boost engine to be added to baseline engine for takeoff and climb.  Climb thrust of the boost engine in the Engine Deck must be artificially increased by 100,000.\n= 0., No boost engine',typerVar='Float')
         self.add_param(strChain+'igeo',val=0,optionsVal=(0,1), desc='Engine deck altitude type', aliases=('Geometric', 'Geopotential-will be converted'),typerVar='Enum')
 
@@ -1696,7 +3496,7 @@ class FlopsWrapper(ExternalCode):
         """Container for input:confin:Objective"""
         strChain = 'input:confin:Objective:'
 
-    # OpenMDAO Public Variables
+       # OpenMDAO Public Variables
         self.add_param(strChain+'ofg',val=0.0, desc='Objective function weighting factor for gross weight \nThe function that is minimized is\n \n OBJ = OFG*GW \n + OFF*Fuel \n + OFM*VCMN*(Lift/Drag) \n + OFR*Range + OFC*Cost \n + OSFC*SFC \n + OFNOX*NOx \n + OFNF*(Flyover Noise) \n + OFNS*(Sideline Noise) \n + OFNFOM*(Noise Figure of Merit) \n + OFH*(Hold Time for Segment NHOLD)',typerVar='Float')
         self.add_param(strChain+'off',val=1.0, desc='Objective function weighting factor for mission fuel \nThe function that is minimized is\n \n OBJ = OFG*GW \n + OFF*Fuel \n + OFM*VCMN*(Lift/Drag) \n + OFR*Range + OFC*Cost \n + OSFC*SFC \n + OFNOX*NOx \n + OFNF*(Flyover Noise) \n + OFNS*(Sideline Noise) \n + OFNFOM*(Noise Figure of Merit) \n + OFH*(Hold Time for Segment NHOLD)',typerVar='Float')
         self.add_param(strChain+'ofm',val=0.0, desc='Objective function weighting factor for Mach*(L/D), should be negative to maximize \nThe function that is minimized is\n \n OBJ = OFG*GW \n + OFF*Fuel \n + OFM*VCMN*(Lift/Drag) \n + OFR*Range + OFC*Cost \n + OSFC*SFC \n + OFNOX*NOx \n + OFNF*(Flyover Noise) \n + OFNS*(Sideline Noise) \n + OFNFOM*(Noise Figure of Merit) \n + OFH*(Hold Time for Segment NHOLD)',typerVar='Float')
@@ -1716,24 +3516,24 @@ class FlopsWrapper(ExternalCode):
         strChain = 'input:confin:Design_Variables:'
 
     # OpenMDAO Public Variables
-        self.add_param(strChain+'gw',val=numpy_float64, units='lb', desc='GW(0)=Ramp weight (Required.  If IRW = 1, a good initial guess must be input.)\nGW(1)=Activity status, active if > 0\nGW(2)=Lower bound\nGW(3)=Upper bound\nGW(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'ar',val=numpy_float64, desc='AR(0)=Wing aspect ratio\nAR(1)=Activity status, active if > 0\nAR(2)=Lower bound\nAR(3)=Upper bound\nAR(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'thrust',val=numpy_float64, units='lb', desc='THRUST(0)=Maximum rated thrust per engine, or thrust-weight ratio if TWR = -1.\nTHRUST(1)=Activity status, active if > 0\nTHRUST(2)=Lower bound\nTHRUST(3)=Upper bound\nTHRUST(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'sw',val=numpy_float64, units='ft*ft', desc='SW(0)=Reference wing area, or wing loading if WSR = -1.\nSW(1)=Activity status, active if > 0\nSW(2)=Lower bound\nSW(3)=Upper bound\nSW(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'tr',val=numpy_float64, desc='TR(0)=Taper ratio of the wing (Required)\nTR(1)=Activity status, active if > 0\nTR(2)=Lower bound\nTR(3)=Upper bound\nTR(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'sweep',val=numpy_float64, units='deg', desc='SWEEP(0)=Quarter-chord sweep angle of the wing (Required)\nSWEEP(1)=Activity status, active if > 0\nSWEEP(2)=Lower bound\nSWEEP(3)=Upper bound\nSWEEP(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'tca',val=numpy_float64, desc='TCA(0)=Wing thickness-chord ratio (weighted average) (Required)\nTCA(1)=Activity status, active if > 0\nTCA(2)=Lower bound\nTCA(3)=Upper bound\nTCA(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'vcmn',val=numpy_float64, desc='VCMN(0)=Cruise Mach number (Required)\nVCMN(1)=Activity status, active if > 0\nVCMN(2)=Lower bound\nVCMN(3)=Upper bound\nVCMN(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'ch',val=numpy_float64, units='ft', desc='CH(0)=Maximum cruise altitude (Required)\nCH(1)=Activity status, active if > 0\nCH(2)=Lower bound\nCH(3)=Upper bound\nCH(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'varth',val=numpy_float64, desc='VARTH(0)=Thrust derating factor for takeoff noise Fraction of full thrust used in takeoff\nVARTH(1)=Activity status, active if > 0\nVARTH(2)=Lower bound\nVARTH(3)=Upper bound\nVARTH(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'rotvel',val=numpy_float64, desc='ROTVEL(0)=Rotation velocity for takeoff noise abatement (default is minimum required to meet takeoff performance constraints)\nROTVEL(1)=Activity status, active if > 0\nROTVEL(2)=Lower bound\nROTVEL(3)=Upper bound\nROTVEL(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'plr',val=numpy_float64, desc='PLR(0)=Thrust fraction after programmed lapse rate (default thrust is specified in each segment)\nPLR(1)=Activity status, active if > 0\nPLR(2)=Lower bound\nPLR(3)=Upper bound\nPLR(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'etit',val=numpy_float64, units='degR', desc='ETIT(0)=Engine design point turbine entry temperature\nETIT(1)=Activity status, active if > 0\nETIT(2)=Lower bound\nETIT(3)=Upper bound\nETIT(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'eopr',val=numpy_float64, desc='EOPR(0)=Overall pressure ratio\nEOPR(1)=Activity status, active if > 0\nEOPR(2)=Lower bound\nEOPR(3)=Upper bound\nEOPR(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'efpr',val=numpy_float64, desc='EFPR(0)=Fan pressure ratio (turbofans only)\nEFPR(1)=Activity status, active if > 0\nEFPR(2)=Lower bound\nEFPR(3)=Upper bound\nEFPR(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'ebpr',val=numpy_float64, desc='EBPR(0)=Bypass ratio (turbofans only)\nEBPR(1)=Activity status, active if > 0\nEBPR(2)=Lower bound\nEBPR(3)=Upper bound\nEBPR(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'ettr',val=numpy_float64, desc='ETTR(0)=Engine throttle ratio defined as the ratio of the maximum allowable turbine inlet temperature divided by the design point turbine inlet temperature.\nIf ETTR is greater than ETIT, it is assumed to be the maximum allowable turbine inlet temperature.\nETTR(1)=Activity status, active if > 0\nETTR(2)=Lower bound\nETTR(3)=Upper bound\nETTR(4)=Optimization scale factor',typerVar='Array')
-        self.add_param(strChain+'ebla',val=numpy_float64, units='deg', desc='EBLA(0)=Blade angle for fixed pitch propeller\nEBLA(1)=Activity status, active if > 0\nEBLA(2)=Lower bound\nEBLA(3)=Upper bound\nEBLA(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'gw',val=array([]), units='lb', desc='GW(0)=Ramp weight (Required.  If IRW = 1, a good initial guess must be input.)\nGW(1)=Activity status, active if > 0\nGW(2)=Lower bound\nGW(3)=Upper bound\nGW(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'ar',val=array([]), desc='AR(0)=Wing aspect ratio\nAR(1)=Activity status, active if > 0\nAR(2)=Lower bound\nAR(3)=Upper bound\nAR(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'thrust',val=array([]), units='lb', desc='THRUST(0)=Maximum rated thrust per engine, or thrust-weight ratio if TWR = -1.\nTHRUST(1)=Activity status, active if > 0\nTHRUST(2)=Lower bound\nTHRUST(3)=Upper bound\nTHRUST(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'sw',val=array([]), units='ft*ft', desc='SW(0)=Reference wing area, or wing loading if WSR = -1.\nSW(1)=Activity status, active if > 0\nSW(2)=Lower bound\nSW(3)=Upper bound\nSW(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'tr',val=array([]), desc='TR(0)=Taper ratio of the wing (Required)\nTR(1)=Activity status, active if > 0\nTR(2)=Lower bound\nTR(3)=Upper bound\nTR(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'sweep',val=array([]), units='deg', desc='SWEEP(0)=Quarter-chord sweep angle of the wing (Required)\nSWEEP(1)=Activity status, active if > 0\nSWEEP(2)=Lower bound\nSWEEP(3)=Upper bound\nSWEEP(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'tca',val=array([]), desc='TCA(0)=Wing thickness-chord ratio (weighted average) (Required)\nTCA(1)=Activity status, active if > 0\nTCA(2)=Lower bound\nTCA(3)=Upper bound\nTCA(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'vcmn',val=array([]), desc='VCMN(0)=Cruise Mach number (Required)\nVCMN(1)=Activity status, active if > 0\nVCMN(2)=Lower bound\nVCMN(3)=Upper bound\nVCMN(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'ch',val=array([]), units='ft', desc='CH(0)=Maximum cruise altitude (Required)\nCH(1)=Activity status, active if > 0\nCH(2)=Lower bound\nCH(3)=Upper bound\nCH(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'varth',val=array([]), desc='VARTH(0)=Thrust derating factor for takeoff noise Fraction of full thrust used in takeoff\nVARTH(1)=Activity status, active if > 0\nVARTH(2)=Lower bound\nVARTH(3)=Upper bound\nVARTH(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'rotvel',val=array([]), desc='ROTVEL(0)=Rotation velocity for takeoff noise abatement (default is minimum required to meet takeoff performance constraints)\nROTVEL(1)=Activity status, active if > 0\nROTVEL(2)=Lower bound\nROTVEL(3)=Upper bound\nROTVEL(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'plr',val=array([]), desc='PLR(0)=Thrust fraction after programmed lapse rate (default thrust is specified in each segment)\nPLR(1)=Activity status, active if > 0\nPLR(2)=Lower bound\nPLR(3)=Upper bound\nPLR(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'etit',val=array([]), units='degR', desc='ETIT(0)=Engine design point turbine entry temperature\nETIT(1)=Activity status, active if > 0\nETIT(2)=Lower bound\nETIT(3)=Upper bound\nETIT(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'eopr',val=array([]), desc='EOPR(0)=Overall pressure ratio\nEOPR(1)=Activity status, active if > 0\nEOPR(2)=Lower bound\nEOPR(3)=Upper bound\nEOPR(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'efpr',val=array([]), desc='EFPR(0)=Fan pressure ratio (turbofans only)\nEFPR(1)=Activity status, active if > 0\nEFPR(2)=Lower bound\nEFPR(3)=Upper bound\nEFPR(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'ebpr',val=array([]), desc='EBPR(0)=Bypass ratio (turbofans only)\nEBPR(1)=Activity status, active if > 0\nEBPR(2)=Lower bound\nEBPR(3)=Upper bound\nEBPR(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'ettr',val=array([]), desc='ETTR(0)=Engine throttle ratio defined as the ratio of the maximum allowable turbine inlet temperature divided by the design point turbine inlet temperature.\nIf ETTR is greater than ETIT, it is assumed to be the maximum allowable turbine inlet temperature.\nETTR(1)=Activity status, active if > 0\nETTR(2)=Lower bound\nETTR(3)=Upper bound\nETTR(4)=Optimization scale factor',typerVar='Array')
+        self.add_param(strChain+'ebla',val=array([]), units='deg', desc='EBLA(0)=Blade angle for fixed pitch propeller\nEBLA(1)=Activity status, active if > 0\nEBLA(2)=Lower bound\nEBLA(3)=Upper bound\nEBLA(4)=Optimization scale factor',typerVar='Array')
 
 
     def FlopsWrapper_input_confin_Basic(self):
@@ -1762,14 +3562,14 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'awetn',val=0.0, desc='Nacelle wetted area/SREF',typerVar='Float')
         self.add_param(strChain+'eltot',val=0.0, units='ft', desc='Total configuration length (Default = fuselage length)',typerVar='Float')
         self.add_param(strChain+'voltot',val=0.0, units='ft*ft*ft', desc='Total configuration volume',typerVar='Float')
-        self.add_param(strChain+'awett',val=numpy_float64, desc='Total wetted area/SREF.  For variable geometry aircraft, up to NMP values may be input',typerVar='Array')
-        self.add_param(strChain+'awetw',val=numpy_float64, desc='Wing wetted area/SREF',typerVar='Array')
-        self.add_param(strChain+'elw',val=numpy_float64, units='ft', desc='Total length of exposed wing',typerVar='Array')
-        self.add_param(strChain+'volw',val=numpy_float64, units='ft*ft*ft', desc='Total volume of exposed wing',typerVar='Array')
-        self.add_param(strChain+'form',val=numpy_float64, desc='Subsonic form factor for total configuration',typerVar='Array')
-        self.add_param(strChain+'eql',val=numpy_float64, units='ft', desc='Equivalent friction length for total baseline configuration.  If EQL is omitted, skin friction drag is computed from component data',typerVar='Array')
-        self.add_param(strChain+'cdwav',val=numpy_float64, desc='Wave drag coefficients (NMP values)',typerVar='Array')
-        self.add_param(strChain+'dcdnac',val=numpy_float64, desc='Delta wave drag coefficients, nacelles on - nacelles off',typerVar='Array')
+        self.add_param(strChain+'awett',val=array([]), desc='Total wetted area/SREF.  For variable geometry aircraft, up to NMP values may be input',typerVar='Array')
+        self.add_param(strChain+'awetw',val=array([]), desc='Wing wetted area/SREF',typerVar='Array')
+        self.add_param(strChain+'elw',val=array([]), units='ft', desc='Total length of exposed wing',typerVar='Array')
+        self.add_param(strChain+'volw',val=array([]), units='ft*ft*ft', desc='Total volume of exposed wing',typerVar='Array')
+        self.add_param(strChain+'form',val=array([]), desc='Subsonic form factor for total configuration',typerVar='Array')
+        self.add_param(strChain+'eql',val=array([]), units='ft', desc='Equivalent friction length for total baseline configuration.  If EQL is omitted, skin friction drag is computed from component data',typerVar='Array')
+        self.add_param(strChain+'cdwav',val=array([]), desc='Wave drag coefficients (NMP values)',typerVar='Array')
+        self.add_param(strChain+'dcdnac',val=array([]), desc='Delta wave drag coefficients, nacelles on - nacelles off',typerVar='Array')
 
 
     def FlopsWrapper_input_aero_data(self):
@@ -1860,165 +3660,158 @@ class FlopsWrapper(ExternalCode):
         self.npcons0.append(0)
         #comp = VariableTree()
         self.add_param('input:'+name+':desrng',val=-1,units="nmi.s")
-       
-        '''comp.add('desrng', Float(-1., units="nmi/s" ))
-        comp.add('mywts', Int(-1 ))
-        comp.add('rampwt', Float(-1., units="lb" ))
-        comp.add('dowe', Float(-1., units="lb" ))
-        comp.add('paylod', Float(-1., units="lb" ))
-        comp.add('fuemax', Float(-1., units="lb" ))
-        comp.add('itakof', Int(-1 ))
-        comp.add('iland', Int(-1 ))
-        comp.add('nopro', Int(-1 ))
-        comp.add('noise', Int(-1 ))
-        comp.add('icost', Int(-1 ))
-        comp.add('wsr', Float(-1. ))
-        comp.add('twr', Float(-1. ))
+        self.add_param('input:'+name+':mywts', val=-1 )
+        self.add_param('input:'+name+':rampwt', val=-1., units="lb" )
+        self.add_param('input:'+name+':dowe', val=-1., units="lb" )
+        self.add_param('input:'+name+':paylod', val=-1., units="lb" )
+        self.add_param('input:'+name+':fuemax', val=-1., units="lb" )
+        self.add_param('input:'+name+':itakof', val=-1 )
+        self.add_param('input:'+name+':iland', val=-1 )
+        self.add_param('input:'+name+':nopro', val=-1 )
+        self.add_param('input:'+name+':noise', val=-1 )
+        self.add_param('input:'+name+':icost', val=-1 )
+        self.add_param('input:'+name+':wsr', val=-1. )
+        self.add_param('input:'+name+':twr', val=-1. )
 
-        comp.add('missin', VarTree(VariableTree()))
-        comp.missin.add('Basic', VarTree(VariableTree()))
-        comp.missin.Basic.add('indr', Int(-999 ))
-        comp.missin.Basic.add('fact', Float(-999. ))
-        comp.missin.Basic.add('fleak', Float(-999. ))
-        comp.missin.Basic.add('fcdo', Float(-999. ))
-        comp.missin.Basic.add('fcdi', Float(-999. ))
-        comp.missin.Basic.add('fcdsub', Float(-999. ))
-        comp.missin.Basic.add('fcdsup', Float(-999. ))
-        comp.missin.Basic.add('iskal', Int(-999 ))
-        comp.missin.Basic.add('owfact', Float(-999. ))
-        comp.missin.Basic.add('iflag', Int(-999 ))
-        comp.missin.Basic.add('msumpt', Int(-999 ))
-        comp.missin.Basic.add('dtc', Float(-999. ))
-        comp.missin.Basic.add('irw', Int(-999 ))
-        comp.missin.Basic.add('rtol', Float(-999. ))
-        comp.missin.Basic.add('nhold', Int(-999 ))
-        comp.missin.Basic.add('iata', Int(-999 ))
-        comp.missin.Basic.add('tlwind', Float(-999. ))
-        comp.missin.Basic.add('dwt', Float(-999. ))
-        comp.missin.Basic.add('offdr', Array(dtype=numpy_float64 ))
-        comp.missin.Basic.add('idoq', Int(-999 ))
-        comp.missin.Basic.add('nsout', Int(-999 ))
-        comp.missin.Basic.add('nsadj', Int(-999 ))
-        comp.missin.Basic.add('mirror', Int(-999 ))
 
-        comp.missin.add('Store_Drag', VarTree(VariableTree()))
-        comp.missin.Store_Drag.add('stma', Array(dtype=numpy_float64 ))
-        comp.missin.Store_Drag.add('cdst', Array(dtype=numpy_float64 ))
-        comp.missin.Store_Drag.add('istcl', Array(dtype=numpy_float64 ))
-        comp.missin.Store_Drag.add('istcr', Array(dtype=numpy_float64 ))
-        comp.missin.Store_Drag.add('istde', Int(-999 ))
+        self.add_param('input:'+name+':missin:Basic:indr', val=-999)
+        self.add_param('input:'+name+':missin:Basic:fact', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:fleak', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:fcdo', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:fcdi', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:fcdsub', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:fcdsup', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:iskal', val=-999)
+        self.add_param('input:'+name+':missin:Basic:owfact', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:iflag', val=-999)
+        self.add_param('input:'+name+':missin:Basic:msumpt', val=-999)
+        self.add_param('input:'+name+':missin:Basic:dtc', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:irw', val=-999)
+        self.add_param('input:'+name+':missin:Basic:rtol', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:nhold', val=-999)
+        self.add_param('input:'+name+':missin:Basic:iata', val=-999)
+        self.add_param('input:'+name+':missin:Basic:tlwind', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:dwt', val=-999.)
+        self.add_param('input:'+name+':missin:Basic:offdr', array([]))
+        self.add_param('input:'+name+':missin:Basic:idoq', val=-999)
+        self.add_param('input:'+name+':missin:Basic:nsout', val=-999)
+        self.add_param('input:'+name+':missin:Basic:nsadj', val=-999)
+        self.add_param('input:'+name+':missin:Basic:mirror', val=-999)
 
-        comp.missin.add('User_Weights', VarTree(VariableTree()))
-        comp.missin.User_Weights.add('mywts', Int(-999 ))
-        comp.missin.User_Weights.add('rampwt', Float(-999. ))
-        comp.missin.User_Weights.add('dowe', Float(-999. ))
-        comp.missin.User_Weights.add('paylod', Float(-999. ))
-        comp.missin.User_Weights.add('fuemax', Float(-999. ))
+        
+        self.add_param('input:'+name+':missin:Store_Drag:stma',val=array([]))
+        self.add_param('input:'+name+':missin:Store_Drag:cdst', val=array([]))
+        self.add_param('input:'+name+':missin:Store_Drag:istcl', val=array([]))
+        self.add_param('input:'+name+':missin:Store_Drag:istcr', val=array([]))
+        self.add_param('input:'+name+':missin:Store_Drag:istde', val=-999)
 
-        comp.missin.add('Ground_Operations', VarTree(VariableTree()))
-        comp.missin.Ground_Operations.add('takotm', Float(-999. ))
-        comp.missin.Ground_Operations.add('taxotm', Float(-999. ))
-        comp.missin.Ground_Operations.add('apprtm', Float(-999. ))
-        comp.missin.Ground_Operations.add('appfff', Float(-999. ))
-        comp.missin.Ground_Operations.add('taxitm', Float(-999. ))
-        comp.missin.Ground_Operations.add('ittff', Int(-999 ))
-        comp.missin.Ground_Operations.add('takoff', Float(-999. ))
-        comp.missin.Ground_Operations.add('txfufl', Float(-999. ))
-        comp.missin.Ground_Operations.add('ftkofl', Float(-999. ))
-        comp.missin.Ground_Operations.add('ftxofl', Float(-999. ))
-        comp.missin.Ground_Operations.add('ftxifl', Float(-999. ))
-        comp.missin.Ground_Operations.add('faprfl', Float(-999. ))
 
-        comp.missin.add('Turn_Segments', VarTree(VariableTree()))
-        comp.missin.Turn_Segments.add('xnz', Array(dtype=numpy_float64 ))
-        comp.missin.Turn_Segments.add('xcl', Array(dtype=numpy_float64 ))
-        comp.missin.Turn_Segments.add('xmach', Array(dtype=numpy_float64 ))
+        self.add_param('input:'+name+':missin:User_Weights:mywts', val=-999)
+        self.add_param('input:'+name+':missin:User_Weights:rampwt', val=-999.)
+        self.add_param('input:'+name+':missin:User_Weights:dowe', val=-999.)
+        self.add_param('input:'+name+':missin:User_Weights:paylod', val=-999.)
+        self.add_param('input:'+name+':missin:User_Weights:fuemax', val=-999.)
 
-        comp.missin.add('Climb', VarTree(VariableTree()))
-        comp.missin.Climb.add('nclimb', Int(-999))
-        comp.missin.Climb.add('clmmin', Array(dtype=numpy_float64 ))
-        comp.missin.Climb.add('clmmax', Array(dtype=numpy_float64 ))
-        comp.missin.Climb.add('clamin', Array(dtype=numpy_float64 ))
-        comp.missin.Climb.add('clamax', Array(dtype=numpy_float64 ))
-        comp.missin.Climb.add('nincl', Array(dtype=numpy_int64 ))
-        comp.missin.Climb.add('fwf', Array(dtype=numpy_float64 ))
-        comp.missin.Climb.add('ncrcl', Array(dtype=numpy_int64 ))
-        comp.missin.Climb.add('cldcd', Array(dtype=numpy_float64 ))
-        comp.missin.Climb.add('ippcl', Array(dtype=numpy_int64 ))
-        comp.missin.Climb.add('maxcl', Array(dtype=numpy_int64 ))
-        comp.missin.Climb.add('no', Array(dtype=numpy_int64 ))
-        comp.missin.Climb.add('keasvc', Int(-999 ))
-        comp.missin.Climb.add('actab', Array(dtype=numpy_float64 ))
-        comp.missin.Climb.add('vctab', Array(dtype=numpy_float64 ))
-        comp.missin.Climb.add('ifaacl', Int(-999 ))
-        comp.missin.Climb.add('ifaade', Int(-999 ))
-        comp.missin.Climb.add('nodive', Int(-999 ))
-        comp.missin.Climb.add('divlim', Float(-999. ))
-        comp.missin.Climb.add('qlim', Float(-999. ))
-        comp.missin.Climb.add('spdlim', Float(-999. ))
-        comp.missin.Climb.add('nql', Int(-999 ))
-        comp.missin.Climb.add('qlalt', Array(dtype=numpy_float64 ))
-        comp.missin.Climb.add('vqlm', Array(dtype=numpy_float64 ))
 
-        comp.missin.add('Cruise', VarTree(VariableTree()))
-        comp.missin.Cruise.add('ncruse', Int(-999 ))
-        comp.missin.Cruise.add('ioc', Array(dtype=numpy_int64 ))
-        comp.missin.Cruise.add('crmach', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('cralt', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('crdcd', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('flrcr', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('crmmin', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('crclmx', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('hpmin', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('ffuel', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('fnox', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('ifeath', Array(dtype=numpy_int64 ))
-        comp.missin.Cruise.add('feathf', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('cdfeth', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('dcwt', Float(-999. ))
-        comp.missin.Cruise.add('rcin', Float(-999. ))
-        comp.missin.Cruise.add('wtbm', Array(dtype=numpy_float64 ))
-        comp.missin.Cruise.add('altbm', Array(dtype=numpy_float64 ))
+        self.add_param('input:'+name+':missin:Ground_Operations:takotm', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:taxotm', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:apprtm', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:appfff', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:taxitm', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:ittff', val=-999)
+        self.add_param('input:'+name+':missin:Ground_Operations:takoff', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:txfufl', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:ftkofl', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:ftxofl', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:ftxifl', val=-999.)
+        self.add_param('input:'+name+':missin:Ground_Operations:faprfl', val=-999.)
 
-        comp.missin.add('Descent', VarTree(VariableTree()))
-        comp.missin.Descent.add('ivs', Int(-999 ))
-        comp.missin.Descent.add('decl', Float(-999. ))
-        comp.missin.Descent.add('demmin', Float(-999. ))
-        comp.missin.Descent.add('demmax', Float(-999. ))
-        comp.missin.Descent.add('deamin', Float(-999. ))
-        comp.missin.Descent.add('deamax', Float(-999. ))
-        comp.missin.Descent.add('ninde', Int(-999 ))
-        comp.missin.Descent.add('dedcd', Float(-999. ))
-        comp.missin.Descent.add('rdlim', Float(-999. ))
-        comp.missin.Descent.add('ns', Int(-999 ))
-        comp.missin.Descent.add('keasvd', Int(-999 ))
-        comp.missin.Descent.add('adtab', Array(dtype=numpy_float64 ))
-        comp.missin.Descent.add('vdtab', Array(dtype=numpy_float64 ))
 
-        comp.missin.add('Reserve', VarTree(VariableTree()))
-        comp.missin.Reserve.add('irs', Int(-999 ))
-        comp.missin.Reserve.add('resrfu', Float(-999. ))
-        comp.missin.Reserve.add('restrp', Float(-999. ))
-        comp.missin.Reserve.add('timmap', Float(-999. ))
-        comp.missin.Reserve.add('altran', Float(-999. ))
-        comp.missin.Reserve.add('nclres', Int(-999 ))
-        comp.missin.Reserve.add('ncrres', Int(-999 ))
-        comp.missin.Reserve.add('sremch', Float(-999. ))
-        comp.missin.Reserve.add('eremch', Float(-999. ))
-        comp.missin.Reserve.add('srealt', Float(-999. ))
-        comp.missin.Reserve.add('erealt', Float(-999. ))
-        comp.missin.Reserve.add('holdtm', Float(-999. ))
-        comp.missin.Reserve.add('ncrhol', Int(-999 ))
-        comp.missin.Reserve.add('ihopos', Int(-999 ))
-        comp.missin.Reserve.add('icron', Int(-999 ))
-        comp.missin.Reserve.add('thold', Float(-999. ))
-        comp.missin.Reserve.add('ncrth', Int(-999 ))
+        self.add_param('input:'+name+':missin:Turn_Segments:xnz', val=array([]))
+        self.add_param('input:'+name+':missin:Turn_Segments:xcl', val=array([]))
+        self.add_param('input:'+name+':missin:Turn_Segments:xmach', val=array([]))
 
-        # New mission definition defaults to the original one
-        comp.add('mission_definition', List(iotype='in'))
-        comp.mission_definition = self.input.mission_definition.mission
 
-        self.input.add(name, VarTree(comp))'''
+        self.add_param('input:'+name+':missin:Climb:nclimb', val=-999)
+        self.add_param('input:'+name+':missin:Climb:clmmin', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:clmmax', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:clamin', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:clamax', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:nincl', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:fwf', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:ncrcl', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:cldcd', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:ippcl', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:maxcl', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:no', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:keasvc', val=-999)
+        self.add_param('input:'+name+':missin:Climb:actab', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:vctab', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:ifaacl', val=-999)
+        self.add_param('input:'+name+':missin:Climb:ifaade', val=-999)
+        self.add_param('input:'+name+':missin:Climb:nodive', val=-999)
+        self.add_param('input:'+name+':missin:Climb:divlim', val=-999.)
+        self.add_param('input:'+name+':missin:Climb:qlim', val=-999.)
+        self.add_param('input:'+name+':missin:Climb:spdlim', val=-999.)
+        self.add_param('input:'+name+':missin:Climb:nql', val=-999)
+        self.add_param('input:'+name+':missin:Climb:qlalt', val=array([]))
+        self.add_param('input:'+name+':missin:Climb:vqlm', val=array([]))
+
+
+        self.add_param('input:'+name+':missin:Cruise:ncruse', val=-999)
+        self.add_param('input:'+name+':missin:Cruise:ioc', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:crmach', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:cralt', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:crdcd', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:flrcr', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:crmmin', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:crclmx', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:hpmin', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:ffuel', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:fnox', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:ifeath', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:feathf', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:cdfeth', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:dcwt', val=-999.)
+        self.add_param('input:'+name+':missin:Cruise:rcin', val=-999.)
+        self.add_param('input:'+name+':missin:Cruise:wtbm', val=array([]))
+        self.add_param('input:'+name+':missin:Cruise:altbm', val=array([]))
+
+
+        self.add_param('input:'+name+':missin:Descent:ivs', val=-999)
+        self.add_param('input:'+name+':missin:Descent:decl', val=-999.)
+        self.add_param('input:'+name+':missin:Descent:demmin', val=-999.)
+        self.add_param('input:'+name+':missin:Descent:demmax', val=-999.)
+        self.add_param('input:'+name+':missin:Descent:deamin', val=-999.)
+        self.add_param('input:'+name+':missin:Descent:deamax', val=-999.)
+        self.add_param('input:'+name+':missin:Descent:ninde', val=-999)
+        self.add_param('input:'+name+':missin:Descent:dedcd', val=-999.)
+        self.add_param('input:'+name+':missin:Descent:rdlim', val=-999.)
+        self.add_param('input:'+name+':missin:Descent:ns', val=-999)
+        self.add_param('input:'+name+':missin:Descent:keasvd', val=-999)
+        self.add_param('input:'+name+':missin:Descent:adtab', val=array([]))
+        self.add_param('input:'+name+':missin:Descent:vdtab', val=array([]))
+
+
+        self.add_param('input:'+name+':missin:Reserve:irs', val=-999)
+        self.add_param('input:'+name+':missin:Reserve:resrfu', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:restrp', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:timmap', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:altran', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:nclres', val=-999)
+        self.add_param('input:'+name+':missin:Reserve:ncrres', val=-999)
+        self.add_param('input:'+name+':missin:Reserve:sremch', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:eremch', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:srealt', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:erealt', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:holdtm', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:ncrhol', val=-999)
+        self.add_param('input:'+name+':missin:Reserve:ihopos', val=-999)
+        self.add_param('input:'+name+':missin:Reserve:icron', val=-999)
+        self.add_param('input:'+name+':missin:Reserve:thold', val=-999.)
+        self.add_param('input:'+name+':missin:Reserve:ncrth', val=-999)
+
+
 
 
   
@@ -2123,7 +3916,7 @@ class FlopsWrapper(ExternalCode):
 
         empty_groups, unlisted_groups, unlinked_vars = \
                     sb.load_model(rule_dict, ignore)
-
+     
         # The pconin groups are problematic, and have not been filled because
         # they aren't created yet. We can parse the unlisted_groups to see
         # which ones are in the input-file, and then add them to the component.
@@ -2235,7 +4028,7 @@ class FlopsWrapper(ExternalCode):
                         mission_end = i+mission_start
                         mission_count += i+1
                         break
-                '''self.set("input:%s.mission_definition" % name, \
+                '''self.set("input:%s:mission_definition" % name, \
                            missions[mission_start:mission_end+1])'''
                 self.add_param("input:%s:mission_definition" % name,val=missions[mission_start:mission_end+1])
 
@@ -2247,7 +4040,7 @@ class FlopsWrapper(ExternalCode):
         #getValue(self,'input:engdin:Basic:igenen')
         #exit()
 
-        #if self.input.engdin.Basic.igenen in (0, -2):
+        #if self.input.engdin:Basic:igenen in (0, -2):
         if self.getValue('input:engdin:Basic:igenen') in (0,-2):
             found = False
             engine_deck = ""
@@ -2264,7 +4057,7 @@ class FlopsWrapper(ExternalCode):
                     engine_deck += '%s\n' % group
                     ndecks += 1
 
-            self.input.engine_deck.engdek = engine_deck
+            self.assignValue("input:engine_deck.engdek", engine_deck)
 
         # Aero deck seems to fall after the mission segements
         if self.getValue('input:aerin:Basic:myaero') > 0 and \
@@ -2290,13 +4083,13 @@ class FlopsWrapper(ExternalCode):
             self.assignValue('input:aero_data:aerodat',aerodat)
         # Post process some stuff, mostly arrays 2D arrays that come over as 1D
 
-        #tf = self.input.wtin.Inertia.tf
+        #tf = self.input:wtin:Inertia:tf
         tf = self.getValue('input:wtin:Inertia:tf')
         # TODO: tf can be input with 1st dim greater than one. Need to find out
         # how that is written / parsed.
 
         if tf.shape[0] > 0:
-            #self.set('input.wtin.Inertia.tf', array([tf]))
+            #self.set('input:wtin:Inertia:tf', array([tf]))
             self.assignValues('input:wtin:Inertia:tf',array([tf]))      
 
         # Report diagnostics and raise any exceptions.
