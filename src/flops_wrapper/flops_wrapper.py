@@ -31,7 +31,61 @@ class FlopsWrapper(ExternalCode):
     """Wrapper for FlopsWrapper"""
 
 
+    def __init__(self):
+        '''Constructor for the FlopsWrapper component'''
+        super(FlopsWrapper,self).__init__()
+
+        '''In old wrapper these were openmdao variables. Not sure what is the best way to 
+        organize these'''
+        self.ERROR = 'none'
+        self.HINT='none'
+        self.add_param('input:missin:Basic:npcon',val=0, iotype='in', desc='Number of PCONIN namelists to be created',pass_by_obj=True)
+        self.nseg = 0
+        self.npcons = []
+
+
+
+
+
+        self.add_param('input:title',val='none',typeVar='Str')#adding title for namecards
+        self.loadInputVars()
+        #top = Problem()
+        #top.root =  Group()
+        #top.root.add('my_flops',self)
+        #top.setup(check=False)
+
+        # External Code public variables
+
+        self.input_filepath = 'flops.inp'
+        self.output_filepath = 'flops.out'
+        self.stderr = 'flops.err'
+
+        self.options['external_input_files'] = [self.input_filepath]
+        self.options['external_output_files'] = [self.output_filepath]
+        self.options['command'] = ['flops',self.input_filepath,self.output_filepath]
+
+        """self.external_files = [
+            FileMetadata(path=self.stdin, input=True),
+            FileMetadata(path=self.stdout),
+            FileMetadata(path=self.stderr),
+        ]"""
+
+
+        # This stuff is global in the Java wrap.
+        # These are used when adding and removing certain segments.
+        self.nseg0 = 0
+        self.npcon0 = 0
+        self.nrern0 = 0
+        self.npcons0 = []
+        self.npcons0.append(0)
+        self.nmseg = 0
+
+
+
+
+
     def mydumpVar(self, out_stream=sys.stdout):
+        # The current dump function in Components only dumps the outputs
         """
         Writes a formated dump of this `Component` to file.
 
@@ -456,57 +510,12 @@ class FlopsWrapper(ExternalCode):
 
 
 
-    def __init__(self):
-        '''Constructor for the FlopsWrapper component'''
-        super(FlopsWrapper,self).__init__()
 
-        '''In old wrapper these were openmdao variables. Not sure what is the best way to 
-        organize these'''
-        self.ERROR = 'none'
-        self.HINT='none'
-        self.add_param('input:missin:Basic:npcon',val=0, iotype='in', desc='Number of PCONIN namelists to be created',pass_by_obj=True)
-        self.nseg = 0
-        self.npcons = []
-
-
-
-
-
-        self.add_param('input:title',val='none',typeVar='Str')#adding title for namecards
-        self.loadInputVars()
-        #top = Problem()
-        #top.root =  Group()
-        #top.root.add('my_flops',self)
-        #top.setup(check=False)
-
-        # External Code public variables
-
-        self.input_filepath = 'flops.inp'
-        self.output_filepath = 'flops.out'
-        self.stderr = 'flops.err'
-
-        self.options['external_input_files'] = [self.input_filepath]
-        self.options['external_output_files'] = [self.output_filepath]
-        self.options['command'] = ['flops',self.input_filepath,self.output_filepath]
-
-        """self.external_files = [
-            FileMetadata(path=self.stdin, input=True),
-            FileMetadata(path=self.stdout),
-            FileMetadata(path=self.stderr),
-        ]"""
-
-
-        # This stuff is global in the Java wrap.
-        # These are used when adding and removing certain segments.
-        self.nseg0 = 0
-        self.npcon0 = 0
-        self.nrern0 = 0
-        self.npcons0 = []
-        self.npcons0.append(0)
-        self.nmseg = 0
 
     def generate_input(self):
 
+        ''' This is a current hack to compare the outputs with the old flops wrapper. Need to generate new test files to get rid of these lines'''
+        ######################################################
         paramList = list(self._params_dict.keys())
         for param in paramList:
             if 'typeVar' in self._params_dict[param]:
@@ -521,6 +530,8 @@ class FlopsWrapper(ExternalCode):
                         self._params_dict[param]['val'] = array(self._params_dict[param]['val'] ,dtype=numpy_float64)
                 elif keyVar['typeVar']=='Float' and isinstance(keyVar['val'],int):
                         self._params_dict[param]['val'] = float(self._params_dict[param]['val'] )
+
+        ######################################################
 
 
         sb = Namelist(self)
@@ -3403,7 +3414,7 @@ class FlopsWrapper(ExternalCode):
         self.add_param(name+'missin:Climb:qlalt', val=array([]),typeVar='Array,float')
         self.add_param(name+'missin:Climb:vqlm', val=array([]),typeVar='Array,float')
 
-        comp.missin.add('Cruise', VarTree(VariableTree()))
+
         self.add_param(name+'missin:Cruise:ncruse', val=-999,typeVar='Int',pass_by_obj=True)
         self.add_param(name+'missin:Cruise:ioc', val=array([]),typeVar='Array,int',pass_by_obj=False)
         self.add_param(name+'missin:Cruise:crmach', val=array([]),typeVar='Array,float')
@@ -3423,7 +3434,7 @@ class FlopsWrapper(ExternalCode):
         self.add_param(name+'missin:Cruise:wtbm', val=array([]),typeVar='Array,float')
         self.add_param(name+'missin:Cruise:altbm', val=array([]),typeVar='Array,float')
 
-        comp.missin.add('Descent', VarTree(VariableTree()))
+
         self.add_param(name+'missin:Descent:ivs', val=-999,typeVar='Int',pass_by_obj=True)
         self.add_param(name+'missin:Descent:decl', val=-999.,typeVar='Float')
         self.add_param(name+'missin:Descent:demmin', val=-999.,typeVar='Float')
@@ -3438,7 +3449,7 @@ class FlopsWrapper(ExternalCode):
         self.add_param(name+'missin:Descent:adtab', val=array([]),typeVar='Array,float')
         self.add_param(name+'missin:Descent:vdtab', val=array([]),typeVar='Array,float')
 
-        comp.missin.add('Reserve', VarTree(VariableTree()))
+
         self.add_param(name+'missin:Reserve:irs', val=-999,typeVar='Int',pass_by_obj=True)
         self.add_param(name+'missin:Reserve:resrfu', val=-999.,typeVar='Float')
         self.add_param(name+'missin:Reserve:restrp', val=-999.,typeVar='Float')
