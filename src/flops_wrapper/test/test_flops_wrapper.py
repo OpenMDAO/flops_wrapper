@@ -9,10 +9,10 @@ import shutil
 # have the package installed.
 
 
-#from flops_wrapper.flops_wrapper import FlopsWrapper
-import sys
-sys.path.append("../")
-from flops_wrapper import FlopsWrapper
+from flops_wrapper.flops_wrapper import FlopsWrapper
+#import sys
+#sys.path.append("../")
+#from flops_wrapper import FlopsWrapper
 from openmdao.core.problem import Problem
 from openmdao.core.group import Group
 from openmdao.recorders.dump_recorder import DumpRecorder
