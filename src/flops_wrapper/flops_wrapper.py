@@ -29,21 +29,17 @@ from six import iteritems, itervalues, iterkeys
     
 class FlopsWrapper(ExternalCode):
     """Wrapper for FlopsWrapper"""
-
-
     def __init__(self):
         '''Constructor for the FlopsWrapper component'''
         super(FlopsWrapper,self).__init__()
 
-        '''In old wrapper these were openmdao variables. Not sure what is the best way to 
-        organize these'''
-        self.ERROR = 'none'
-        self.HINT='none'
+        self.add_output('output:ERROR',val='none',pass_by_obj=True)
+        self.add_output('output:HINT',val='none',pass_by_obj=True)
+
         self.add_param('input:missin:Basic:npcon',val=0, iotype='in', desc='Number of PCONIN namelists to be created',pass_by_obj=True)
+
         self.nseg = 0
         self.npcons = []
-
-
 
 
 
@@ -79,43 +75,6 @@ class FlopsWrapper(ExternalCode):
         self.npcons0 = []
         self.npcons0.append(0)
         self.nmseg = 0
-
-
-
-
-
-    def mydumpVar(self, out_stream=sys.stdout):
-        # The current dump function in Components only dumps the outputs
-        """
-        Writes a formated dump of this `Component` to file.
-
-        Args
-        ----
-
-        out_stream : an open file, optional
-            Where output is written.  Defaults to sys.stdout.
-
-        """
-
-        ulabel, plabel, uvecname, pvecname = 'u', 'p', 'unknowns', 'params'
-
-        uvec = getattr(self, uvecname)
-        pvec = getattr(self, pvecname)
-
-
-        for v in sorted(pvec):
-
-
-            inval = ' \''+v.replace(":",'.')+'\':'+' \''+str(pvec[v]).replace("\n","\\n")+'\',\n'
-            out_stream.write( inval)
-    
-
-        for v in sorted(uvec):
-            outval = ' \''+v.replace(":",'.')+'\':'+' \''+str(uvec[v]).replace("\n","\\n")+'\',\n'
-            out_stream.write(outval)
-
-
-        out_stream.flush()
 
 
     '''functions to manipulate inputs before setup()'''
@@ -183,6 +142,23 @@ class FlopsWrapper(ExternalCode):
                 print("Warning in flops_wrapper.py->remove_container.\nNo container to remove")
 
     '''define output variables'''
+    def loadOutputVars(self):
+                
+        self.FlopsWrapper_output_Weight_Wing()
+        self.FlopsWrapper_output_Weight_Inertia()
+        self.FlopsWrapper_output_Weight()
+        self.FlopsWrapper_output_Plot_Files()
+        self.FlopsWrapper_output_Performance_Segments()
+        self.FlopsWrapper_output_Performance_Constraints()
+        self.FlopsWrapper_output_Performance()
+        self.FlopsWrapper_output_Payload()
+        self.FlopsWrapper_output_Noise()
+        self.FlopsWrapper_output_Geometry_BWB()
+        self.FlopsWrapper_output_Geometry()
+        self.FlopsWrapper_output_Engine()
+        self.FlopsWrapper_output_Econ()
+
+
 
     def FlopsWrapper_output_Weight_Wing(self):
         """Container for output.Weight.Wing"""
@@ -268,7 +244,7 @@ class FlopsWrapper(ExternalCode):
         self.add_output(strChain+'wbomb',val=0.0,typeVar='Float')
 
         '''Not declared in olf FLOPS wrapper'''
-        self.add_output(strChain+'thrsop',val=0.0,typeVar='Float')
+        self.add_output(strChain+'thrsop',val=zeros(0),typeVar='Float')
 
 
     def FlopsWrapper_output_Plot_Files(self):    """Container for output.Plot_Files"""
@@ -507,2509 +483,6 @@ class FlopsWrapper(ExternalCode):
 
 
 
-
-
-
-
-
-    def generate_input(self):
-
-        ''' This is a current hack to compare the outputs with the old flops wrapper. Need to generate new test files to get rid of these lines'''
-        ######################################################
-        paramList = list(self._params_dict.keys())
-        for param in paramList:
-            if 'typeVar' in self._params_dict[param]:
-                keyVar = self._params_dict[param]
-                if keyVar['typeVar']=='Array,int' and isinstance(keyVar['val'],ndarray):              
-                        self._params_dict[param]['val'] = array(self._params_dict[param]['val'],dtype=numpy_int64 ).tolist()
-                if (keyVar['typeVar'].lower()=='list' or keyVar['typeVar']=='Array,int')   and isinstance(keyVar['val'],int):              
-                        self._params_dict[param]['val'] = array([self._params_dict[param]['val']])
-
-
-                elif keyVar['typeVar']=='Array,float' and isinstance(keyVar['val'],ndarray):
-                        self._params_dict[param]['val'] = array(self._params_dict[param]['val'] ,dtype=numpy_float64)
-                elif keyVar['typeVar']=='Float' and isinstance(keyVar['val'],int):
-                        self._params_dict[param]['val'] = float(self._params_dict[param]['val'] )
-
-        ######################################################
-
-
-        sb = Namelist(self)
-        sb.set_filename(self.input_filepath)
-        sb.set_title(self.getValue('input:title'))
-
-        #-------------------
-        # Namelist &OPTION
-        #-------------------
-
-        sb.add_group('OPTION')
-        sb.add_comment("\n  ! Program Control, Execution, Analysis and Plot Option Data")
-
-        iopt = self.getValue('input:option:Program_Control:iopt')
-        ianal = self.getValue('input:option:Program_Control:ianal')
-        ineng = self.getValue('input:option:Program_Control:ineng')
-        itakof = self.getValue('input:option:Program_Control:itakof')
-        iland = self.getValue('input:option:Program_Control:iland')
-        nopro = self.getValue('input:option:Program_Control:nopro')
-        noise = self.getValue('input:option:Program_Control:noise')
-        icost = self.getValue('input:option:Program_Control:icost')
-        ifite = self.getValue('input:option:Program_Control:ifite')
-        mywts = self.getValue('input:wtin:Basic:mywts')
-
-        sb.add_container("input:option:Program_Control")
-
-        sb.add_comment("\n  ! Plot files for XFLOPS Graphical Interface Postprocessor (MSMPLOT)")
-        sb.add_var("input:option:Plot_Files:ixfl")
-
-        sb.add_comment("\n  ! Takeoff and Climb Profile File for Noise Calculations (NPROF)")
-        sb.add_var("input:option:Plot_Files:npfile")
-
-        sb.add_comment("\n  ! Drag Polar Plot File (POLPLOT)")
-        sb.add_var("input:option:Plot_Files:ipolp")
-        sb.add_var("input:option:Plot_Files:polalt")
-
-        nmach = len(self.getValue('input:option:Plot_Files:pmach'))
-        if nmach > 0:
-            sb.add_newvar("nmach", nmach)
-            sb.add_var("input:option:Plot_Files:pmach")
-
-        sb.add_comment("\n  ! Engine Performance Data Plot File (THRPLOT)")
-        sb.add_var("input:option:Plot_Files:ipltth")
-
-        sb.add_comment("\n  ! Design History Plot File (HISPLOT)")
-        sb.add_var("input:option:Plot_Files:iplths")
-
-        ipltps = len(self.getValue("input:option:Excess_Power_Plot:pltnz"))
-        if ipltps > 0:
-            sb.add_comment("\n  ! Excess Power Plot File (PSPLOT)")
-            sb.add_newvar("ipltps", ipltps)
-            sb.add_container("input:option:Excess_Power_Plot")
-
-        # Plotfile names
-        sb.add_comment("\n  ! Plotfile Names")
-        if self.getValue("input:option:Plot_Files:cnfile"):
-            sb.add_var("input:option:Plot_Files:cnfile")
-        if self.getValue("input:option:Plot_Files:msfile"):
-            sb.add_var("input:option:Plot_Files:msfile")
-        if self.getValue("input:option:Plot_Files:crfile"):
-            sb.add_var("input:option:Plot_Files:crfile")
-        if self.getValue("input:option:Plot_Files:tofile") :
-            sb.add_var("input:option:Plot_Files:tofile")
-        if self.getValue("input:option:Plot_Files:nofile"):
-            sb.add_var("input:option:Plot_Files:nofile")
-        if self.getValue("input:option:Plot_Files:apfile") :
-            sb.add_var("input:option:Plot_Files:apfile")
-        if self.getValue("input:option:Plot_Files:thfile") :
-            sb.add_var("input:option:Plot_Files:thfile ")
-        if self.getValue("input:option:Plot_Files:hsfile") :
-            sb.add_var("input:option:Plot_Files:hsfile")
-        if self.getValue("input:option:Plot_Files:psfile") :
-            sb.add_var("input:option:Plot_Files:psfile")
-
-        #-------------------
-        # Namelist &WTIN
-        #-------------------
-
-        sb.add_group('WTIN')
-
-        sb.add_comment("\n  ! Geometric, Weight, Balance and Inertia Data")
-        sb.add_container("input:wtin:Basic")
-
-        sb.add_comment("\n  ! Special Option for Operating Weight Empty Calculations")
-        sb.add_container("input:wtin:OEW_Calculations")
-
-        sb.add_comment("\n  ! Wing Data")
-        sb.add_container("input:wtin:Wing_Data")
-
-        netaw = len(self.getValue("input:wtin:Detailed_Wing:etaw"))
-
-        if netaw > 0:
-            sb.add_comment("\n  ! Detailed Wing Data")
-            sb.add_newvar("netaw", netaw)
-            sb.add_var("input:wtin:Detailed_Wing:etaw")
-            sb.add_var("input:wtin:Detailed_Wing:chd")
-            sb.add_var("input:wtin:Detailed_Wing:toc")
-            sb.add_var("input:wtin:Detailed_Wing:swl")
-            sb.add_var("input:wtin:Detailed_Wing:etae")
-            sb.add_var("input:wtin:Detailed_Wing:pctl")
-            sb.add_var("input:wtin:Detailed_Wing:arref")
-            sb.add_var("input:wtin:Detailed_Wing:tcref")
-            sb.add_var("input:wtin:Detailed_Wing:nstd")
-
-            pdist = self.getValue("input:wtin:Detailed_Wing:pdist")
-            sb.add_var("input:wtin:Detailed_Wing:pdist")
-            if pdist < 0.0001:
-                sb.add_var("input:wtin:Detailed_Wing:etap")
-                sb.add_var("input:wtin:Detailed_Wing:pval")
-
-        sb.add_comment("\n  ! Tails, Fins, Canards")
-        sb.add_comment("\n  ! Horizontal Tail Data")
-        sb.add_var("input:wtin:Tails_Fins:sht")
-        sb.add_var("input:wtin:Tails_Fins:swpht")
-        sb.add_var("input:wtin:Tails_Fins:arht")
-        sb.add_var("input:wtin:Tails_Fins:trht")
-        sb.add_var("input:wtin:Tails_Fins:tcht")
-        sb.add_var("input:wtin:Tails_Fins:hht")
-
-        nvert = self.getValue("input:wtin:Tails_Fins:nvert")
-        if nvert != 0:
-            sb.add_comment("\n  ! Vertical Tail Data")
-            sb.add_var("input:wtin:Tails_Fins:nvert")
-            sb.add_var("input:wtin:Tails_Fins:svt")
-            sb.add_var("input:wtin:Tails_Fins:swpvt")
-            sb.add_var("input:wtin:Tails_Fins:arvt")
-            sb.add_var("input:wtin:Tails_Fins:trvt")
-            sb.add_var("input:wtin:Tails_Fins:tcvt")
-
-        nfin = self.getValue("input:wtin:Tails_Fins:nfin")
-        if nfin != 0:
-            sb.add_comment("\n  ! Fin Data")
-            sb.add_var("input:wtin:Tails_Fins:nfin")
-            sb.add_var("input:wtin:Tails_Fins:sfin")
-            sb.add_var("input:wtin:Tails_Fins:arfin")
-            sb.add_var("input:wtin:Tails_Fins:trfin")
-            sb.add_var("input:wtin:Tails_Fins:swpfin")
-            sb.add_var("input:wtin:Tails_Fins:tcfin")
-
-        scan = self.getValue("input:wtin:Tails_Fins:scan")
-        if scan != 0:
-            sb.add_comment("\n  ! Canard Data")
-            sb.add_var("input:wtin:Tails_Fins:scan")
-            sb.add_var("input:wtin:Tails_Fins:swpcan")
-            sb.add_var("input:wtin:Tails_Fins:arcan")
-            sb.add_var("input:wtin:Tails_Fins:trcan")
-            sb.add_var("input:wtin:Tails_Fins:tccan")
-
-        sb.add_comment("\n  ! Fuselage Data")
-        sb.add_container("input:wtin:Fuselage")
-
-        sb.add_comment("\n  ! Landing Gear Data")
-        sb.add_container("input:wtin:Landing_Gear")
-
-        sb.add_comment("\n  ! Propulsion System Data")
-        sb.add_container("input:wtin:Propulsion")
-
-        sb.add_comment("\n  ! Fuel System Data")
-        sb.add_var("input:wtin:Fuel_System:ntank")
-        sb.add_var("input:wtin:Fuel_System:fulwmx")
-        sb.add_var("input:wtin:Fuel_System:fulden")
-        sb.add_var("input:wtin:Fuel_System:fulfmx")
-        sb.add_var("input:wtin:Fuel_System:ifufu")
-        sb.add_var("input:wtin:Fuel_System:fulaux")
-
-        fuscla = self.getValue("input:wtin:Fuel_System:fuscla")
-        if fuscla > 0.000001:
-            sb.add_comment("\n  ! Special method for scaling wing fuel capacity")
-            sb.add_var("input:wtin:Fuel_System:fuelrf")
-            sb.add_var("input:wtin:Fuel_System:fswref")
-            sb.add_var("input:wtin:Fuel_System:fuscla")
-            sb.add_var("input:wtin:Fuel_System:fusclb")
-
-        sb.add_comment("\n  ! Crew and Payload Data")
-        sb.add_container("input:wtin:Crew_Payload")
-
-        sb.add_comment("\n  ! Override Parameters")
-        sb.add_container("input:wtin:Override")
-
-        sb.add_comment("\n  ! Center of Gravity (C.G.) Data")
-        sb.add_container("input:wtin:Center_of_Gravity")
-
-        inrtia = self.getValue("input:wtin:Inertia:inrtia")
-        if inrtia != 0:
-            sb.add_comment("\n  ! Inertia Data")
-            sb.add_newvar("inrtia", inrtia)
-            sb.add_var("input:wtin:Inertia:zht")
-            sb.add_var("input:wtin:Inertia:zvt")
-            sb.add_var("input:wtin:Inertia:zfin")
-            sb.add_var("input:wtin:Inertia:yfin")
-            sb.add_var("input:wtin:Inertia:zef")
-            sb.add_var("input:wtin:Inertia:yef")
-            sb.add_var("input:wtin:Inertia:zea")
-            sb.add_var("input:wtin:Inertia:yea")
-            sb.add_var("input:wtin:Inertia:zbw")
-            sb.add_var("input:wtin:Inertia:zap")
-            sb.add_var("input:wtin:Inertia:zrvt")
-            sb.add_var("input:wtin:Inertia:ymlg")
-            sb.add_var("input:wtin:Inertia:yfuse")
-            sb.add_var("input:wtin:Inertia:yvert")
-            sb.add_var("input:wtin:Inertia:swtff")
-            sb.add_var("input:wtin:Inertia:tcr")
-            sb.add_var("input:wtin:Inertia:tct")
-            sb.add_var("input:wtin:Inertia:incpay")
-
-            l = len(self.getValue("input:wtin:Inertia:tx"))
-            sb.add_newvar("itank", l)
-            if l > 0:
-                sb.add_var("input:wtin:Inertia:tx")
-                sb.add_var("input:wtin:Inertia:ty")
-                sb.add_var("input:wtin:Inertia:tz")
-
-            j = len(self.getValue("input:wtin:Inertia:tl"))
-            if j > 0:
-                sb.add_var("input:wtin:Inertia:tl")
-                sb.add_var("input:wtin:Inertia:tw")
-                sb.add_var("input:wtin:Inertia:td")
-
-            j = self.getValue("input:wtin:Inertia:tf").shape[0]
-            sb.add_newvar("nfcon", j)
-            if l*j > 0:
-                sb.add_var("input:wtin:Inertia:tf")
-
-        #-------------------
-        # Namelist &FUSEIN
-        #-------------------
-
-        # Namelist &FUSEIN is only required if XL=0 or IFITE=3.
-        xl = self.getValue("input:wtin:Fuselage:xl")
-        if xl < 0.0000001 or ifite == 3:
-
-            sb.add_group('FUSEIN')
-            sb.add_comment("\n  ! Fuselage Design Data")
-            sb.add_container("input:fusein:Basic")
-            sb.add_container("input:fusein:BWB")
-
-        #-------------------
-        # Namelist &CONFIN
-        #-------------------
-
-        sb.add_group('CONFIN')
-        sb.add_container("input:confin:Basic")
-
-        # MC Flops wrapper didn't write these out if iopt was less than 3
-        # I changed it to match expected behavior when comparing manual FLOPS
-        # if iopt >= 3:
-        sb.add_comment("\n  ! Objective Function Definition")
-        sb.add_container("input:confin:Objective")
-
-        sb.add_comment("\n  ! Design Variables")
-        sb.add_var("input:confin:Design_Variables:gw")
-        sb.add_var("input:confin:Design_Variables:ar")
-        sb.add_var("input:confin:Design_Variables:thrust")
-        sb.add_var("input:confin:Design_Variables:sw")
-        sb.add_var("input:confin:Design_Variables:tr")
-        sb.add_var("input:confin:Design_Variables:sweep")
-        sb.add_var("input:confin:Design_Variables:tca")
-        sb.add_var("input:confin:Design_Variables:vcmn")
-        sb.add_var("input:confin:Design_Variables:ch")
-        sb.add_var("input:confin:Design_Variables:varth")
-        sb.add_var("input:confin:Design_Variables:rotvel")
-        sb.add_var("input:confin:Design_Variables:plr")
-
-        igenen = self.getValue("input:engdin:Basic:igenen")
-        if igenen in (1, -2):
-            sb.add_comment("\n  ! Engine Design Variables")
-            sb.add_var("input:confin:Design_Variables:etit")
-            sb.add_var("input:confin:Design_Variables:eopr")
-            sb.add_var("input:confin:Design_Variables:efpr")
-            sb.add_var("input:confin:Design_Variables:ebpr")
-            sb.add_var("input:confin:Design_Variables:ettr")
-            sb.add_var("input:confin:Design_Variables:ebla")
-
-        #-------------------
-        # Namelist &AERIN
-        #-------------------
-
-        sb.add_group('AERIN')
-
-        myaero = self.getValue("input:aerin:Basic:myaero")
-        iwave = self.getValue("input:aerin:Basic:iwave")
-        if myaero != 0:
-            sb.add_comment("\n  ! Externally Computed Aerodynamics")
-            sb.add_var("input:aerin:Basic:myaero")
-            sb.add_var("input:aerin:Basic:iwave")
-            if iwave != 0:
-                sb.add_var("input:aerin:Basic:fwave")
-            sb.add_var("input:aerin:Basic:itpaer")
-            sb.add_var("input:aerin:Basic:ibo")
-        else:
-            sb.add_comment("\n  ! Internally Computed Aerodynamics")
-            sb.add_container("input:aerin:Internal_Aero")
-
-        sb.add_container("input:aerin:Takeoff_Landing")
-
-        #-------------------
-        # Namelist &COSTIN
-        #-------------------
-
-        # Namelist &COSTIN is only required if ICOST=1.
-        if icost != 0:
-            sb.add_group('COSTIN')
-
-            sb.add_comment("\n  ! Cost Calculation Data")
-            sb.add_container("input:costin:Basic")
-            sb.add_comment("\n  ! Mission Performance Data")
-            sb.add_container("input:costin:Mission_Performance")
-            sb.add_comment("\n  ! Cost Technology Parameters")
-            sb.add_container("input:costin:Cost_Technology")
-
-        #-------------------
-        # Namelist &ENGDIN
-        #-------------------
-
-        # Namelist &ENGDIN is only required in IANAL=3 or 4 or INENG=1.
-        if ianal in (3, 4) or ineng == 1:
-            sb.add_group('ENGDIN')
-
-            sb.add_comment("\n  ! Engine Deck Control, Scaling and Usage Data")
-            sb.add_var("input:engdin:Basic:ngprt")
-            sb.add_var("input:engdin:Basic:igenen")
-            sb.add_var("input:engdin:Basic:extfac")
-            sb.add_var("input:engdin:Basic:fffsub")
-            sb.add_var("input:engdin:Basic:fffsup")
-            sb.add_var("input:engdin:Basic:idle")
-            sb.add_var("input:engdin:Basic:noneg")
-            sb.add_var("input:engdin:Basic:fidmin")
-            sb.add_var("input:engdin:Basic:fidmax")
-            sb.add_var("input:engdin:Basic:ixtrap")
-            sb.add_var("input:engdin:Basic:ifill")
-            sb.add_var("input:engdin:Basic:maxcr")
-            sb.add_var("input:engdin:Basic:nox")
-
-            npcode =  len(self.getValue("input:engdin:Basic:pcode"))
-            if npcode > 0:
-                sb.add_newvar("npcode", npcode)
-                sb.add_var("input:engdin:Basic:pcode")
-
-            sb.add_var("input:engdin:Basic:boost")
-            sb.add_var("input:engdin:Basic:igeo")
-            sb.add_var("input:engdin:Special_Options:dffac")
-            sb.add_var("input:engdin:Special_Options:fffac")
-
-            if igenen in (1, -2):
-                j =  len(self.getValue("input:engdin:Special_Options:emach"))
-                l =  self.getValue("input:engdin:Special_Options:alt").shape[0]
-                if j > 0:
-                    # TODO - Find out about fake 2d for new FLOPS double prop
-                    # capability.
-                    sb.add_var("input:engdin:Special_Options:emach")
-                    if l*j > 0:
-                        # TODO - Find out about fake 3d for new FLOPS double prop
-                        # capability.
-                        sb.add_var("input:engdin:Special_Options:alt")
-
-            insdrg =  self.getValue("input:engdin:Special_Options:insdrg")
-            if insdrg != 0:
-                sb.add_comment("\n  ! Nozzle installation drag using table look-up")
-                sb.add_newvar("insdrg", insdrg)
-                sb.add_var("input:engdin:Special_Options:nab")
-                sb.add_var("input:engdin:Special_Options:nabref")
-                sb.add_var("input:engdin:Special_Options:a10")
-                sb.add_var("input:engdin:Special_Options:a10ref")
-                sb.add_var("input:engdin:Special_Options:a9ref")
-                sb.add_var("input:engdin:Special_Options:xnoz")
-                sb.add_var("input:engdin:Special_Options:xnref")
-                sb.add_var("input:engdin:Special_Options:rcrv")
-
-                # TODO - rawInputFile( cdfile, "ENDRAG" );
-                #cdfile.open
-
-            # Write out the eifile. This is a new addition.
-            if self.getValue("input:engdin:eifile"):
-                sb.add_var("input:engdin:eifile")
-
-
-            #----------------------
-            # Namelist Engine deck
-            #----------------------
-
-            # Insert the engine deck into the flops input file
-
-            # If IGENEN=0 the engine deck is part of the input file, otherwise it is an
-            # external file.
-
-            engine_deck  = self.getValue("input:engine_deck:engdek")
-            if igenen in (0, -2):
-                # engine_deck contains the raw engine deck
-                sb.add_group(engine_deck)
-            else:
-                # engine_deck contains the name of the engine deck file
-                if engine_deck:
-                    sb.add_var("input:engine_deck:engdek")
-
-        #-------------------
-        # Namelist &ENGINE
-        #-------------------
-
-        # Namelist &ENGINE is only required if IGENEN=-2 or 1.
-        if igenen in (-2, 1):
-
-            sb.add_group('ENGINE')
-
-            nginwt =  self.getValue("input:engine:Engine_Weight:nginwt")
-            ieng = self.getValue("input:engine:Basic:ieng")
-
-            sb.add_var("input:engine:Basic:ieng")
-            sb.add_var("input:engine:Basic:iprint")
-            sb.add_var("input:engine:Basic:gendek")
-            sb.add_var("input:engine:Basic:ithrot")
-            sb.add_var("input:engine:Basic:npab")
-            sb.add_var("input:engine:Basic:npdry")
-            sb.add_var("input:engine:Basic:xidle")
-            sb.add_var("input:engine:Basic:nitmax")
-
-            if self.getValue("input:engine:Basic:xmmax") > 0:
-                sb.add_var("input:engine:Basic:xmmax")
-            if self.getValue("input:engine:Basic:amax") > 0:
-                sb.add_var("input:engine:Basic:amax")
-            if self.getValue("input:engine:Basic:xminc") > 0:
-                sb.add_var("input:engine:Basic:xminc")
-            if self.getValue("input:engine:Basic:ainc") > 0:
-                sb.add_var("input:engine:Basic:ainc")
-            if self.getValue("input:engine:Basic:qmin") > 0:
-                sb.add_var("input:engine:Basic:qmin")
-            if self.getValue("input:engine:Basic:qmax") > 0:
-                sb.add_var("input:engine:Basic:qmax")
-
-            sb.add_newvar("nginwt", nginwt)
-            sb.add_container("input:engine:Noise_Data")
-
-            if self.getValue("input:engine:Design_Point:desfn") > 0:
-                sb.add_var("input:engine:Design_Point:desfn")
-            if self.getValue("input:engine:Design_Point:xmdes") > 0:
-                sb.add_var("input:engine:Design_Point:xmdes")
-            if self.getValue("input:engine:Design_Point:xades") > 0:
-                sb.add_var("input:engine:Design_Point:xades")
-
-            sb.add_var("input:engine:Design_Point:oprdes")
-            sb.add_var("input:engine:Design_Point:fprdes")
-            sb.add_var("input:engine:Design_Point:bprdes")
-            sb.add_var("input:engine:Design_Point:tetdes")
-            sb.add_var("input:engine:Design_Point:ttrdes")
-            sb.add_var("input:engine:Other:hpcpr")
-            sb.add_var("input:engine:Other:aburn")
-            sb.add_var("input:engine:Other:dburn")
-            sb.add_var("input:engine:Other:effab")
-            sb.add_var("input:engine:Other:tabmax")
-            sb.add_var("input:engine:Other:ven")
-            sb.add_var("input:engine:Other:costbl")
-            sb.add_var("input:engine:Other:fanbl")
-            sb.add_var("input:engine:Other:hpext")
-            sb.add_var("input:engine:Other:wcool")
-            sb.add_var("input:engine:Other:fhv")
-            sb.add_var("input:engine:Other:dtce")
-            sb.add_var("input:engine:Other:alc")
-            sb.add_var("input:engine:Other:year")
-            sb.add_comment("\n  ! Installation effects")
-            sb.add_var("input:engine:Other:boat")
-            sb.add_var("input:engine:Other:ajmax")
-
-            if self.getValue("input:engine:Other:spill"):
-                sb.add_comment("\n  ! Installation effects")
-                sb.add_var("input:engine:Other:spill")
-                sb.add_var("input:engine:Other:lip")
-                sb.add_var("input:engine:Other:blmax")
-                sb.add_var("input:engine:Other:spldes")
-                sb.add_var("input:engine:Other:aminds")
-                sb.add_var("input:engine:Other:alinds")
-
-            sb.add_var("input:engine:Other:etaprp")
-            sb.add_var("input:engine:Other:shpowa")
-            sb.add_comment("\n  ! Engine operating constraints")
-            sb.add_var("input:engine:Other:cdtmax")
-            sb.add_var("input:engine:Other:cdpmax")
-            sb.add_var("input:engine:Other:vjmax")
-            sb.add_var("input:engine:Other:stmin")
-            sb.add_var("input:engine:Other:armax")
-            sb.add_var("input:engine:Other:limcd")
-
-            if nginwt != 0:
-                sb.add_comment("\n  ! Engine Weight Calculation Data")
-                sb.add_var("input:engine:Engine_Weight:iwtprt")
-                sb.add_var("input:engine:Engine_Weight:iwtplt")
-                sb.add_var("input:engine:Engine_Weight:gratio")
-                sb.add_var("input:engine:Engine_Weight:utip1")
-                sb.add_var("input:engine:Engine_Weight:rh2t1")
-                sb.add_var("input:engine:Engine_Weight:igvw")
-                sb.add_var("input:engine:Engine_Weight:trbrpm")
-                sb.add_var("input:engine:Engine_Weight:trban2")
-                sb.add_var("input:engine:Engine_Weight:trbstr")
-                sb.add_var("input:engine:Engine_Weight:cmpan2")
-                sb.add_var("input:engine:Engine_Weight:cmpstr")
-                sb.add_var("input:engine:Engine_Weight:vjpnlt")
-                sb.add_var("input:engine:Engine_Weight:wtebu")
-                sb.add_var("input:engine:Engine_Weight:wtcon")
-
-            if ieng == 101:
-                sb.add_var("input:engine:IC_Engine:ncyl")
-                sb.add_var("input:engine:IC_Engine:deshp")
-                sb.add_var("input:engine:IC_Engine:alcrit")
-                sb.add_var("input:engine:IC_Engine:sfcmax")
-                sb.add_var("input:engine:IC_Engine:sfcmin")
-                sb.add_var("input:engine:IC_Engine:pwrmin")
-                sb.add_var("input:engine:IC_Engine:engspd")
-                sb.add_var("input:engine:IC_Engine:prpspd")
-
-            if ieng == 101 or igenen == -2 and nginwt > 0:
-                sb.add_var("input:engine:IC_Engine:iwc")
-                sb.add_var("input:engine:IC_Engine:ecid")
-                sb.add_var("input:engine:IC_Engine:ecr")
-
-            if ieng == 101 or igenen == -2:
-                sb.add_var("input:engine:IC_Engine:eht")
-                sb.add_var("input:engine:IC_Engine:ewid")
-                sb.add_var("input:engine:IC_Engine:elen")
-                sb.add_var("input:engine:IC_Engine:ntyp")
-                sb.add_var("input:engine:IC_Engine:af")
-                sb.add_var("input:engine:IC_Engine:cli")
-                sb.add_var("input:engine:IC_Engine:blang")
-                sb.add_var("input:engine:IC_Engine:dprop")
-                sb.add_var("input:engine:IC_Engine:nblade")
-                sb.add_var("input:engine:IC_Engine:gbloss")
-
-            nrpm =  len(self.getValue("input:engine:IC_Engine:arrpm"))
-            if nrpm > 0:
-                sb.add_comment("  ! power curve input data")
-                sb.add_newvar("nrpm", nrpm)
-                sb.add_var("input:engine:IC_Engine:arrpm")
-                sb.add_var("input:engine:IC_Engine:arpwr")
-                sb.add_var("input:engine:IC_Engine:arful")
-                if self.input.engine.IC_Engine.lfuun != 0:
-                    sb.add_var("input:engine:IC_Engine:lfuun")
-                    sb.add_var("input:engine:IC_Engine:feng")
-
-            sb.add_var("input:engine:IC_Engine:fprop")
-            sb.add_var("input:engine:IC_Engine:fgbox")
-
-            ifile = self.getValue("input:engine:ifile")
-            tfile = self.getValue("input:engine:tfile")
-
-            # The name of the engine cycle definition file to be read in is
-            # set by the value of if IENG.
-            filenames = { 0: "MYCYCL",
-                          1: "TURJET",
-                          2: "TFNSEP",
-                          3: "TFNMIX",
-                          4: "TURPRP",
-                          5: "TBYPAS",
-                          6: "TFNSP3",
-                          7: "TFNMX3",
-                          8: "TFN3SH",
-                          9: "TURJT2",
-                          101: "MYCYCL" }
-            try:
-                ifilNam = filenames[ieng]
-            except KeyError:
-                msg = "Illegal value %s for input:engine:Basic:IENG" % ieng
-                raise KeyError(msg)
-
-            # TODO - rawInputFile( ifile, ifilNam )
-            # TODO - rawInputFile( tfile, "ENGTAB" )
-            sb.add_newvar("tfile", tfile)
-            sb.add_newvar("ifile", ifilNam)
-
-            #-------------------
-            # Namelist &NACELL
-            #-------------------
-
-            # Namelist &NACELL is only required if NGINWT != 0
-            # (note:, still in IGENEN=-2 or 1.)
-            if nginwt != 0:
-
-                sb.add_group('NACELL')
-                sb.add_comment("\n  ! Data for Computation of Nacelle Weight.")
-                sb.add_container("input:nacell")
-
-        #-------------------
-        # Namelist &MISSIN
-        #-------------------
-
-        # Namelist &MISSIN is only required if IANAL=3
-
-        npcon = self.getValue("input:missin:Basic:npcon")
-
-        if ianal == 3:
-
-            sb.add_group('MISSIN')
-
-            sb.add_comment("\n  ! Performance Controls and Factors and Mission Segment Definition")
-            sb.add_var("input:missin:Basic:indr")
-            sb.add_var("input:missin:Basic:fact")
-            sb.add_var("input:missin:Basic:fleak")
-            sb.add_var("input:missin:Basic:fcdo")
-            sb.add_var("input:missin:Basic:fcdi")
-            sb.add_var("input:missin:Basic:fcdsub")
-            sb.add_var("input:missin:Basic:fcdsup")
-            sb.add_var("input:missin:Basic:iskal")
-            sb.add_var("input:missin:Basic:owfact")
-            sb.add_var("input:missin:Basic:iflag")
-            sb.add_var("input:missin:Basic:msumpt")
-            sb.add_var("input:missin:Basic:dtc")
-            sb.add_var("input:missin:Basic:irw")
-            sb.add_var("input:missin:Basic:rtol")
-            sb.add_var("input:missin:Basic:nhold")
-            sb.add_var("input:missin:Basic:iata")
-            sb.add_var("input:missin:Basic:tlwind")
-            sb.add_var("input:missin:Basic:dwt")
-
-            if len(self.getValue("input:missin:Basic:offdr")) > 0:
-                sb.add_var("input:missin:Basic:offdr")
-
-            sb.add_var("input:missin:Basic:idoq")
-            sb.add_newvar("npcon", npcon)
-
-            nsout =  self.getValue("input:missin:Basic:nsout")
-            if nsout > 0:
-                sb.add_comment("\n  ! Combat Radius Mission\n")
-                sb.add_newvar("nsout", nsout)
-                sb.add_var("input:missin:Basic:nsadj")
-                sb.add_var("input:missin:Basic:mirror")
-
-            i =  len(self.getValue("input:missin:Store_Drag:stma"))
-            if i > 0:
-                sb.add_comment("\n  ! Store Drags")
-                sb.add_container("input:missin:Store_Drag")
-
-            sb.add_var("input:missin:User_Weights:mywts")
-            if mywts == 1:
-                sb.add_comment("\n  ! User-Specified Weights")
-                sb.add_var("input:missin:User_Weights:rampwt")
-                sb.add_var("input:missin:User_Weights:dowe")
-                sb.add_var("input:missin:User_Weights:paylod")
-                sb.add_var("input:missin:User_Weights:fuemax")
-
-            sb.add_comment("\n  ! Ground Operations and Takeoff and Approach Allowances")
-            sb.add_container("input:missin:Ground_Operations")
-
-            if len(self.getValue("input:missin:Turn_Segments:xnz")) > 0:
-                sb.add_var("input:missin:Turn_Segments:xnz")
-            if len(self.getValue("input:missin:Turn_Segments:xcl")) > 0:
-                sb.add_var("input:missin:Turn_Segments:xcl")
-            if len(self.getValue("input:missin:Turn_Segments:xmach")) > 0:
-                sb.add_var("input:missin:Turn_Segments:xmach")
-            
-            nclimb = max( len(self.getValue("input:missin:Climb:clmmin")),
-                          len(self.getValue("input:missin:Climb:clmmax")),
-                          len(self.getValue("input:missin:Climb:clamax")),
-                          len(self.getValue("input:missin:Climb:nincl")),
-                          len(self.getValue("input:missin:Climb:fwf")),
-                          len(self.getValue("input:missin:Climb:ncrcl")),
-                          len(self.getValue("input:missin:Climb:cldcd")),
-                          len(self.getValue("input:missin:Climb:ippcl")),
-                          len(self.getValue("input:missin:Climb:maxcl")) )
-
-            # TODO - Ask Karl or Jeff about this
-            # I've removed ioc and ifeath from this. These are parameters, so
-            # their "length" should have nothing to do with how many Cruise
-            # Schedules are in the model.
-            ncruse = max( len(self.getValue("input:missin:Cruise:crmach")),
-                          len(self.getValue("input:missin:Cruise:cralt")),
-                          len(self.getValue("input:missin:Cruise:crdcd")),
-                          len(self.getValue("input:missin:Cruise:flrcr")),
-                          len(self.getValue("input:missin:Cruise:crmmin")),
-                          len(self.getValue("input:missin:Cruise:crclmx")),
-                          len(self.getValue("input:missin:Cruise:hpmin")),
-                          len(self.getValue("input:missin:Cruise:ffuel")),
-                          len(self.getValue("input:missin:Cruise:fnox")),
-                          len(self.getValue("input:missin:Cruise:feathf")),
-                          len(self.getValue("input:missin:Cruise:cdfeth")) )
-
-            nql = len(self.getValue("input:missin:Climb:qlalt"))
-            ns = len(self.getValue("input:missin:Descent:adtab"))
-
-            sb.add_comment("\n  ! Climb Schedule Definition")
-            sb.add_newvar("nclimb", nclimb)
-            sb.add_var("input:missin:Climb:clmmin")
-            sb.add_var("input:missin:Climb:clmmax")
-            sb.add_var("input:missin:Climb:clamin")
-            sb.add_var("input:missin:Climb:clamax")
-            sb.add_var("input:missin:Climb:nincl")
-            sb.add_var("input:missin:Climb:fwf")
-            sb.add_var("input:missin:Climb:ncrcl")
-            sb.add_var("input:missin:Climb:cldcd")
-            sb.add_var("input:missin:Climb:ippcl")
-            sb.add_var("input:missin:Climb:maxcl")
-            sb.add_var("input:missin:Climb:keasvc")
-
-            actab = self.getValue("input:missin:Climb:actab")
-            no = actab.shape[1]
-            if no == 0:
-                no = actab.shape[0]
-            elif no > 0:
-                noval = ""
-                for i in range(0, nclimb):
-                    if actab.shape[1] > 0:
-                        for j in range(0, actab.shape[1]):
-                            if actab[i, j] >= 0.0:
-                                n = j+1
-                                noval += n + ", "
-                            else:
-                                break
-                    else:
-                        noval += "0, "
-
-                sb.add_newvar("no", noval)
-                sb.add_var("input:missin:Climb:actab")
-                sb.add_var("input:missin:Climb:vctab")
-
-            sb.add_var("input:missin:Climb:ifaacl")
-            sb.add_var("input:missin:Climb:ifaade")
-            sb.add_var("input:missin:Climb:nodive")
-            sb.add_var("input:missin:Climb:divlim")
-            sb.add_var("input:missin:Climb:qlim")
-            sb.add_var("input:missin:Climb:spdlim")
-            if nql > 0:
-                sb.add_var("input:missin:Climb:qlalt")
-                sb.add_var("input:missin:Climb:vqlm")
-
-            sb.add_comment("\n  ! Cruise Schedule Definition\n")
-            sb.add_newvar("ncruse", ncruse)
-            sb.add_var("input:missin:Cruise:ioc")
-            sb.add_var("input:missin:Cruise:crmach")
-            sb.add_var("input:missin:Cruise:cralt")
-            sb.add_var("input:missin:Cruise:crdcd")
-            sb.add_var("input:missin:Cruise:flrcr")
-            sb.add_var("input:missin:Cruise:crmmin")
-            sb.add_var("input:missin:Cruise:crclmx")
-            sb.add_var("input:missin:Cruise:hpmin")
-            sb.add_var("input:missin:Cruise:ffuel")
-            sb.add_var("input:missin:Cruise:fnox")
-            sb.add_var("input:missin:Cruise:ifeath")
-            sb.add_var("input:missin:Cruise:feathf")
-            sb.add_var("input:missin:Cruise:cdfeth")
-            sb.add_var("input:missin:Cruise:dcwt")
-            sb.add_var("input:missin:Cruise:rcin")
-            if len(self.getValue("input:missin:Cruise:wtbm")) > 0:
-                sb.add_var("input:missin:Cruise:wtbm")
-            if len(self.getValue("input:missin:Cruise:altbm")) > 0:
-                sb.add_var("input:missin:Cruise:altbm")
-
-            sb.add_comment("\n  ! Descent Schedule Definition")
-            sb.add_var("input:missin:Descent:ivs")
-            sb.add_var("input:missin:Descent:decl")
-            sb.add_var("input:missin:Descent:demmin")
-            sb.add_var("input:missin:Descent:demmax")
-            sb.add_var("input:missin:Descent:deamin")
-            sb.add_var("input:missin:Descent:deamax")
-            sb.add_var("input:missin:Descent:ninde")
-            sb.add_var("input:missin:Descent:dedcd")
-            sb.add_var("input:missin:Descent:rdlim")
-            sb.add_var("input:missin:Descent:keasvd")
-            if ns > 0:
-                sb.add_newvar("ns", ns)
-                sb.add_var("input:missin:Descent:adtab")
-                sb.add_var("input:missin:Descent:vdtab")
-
-            sb.add_container("input:missin:Reserve")
-
-            #----------------------
-            # Mission definition
-            #----------------------
-
-            mission = self.getValue("input:mission_definition:mission")
-
-            for seg in mission:
-                sb.add_group(seg)
-
-            self.nmseg = mission.count('CLIMB') + mission.count('CRUISE') + \
-                         mission.count('REFUEL') + mission.count('RELEASE') + \
-                         mission.count('ACCEL') + mission.count('TURN') + \
-                         mission.count('COMBAT') + mission.count('HOLD') + \
-                         mission.count('DESCENT')
-
-        #-------------------
-        # Namelist &PCONIN
-        #-------------------
-
-        # One or more &PCONIN namelists may have been created by the user.
-        if npcon > 0 and ianal == 3:
-
-            for i in range(0, npcon):
-
-                sb.add_group('PCONIN')
-                sb.add_comment("\n  ! Performance Constraint")
-
-                if self.getValue("input:pconin%s:conalt" % (i)) >= 0.:
-                    sb.add_var("input:pconin%s:conalt" % (i))
-                if self.getValue("input:pconin%s:conmch" % (i)) >= 0.:
-                    sb.add_var("input:pconin%s:conmch" % (i))
-                if self.getValue("input:pconin%s:connz" % (i)) >= 0.:
-                    sb.add_var("input:pconin%s:connz" % (i))
-                if self.getValue("input:pconin%s:conpc" % (i)) > -10.:
-                    sb.add_var("input:pconin%s:conpc" % (i))
-                if self.getValue("input:pconin%s:conlim" % (i)) != -999.:
-                    sb.add_var("input:pconin%s:conlim" % (i))
-                if self.getValue("input:pconin%s:conaux" % (i)) > -1.:
-                    sb.add_var("input:pconin%s:conaux" % (i))
-                if self.getValue("input:pconin%s:neo" % (i)) >= 0:
-                    sb.add_var("input:pconin%s:neo" % (i))
-                if self.getValue("input:pconin%s:icstdg" % (i)) >= 0:
-                    sb.add_var("input:pconin%s:icstdg" % (i))
-                if self.getValue("input:pconin%s:conwt" % (i)) >= 0.:
-                    sb.add_var("input:pconin%s:conwt" % (i))
-                if self.getValue("input:pconin%s:iconsg" % (i)) >= 0:
-                    sb.add_var("input:pconin%s:iconsg" % (i))
-                if self.getValue("input:pconin%s:confm" % (i)) >= 0.:
-                    sb.add_var("input:pconin%s:confm" % (i))
-                if self.getValue("input:pconin%s:conwta" % (i)) != -999.:
-                    sb.add_var("input:pconin%s:conwta" % (i))
-                if self.getValue("input:pconin%s:icontp" % (i)) >= 0:
-                    sb.add_var("input:pconin%s:icontp" % (i))
-
-        #--------------------
-        # Aerodynamic data
-        #--------------------
-
-        # Aerodynamic data are placed in the input file if MYAERO > 0.  If MYAERO=3,
-        # insert the aerodynamic data after namelist &RFHIN (below), otherwise insert
-        # them here.
-
-        if myaero > 0 and myaero != 3 and ianal == 3:
-
-            # aerodat contains the raw aero data
-            sb.add_group(self.getValue("input:aero_data:aerodat"))
-
-        #-------------------
-        # Namelist &RFHIN
-        #-------------------
-
-        # Namelist &RFHIN is only required if MYAERO=3.
-
-        elif myaero == 3:
-
-            sb.add_group('RFHIN')
-
-            mmach = len(self.getValue("input:rfhin:tmach"))
-            sb.add_comment("  ! Aerodynamic Data for Parabolic Drag Polars")
-            sb.add_newvar("mmach", mmach)
-            sb.add_container("input:rfhin")
-
-            # If MYAERO=3, insert the aerodynamic data here.  Otherwise it may have already
-            # been inserted above.
-
-            # aerodat contains the raw aero data
-            sb.add_group(self.getValue("input:aero_data:aerodat"))
-
-
-        #-------------------
-        # Namelist &ASCLIN
-        #-------------------
-
-        # Namelist &ASCLIN is only required if MYAERO=2.
-
-        if myaero == 2:
-
-            sb.add_group('ASCLIN')
-
-            sb.add_comment("  ! Scaling Data for Lift Independent Drag")
-            sb.add_var("input:asclin:sref")
-            sb.add_var("input:asclin:tref")
-            sb.add_var("input:asclin:awetn")
-            sb.add_var("input:asclin:eltot")
-            sb.add_var("input:asclin:voltot")
-
-            if len(self.getValue("input:asclin:awett")) > 0:
-                sb.add_var("input:asclin:awett")
-            if len(self.getValue("input:asclin:awetw")) > 0:
-                sb.add_var("input:asclin:awetw")
-            if len(self.getValue("input:asclin:elw")) > 0:
-                sb.add_var("input:asclin:elw")
-            if len(self.getValue("input:asclin:volw")) > 0:
-                sb.add_var("input:asclin:volw")
-            if len(self.getValue("input:asclin:form")) > 0:
-                sb.add_var("input:asclin:form")
-            if len(self.getValue("input:asclin:eql")) > 0:
-                sb.add_var("input:asclin:eql")
-
-            ncdwav = len(self.getValue("input:asclin:cdwav"))
-            if ncdwav > 0:
-                sb.add_var("input:asclin:cdwav")
-                sb.add_var("input:asclin:dcdnac")
-
-        #-------------------
-        # Namelist &TOLIN
-        #-------------------
-
-        if itakof == 1 or iland == 1 or nopro == 1:
-
-            sb.add_group('TOLIN')
-
-            sb.add_var("input:tolin:Basic:apa")
-            sb.add_var("input:tolin:Basic:dtct")
-            if self.getValue("input:tolin:Basic:swref") > 0:
-                sb.add_var("input:tolin:Basic:swref")
-            if self.getValue("input:tolin:Basic:arret") > 0:
-                sb.add_var("input:tolin:Basic:arret")
-            sb.add_var("input:tolin:Basic:whgt")
-            sb.add_var("input:tolin:Basic:alprun")
-            sb.add_var("input:tolin:Basic:tinc")
-            sb.add_var("input:tolin:Basic:rollmu")
-            sb.add_var("input:tolin:Basic:brakmu")
-            sb.add_var("input:tolin:Basic:cdgear")
-            sb.add_var("input:tolin:Basic:cdeout")
-            sb.add_var("input:tolin:Basic:clspol")
-            sb.add_var("input:tolin:Basic:cdspol")
-            sb.add_var("input:tolin:Basic:incgef")
-            sb.add_var("input:tolin:Basic:argef")
-            sb.add_var("input:tolin:Basic:itime")
-
-            sb.add_comment("\n  ! Thrust Reverser")
-            sb.add_var("input:tolin:Thrust_Reverser:inthrv")
-            sb.add_var("input:tolin:Thrust_Reverser:rvfact")
-            if len(self.getValue("input:tolin:Thrust_Reverser:velrv")) > 0:
-                sb.add_var("input:tolin:Thrust_Reverser:velrv")
-                sb.add_var("input:tolin:Thrust_Reverser:thrrv")
-
-            sb.add_var("input:tolin:Thrust_Reverser:tirvrs")
-            sb.add_var("input:tolin:Thrust_Reverser:revcut")
-            sb.add_var("input:tolin:Thrust_Reverser:clrev")
-            sb.add_var("input:tolin:Thrust_Reverser:cdrev")
-
-            sb.add_comment("\n  ! Integration Intervals  (Default values will provide a precision of +/-.25 ft)")
-            sb.add_container("input:tolin:Integration_Intervals")
-
-            sb.add_comment("\n  ! Takeoff Data")
-            if self.getValue("input:tolin:Takeoff:cltom") > 0:
-                sb.add_var("input:tolin:Takeoff:cltom")
-            sb.add_var("input:tolin:Takeoff:cdmto")
-            sb.add_var("input:tolin:Takeoff:fcdmto")
-            sb.add_var("input:tolin:Takeoff:almxto")
-            if self.getValue("input:tolin:Takeoff:obsto") > 0:
-                sb.add_var("input:tolin:Takeoff:obsto")
-            sb.add_var("input:tolin:Takeoff:alpto")
-            sb.add_var("input:tolin:Takeoff:clto")
-            sb.add_var("input:tolin:Takeoff:cdto")
-            sb.add_var("input:tolin:Takeoff:inthto")
-
-            if len(self.getValue("input:tolin:Takeoff:velto")) > 0:
-                sb.add_var("input:tolin:Takeoff:velto")
-                sb.add_var("input:tolin:Takeoff:thrto")
-            if self.getValue("input:tolin:Takeoff:alprot") > -99:
-                sb.add_var("input:tolin:Takeoff:alprot")
-
-            sb.add_var("input:tolin:Takeoff:vrotat")
-            sb.add_var("input:tolin:Takeoff:vangl")
-            sb.add_var("input:tolin:Takeoff:thfact")
-            sb.add_var("input:tolin:Takeoff:ftocl")
-            sb.add_var("input:tolin:Takeoff:ftocd")
-            sb.add_var("input:tolin:Takeoff:igobs")
-            sb.add_var("input:tolin:Takeoff:tdelg")
-            sb.add_var("input:tolin:Takeoff:tigear")
-            sb.add_var("input:tolin:Takeoff:ibal")
-            sb.add_var("input:tolin:Takeoff:itxout")
-
-            sb.add_comment("\n  ! Aborted Takeoff Data")
-            sb.add_var("input:tolin:Takeoff:pilott")
-            sb.add_var("input:tolin:Takeoff:tispa")
-            sb.add_var("input:tolin:Takeoff:tibra")
-            sb.add_var("input:tolin:Takeoff:tirva")
-            sb.add_var("input:tolin:Takeoff:ispol")
-            sb.add_var("input:tolin:Takeoff:irev")
-
-            sb.add_comment("\n  ! Landing Data")
-            if self.getValue("input:tolin:Landing:clldm") > 0:
-                sb.add_var("input:tolin:Landing:clldm")
-            sb.add_var("input:tolin:Landing:cdmld")
-            if self.getValue("input:tolin:Landing:fcdmld") > 0:
-                sb.add_var("input:tolin:Landing:fcdmld")
-            sb.add_var("input:tolin:Landing:almxld")
-            sb.add_var("input:tolin:Landing:obsld")
-            sb.add_var("input:tolin:Landing:alpld")
-            sb.add_var("input:tolin:Landing:clld")
-            sb.add_var("input:tolin:Landing:cdld")
-            sb.add_var("input:tolin:Landing:inthld")
-            if len(self.getValue("input:tolin:Landing:velld")) > 0:
-                sb.add_var("input:tolin:Landing:velld")
-                sb.add_var("input:tolin:Landing:thrld")
-
-            sb.add_var("input:tolin:Landing:thrld")
-            if self.getValue("input:tolin:Landing:thdry") > 0:
-                sb.add_var("input:tolin:Landing:thdry")
-            sb.add_var("input:tolin:Landing:aprhgt")
-            sb.add_var("input:tolin:Landing:aprang")
-            sb.add_var("input:tolin:Landing:fldcl")
-            sb.add_var("input:tolin:Landing:fldcd")
-            sb.add_var("input:tolin:Landing:tdsink")
-            if self.getValue("input:tolin:Landing:vangld") > 0:
-                sb.add_var("input:tolin:Landing:vangld")
-            sb.add_var("input:tolin:Landing:noflar")
-            sb.add_var("input:tolin:Landing:tispol")
-            sb.add_var("input:tolin:Landing:ticut")
-            sb.add_var("input:tolin:Landing:tibrak")
-            sb.add_var("input:tolin:Landing:acclim")
-            if self.getValue("input:tolin:Landing:magrup") > 0:
-                sb.add_var("input:tolin:Landing:magrup")
-
-        #-------------------
-        # Namelist &PROIN
-        #-------------------
-
-        # Namelist &PROIN is only required if NOPRO=1.
-        if nopro > 0:
-
-            npol = len(self.getValue("input:proin:dflap"))
-
-            sb.add_group('PROIN')
-            sb.add_var("input:proin:npol")
-
-            if npol > 0:
-                sb.add_var("input:proin:alpro")
-                sb.add_var("input:proin:clpro")
-                sb.add_var("input:proin:cdpro")
-                sb.add_var("input:proin:dflap")
-
-            sb.add_var("input:proin:ntime")
-            sb.add_var("input:proin:ipcmax")
-            sb.add_var("input:proin:txf")
-            sb.add_var("input:proin:alpmin")
-            sb.add_var("input:proin:gamlim")
-
-            inm = self.getValue("input:proin:inm")
-            if inm == 1:
-                sb.add_var("input:proin:inm")
-                sb.add_var("input:proin:iatr")
-                sb.add_var("input:proin:fzf")
-                sb.add_var("input:proin:thclmb")
-                sb.add_var("input:proin:flapid")
-
-        #-------------------
-        # Namelist &SEGIN
-        #-------------------
-
-        # One or more &SEGIN namelists may have been created by the user.
-        #nseg = self.nseg
-        if nopro > 0 and self.nseg0 > 0:
-
-            for i in range(0, self.nseg0):
-
-                key    = self.getValue("input:segin%s:key" % (i))
-                nflap  = self.getValue("input:segin%s:nflap" % (i))
-                ifix   = self.getValue("input:segin%s:ifix" % (i))
-                engscl = self.getValue("input:segin%s:engscl" % (i))
-                afix   = self.getValue("input:segin%s:afix" % (i))
-                gfix   = self.getValue("input:segin%s:gfix" % (i))
-                vfix   = self.getValue("input:segin%s:vfix" % (i))
-                hstop  = self.getValue("input:segin%s:hstop" % (i))
-                dstop  = self.getValue("input:segin%s:dstop" % (i))
-                tstop  = self.getValue("input:segin%s:tstop" % (i))
-                vstop  = self.getValue("input:segin%s:vstop" % (i))
-                hmin   = self.getValue("input:segin%s:hmin" % (i))
-                sprate = self.getValue("input:segin%s:sprate" % (i))
-                iplr   = self.getValue("input:segin%s:iplr" % (i))
-                delt   = self.getValue("input:segin%s:delt" % (i))
-                grdaeo = self.getValue("input:segin%s:grdaeo" % (i))
-                grdoeo = self.getValue("input:segin%s:grdoeo" % (i))
-
-                sb.add_group('SEGIN')
-                sb.add_newvar("key", key)
-
-                if nflap > 0:
-                    sb.add_newvar("nflap", nflap)
-                if ifix > 0:
-                    sb.add_newvar("ifix", ifix)
-                if engscl >= 0.:
-                    sb.add_newvar("engscl", engscl)
-                if afix > -10.:
-                    sb.add_newvar("afix", afix)
-                if gfix > -10.:
-                    sb.add_newvar("gfix", gfix)
-                if vfix > 0.:
-                    sb.add_newvar("vfix", vfix)
-                if hstop > 0.:
-                    sb.add_newvar("hstop", hstop)
-                if dstop > 0.:
-                    sb.add_newvar("dstop", dstop)
-                if tstop > 0.:
-                    sb.add_newvar("tstop", tstop)
-                if vstop > 0.:
-                    sb.add_newvar("vstop", vstop)
-                if hmin > 0.:
-                    sb.add_newvar("hmin", hmin)
-                if sprate >= 0.:
-                    sb.add_newvar("sprate", sprate)
-                if iplr >= 0.:
-                    sb.add_newvar("iplr", iplr)
-                if delt > 0.:
-                    sb.add_newvar("delt", delt)
-                if grdaeo > -1.:
-                    sb.add_newvar("grdaeo", grdaeo)
-                if grdoeo > -1.:
-                    sb.add_newvar("grdoeo", grdoeo)
-
-        #-------------------
-        # Namelist &NOISIN
-        #-------------------
-
-        # Namelist &NOISIN is only required if NOISIN=1.
-        if noise == 1:
-
-            sb.add_group('NOISIN')
-
-            sb.add_comment("\n  ! Data for Noise Calculations\n  ! Noise regulation control")
-            sb.add_var("input:noisin:Basic:iepn")
-            sb.add_var("input:noisin:Basic:depnt")
-            sb.add_var("input:noisin:Basic:depns")
-            sb.add_var("input:noisin:Basic:depnl")
-            sb.add_var("input:noisin:Basic:itrade")
-
-            sb.add_comment("\n  ! Noise sources to be included")
-            ijet = self.getValue("input:noisin:Basic:ijet")
-            ifan = self.getValue("input:noisin:Basic:ifan")
-            icore = self.getValue("input:noisin:Basic:icore")
-            iturb = self.getValue("input:noisin:Basic:iturb")
-            iprop = self.getValue("input:noisin:Basic:iprop")
-            iflap = self.getValue("input:noisin:Basic:iflap")
-            iairf = self.getValue("input:noisin:Basic:iairf")
-            igear = self.getValue("input:noisin:Basic:igear")
-            ishld = self.getValue("input:noisin:Propagation:ishld")
-            ignd = self.getValue("input:noisin:Propagation:ignd")
-            if ijet > 0:
-                sb.add_newvar("ijet", ijet)
-            if ifan > 0:
-                sb.add_newvar("ifan", ifan)
-            if icore > 0:
-                sb.add_newvar("icore", icore)
-            if iturb > 0:
-                sb.add_newvar("iturb", iturb)
-            if iprop > 0:
-                sb.add_newvar("iprop", iprop)
-            if iflap > 0:
-                sb.add_newvar("iflap", iflap)
-            if iairf > 0:
-                sb.add_newvar("iairf", iairf)
-            if igear > 0:
-                sb.add_newvar("igear", igear)
-
-            sb.add_comment("\n  ! Noise Propagation Corrections")
-            sb.add_var("input:noisin:Propagation:isupp")
-            sb.add_var("input:noisin:Propagation:idop")
-            sb.add_newvar("ignd", ignd)
-            sb.add_var("input:noisin:Propagation:iatm")
-            sb.add_var("input:noisin:Propagation:iega")
-            sb.add_newvar("ishld", ishld)
-            sb.add_var("input:noisin:Propagation:deldb")
-            sb.add_var("input:noisin:Propagation:heng")
-            sb.add_var("input:noisin:Propagation:filbw")
-            sb.add_var("input:noisin:Propagation:tdi")
-            sb.add_var("input:noisin:Propagation:rh")
-
-            sb.add_comment("\n  ! Observer Locations")
-            nob = len(self.getValue("input:noisin:Observers:xo"))
-            if nob > 0:
-                sb.add_newvar("nob", nob)
-                sb.add_var("input:noisin:Observers:xo")
-                sb.add_var("input:noisin:Observers:yo")
-
-            sb.add_var("input:noisin:Observers:zo")
-            sb.add_var("input:noisin:Observers:ndprt")
-            sb.add_var("input:noisin:Observers:ifoot")
-            sb.add_var("input:noisin:Observers:igeom")
-            if self.getValue("input:noisin:Observers:thrn") > 0:
-                sb.add_var("input:noisin:Observers:thrn")
-
-            sb.add_var("input:noisin:Observers:icorr")
-            sb.add_var("input:noisin:Observers:tcorxp")
-
-            nparam = len(self.getValue("input:noisin:Engine_Parameters:aepp"))
-            if nparam > 0:
-                sb.add_comment("\n  ! Engine Noise Parameters")
-                sb.add_newvar("nparam", nparam)
-                sb.add_container("input:noisin:Engine_Parameters")
-
-            if ijet != 0:
-                sb.add_comment("\n  ! Jet Noise Input Data")
-                sb.add_var("input:noisin:Jet:inoz")
-                sb.add_var("input:noisin:Jet:iplug")
-                sb.add_var("input:noisin:Jet:islot")
-                sb.add_var("input:noisin:Jet:iaz")
-                sb.add_var("input:noisin:Jet:dbaz")
-                sb.add_var("input:noisin:Jet:ejdop")
-                sb.add_var("input:noisin:Jet:zmdc")
-                sb.add_var("input:noisin:Jet:gammac")
-                sb.add_var("input:noisin:Jet:gasrc")
-                sb.add_var("input:noisin:Jet:annht")
-                sb.add_var("input:noisin:Jet:zmdf")
-                sb.add_var("input:noisin:Jet:gammap")
-                sb.add_var("input:noisin:Jet:gasrf")
-                sb.add_var("input:noisin:Jet:annhtf")
-                if self.getValue("input:noisin:Jet:dhc") > 0:
-                    sb.add_var("input:noisin:Jet:dhc")
-                sb.add_var("input:noisin:Jet:dhf")
-                sb.add_var("input:noisin:Jet:zl2")
-                sb.add_var("input:noisin:Jet:ifwd")
-                sb.add_var("input:noisin:Jet:ishock")
-                sb.add_var("input:noisin:Jet:zjsupp")
-
-            if ijet == 5:
-                sb.add_comment("\n  ! Jet Noise Input Data for MSjet")
-                sb.add_container("input:noisin:MSJet")
-
-            if ifan > 0:
-                sb.add_comment("\n  ! Fan Noise Data")
-                sb.add_var("input:noisin:Fan:igv")
-                sb.add_var("input:noisin:Fan:ifd")
-                sb.add_var("input:noisin:Fan:iexh")
-                sb.add_var("input:noisin:Fan:nfh")
-
-                if self.getValue("input:noisin:Fan:nstg") > 0:
-                    sb.add_var("input:noisin:Fan:nstg")
-
-                sb.add_var("input:noisin:Fan:suppin")
-                sb.add_var("input:noisin:Fan:suppex")
-                sb.add_var("input:noisin:Fan:methtip")
-                sb.add_var("input:noisin:Fan:icomb")
-                sb.add_var("input:noisin:Fan:decmpt")
-                sb.add_var("input:noisin:Fan:gammaf")
-
-                if self.getValue("input:noisin:Fan:nbl") > 0:
-                    sb.add_var("input:noisin:Fan:nbl")
-                if self.getValue("input:noisin:Fan:nvan") > 0:
-                    sb.add_var("input:noisin:Fan:nvan")
-                if self.getValue("input:noisin:Fan:fandia") > 0:
-                    sb.add_var("input:noisin:Fan:fandia")
-                if self.getValue("input:noisin:Fan:fanhub") > 0:
-                    sb.add_var("input:noisin:Fan:fanhub")
-                if self.getValue("input:noisin:Fan:tipmd") > 0:
-                    sb.add_var("input:noisin:Fan:tipmd")
-
-                sb.add_var("input:noisin:Fan:rss")
-                sb.add_var("input:noisin:Fan:efdop")
-                sb.add_var("input:noisin:Fan:faneff")
-
-                if self.getValue("input:noisin:Fan:nbl2") > 0:
-                    sb.add_var("input:noisin:Fan:nbl2")
-                if self.getValue("input:noisin:Fan:nvan2") > 0:
-                    sb.add_var("input:noisin:Fan:nvan2")
-                if self.getValue("input:noisin:Fan:fand2") > 0:
-                    sb.add_var("input:noisin:Fan:fand2")
-                if self.getValue("input:noisin:Fan:tipmd2") > 0:
-                    sb.add_var("input:noisin:Fan:tipmd2")
-
-                sb.add_var("input:noisin:Fan:rss2")
-                sb.add_var("input:noisin:Fan:efdop2")
-                sb.add_var("input:noisin:Fan:fanef2")
-
-                if self.getValue("input:noisin:Fan:trat") > 0:
-                    sb.add_var("input:noisin:Fan:trat")
-                if igenen not in [1, -2] and self.getValue("input:noisin:Fan:prat") > 0:
-                    sb.add_var("input:noisin:Fan:prat")
-
-            if icore > 0:
-                sb.add_comment("\n  ! Core Noise Data")
-                sb.add_var("input:noisin:Core:csupp")
-                sb.add_var("input:noisin:Core:gamma")
-                sb.add_var("input:noisin:Core:imod")
-                if self.getValue("input:noisin:Core:dtemd") > 0:
-                    sb.add_var("input:noisin:Core:dtemd")
-                sb.add_var("input:noisin:Core:ecdop")
-
-            if iturb > 0:
-                sb.add_comment("\n  ! Core Noise Data")
-                sb.add_var("input:noisin:Turbine:tsupp")
-                if self.getValue("input:noisin:Turbine:tbndia") > 0:
-                    sb.add_var("input:noisin:Turbine:tbndia")
-                sb.add_var("input:noisin:Turbine:gear")
-                sb.add_var("input:noisin:Turbine:cs")
-                if self.getValue("input:noisin:Turbine:nblr") > 0:
-                    sb.add_var("input:noisin:Turbine:nblr")
-                sb.add_var("input:noisin:Turbine:ityptb")
-                sb.add_var("input:noisin:Turbine:etdop")
-
-            if iprop > 0:
-                sb.add_comment("\n  ! Propeller Noise Data")
-                sb.add_container("input:noisin:Propeller")
-
-            if ishld > 0:
-                sb.add_comment("\n  ! Shielding Effects Data")
-                sb.add_container("input:noisin:Shielding")
-
-            if iflap > 0:
-                sb.add_comment("\n  ! Flap Noise Data")
-                sb.add_container("input:noisin:Flap_Noise")
-
-            if iairf > 0:
-                sb.add_comment("\n  ! Flap Noise Data")
-                sb.add_container("input:noisin:Airframe")
-
-            if ignd > 0:
-                sb.add_comment("\n  ! Ground Reflection Effects Data")
-                sb.add_var("input:noisin:Ground_Effects:itone")
-
-                nht = len(self.getValue("input:noisin:Ground_Effects:dk"))
-                if nht > 0:
-                    sb.add_newvar("nht", nht)
-                    sb.add_var("input:noisin:Ground_Effects:dk")
-
-        #-------------------
-        # Namelist &SYNTIN
-        #-------------------
-
-        # Namelist &SYNTIN is only required if IOPT=3.
-        if iopt == 3:
-
-            sb.add_group('SYNTIN')
-
-            if self.getValue("input:syntin:Variables:desrng") > 0:
-                sb.add_var("input:syntin:Variables:desrng")
-            if self.getValue("input:syntin:Variables:vappr") > 0:
-                sb.add_var("input:syntin:Variables:vappr")
-            if self.getValue("input:syntin:Variables:flto") > 0:
-                sb.add_var("input:syntin:Variables:flto")
-            if self.getValue("input:syntin:Variables:flldg")> 0:
-                sb.add_var("input:syntin:Variables:flldg")
-
-            sb.add_var("input:syntin:Variables:exfcap")
-            if igenen == 1:
-                if self.getValue("input:syntin:Variables:cdtmax") > 0:
-                    sb.add_var("input:syntin:Variables:cdtmax")
-                if self.getValue("input:syntin:Variables:cdpmax") > 0:
-                    sb.add_var("input:syntin:Variables:cdpmax")
-                if self.getValue("input:syntin:Variables:vjmax") > 0:
-                    sb.add_var("input:syntin:Variables:vjmax")
-                if self.getValue("input:syntin:Variables:stmin") > 0:
-                    sb.add_var("input:syntin:Variables:stmin")
-                if self.getValue("input:syntin:Variables:armax") > 0:
-                    sb.add_var("input:syntin:Variables:armax")
-
-            sb.add_var("input:syntin:Variables:gnox")
-            sb.add_var("input:syntin:Variables:roclim")
-            sb.add_var("input:syntin:Variables:dhdtlm")
-            sb.add_var("input:syntin:Variables:tmglim")
-            sb.add_var("input:syntin:Variables:ig")
-            sb.add_var("input:syntin:Variables:ibfgs")
-            sb.add_var("input:syntin:Variables:itfine")
-
-            sb.add_comment("\n  ! Optimization Control")
-            sb.add_var("input:syntin:Optimization_Control:ndd")
-            sb.add_var("input:syntin:Optimization_Control:rk")
-            sb.add_var("input:syntin:Optimization_Control:fdd")
-
-            if self.getValue("input:syntin:Optimization_Control:nlin") > 0:
-                sb.add_var("input:syntin:Optimization_Control:nlin")
-
-            sb.add_var("input:syntin:Optimization_Control:nstep")
-            sb.add_var("input:syntin:Optimization_Control:ef")
-            sb.add_var("input:syntin:Optimization_Control:eps")
-            sb.add_var("input:syntin:Optimization_Control:amult")
-            sb.add_var("input:syntin:Optimization_Control:dep")
-            sb.add_var("input:syntin:Optimization_Control:accux")
-            sb.add_var("input:syntin:Optimization_Control:glm")
-
-            if len(self.getValue("input:syntin:Optimization_Control:gfact")) > 0:
-                sb.add_var("input:syntin:Optimization_Control:gfact")
-
-            sb.add_var("input:syntin:Optimization_Control:autscl")
-            sb.add_var("input:syntin:Optimization_Control:icent")
-            sb.add_var("input:syntin:Optimization_Control:rhomin")
-            sb.add_var("input:syntin:Optimization_Control:rhomax")
-            sb.add_var("input:syntin:Optimization_Control:rhodel")
-            sb.add_var("input:syntin:Optimization_Control:itmax")
-            sb.add_var("input:syntin:Optimization_Control:jprnt")
-            sb.add_var("input:syntin:Optimization_Control:rdfun")
-            sb.add_var("input:syntin:Optimization_Control:adfun")
-
-        #-------------------
-        # Namelist &RERUN
-        #-------------------
-
-        # One or more &RERUN namelists may have been created by the user.
-
-        #nrerun = self.nrerun
-        if self.nrern0 > 0:
-
-            for i in range(0, self.nrern0):
-
-                sb.add_group('RERUN')
-
-                re_desrng = self.getValue("input:rerun%s:desrng" % (i))
-                re_mywts  = self.getValue("input:rerun%s:mywts" % (i))
-                re_rampwt = self.getValue("input:rerun%s:rampwt" % (i))
-                re_dowe   = self.getValue("input:rerun%s:dowe" % (i))
-                re_paylod = self.getValue("input:rerun%s:paylod" % (i))
-                re_fuemax = self.getValue("input:rerun%s:fuemax" % (i))
-                re_itakof = self.getValue("input:rerun%s:itakof" % (i))
-                re_iland  = self.getValue("input:rerun%s:iland" % (i))
-                re_nopro  = self.getValue("input:rerun%s:nopro" % (i))
-                re_noise  = self.getValue("input:rerun%s:noise" % (i))
-                re_icost  = self.getValue("input:rerun%s:icost" % (i))
-                re_wsr    = self.getValue("input:rerun%s:wsr" % (i))
-                re_twr    = self.getValue("input:rerun%s:twr" % (i))
-
-                if re_desrng > 0.:
-                    sb.add_var("input:rerun%s:desrng" % (i))
-                if re_mywts >= 0:
-                    sb.add_var("input:rerun%s:mywts" % (i))
-                if re_rampwt >= 0.:
-                    sb.add_var("input:rerun%s:rampwt" % (i))
-                if re_dowe > 0.:
-                    sb.add_var("input:rerun%s:dowe" % (i))
-                if re_paylod > 0.:
-                    sb.add_var("input:rerun%s:paylod" % (i))
-                if re_fuemax > 0.:
-                    sb.add_var("input:rerun%s:fuemax" % (i))
-                if re_itakof == 0:
-                    sb.add_var("input:rerun%s:itakof" % (i))
-                if re_iland == 0:
-                    sb.add_var("input:rerun%s:iland" % (i))
-                if re_nopro == 0:
-                    sb.add_var("input:rerun%s:nopro" % (i))
-                if re_noise == 0:
-                    sb.add_var("input:rerun%s:noise" % (i))
-                if re_icost == 0:
-                    sb.add_var("input:rerun%s:icost" % (i))
-                if re_wsr == 0.:
-                    sb.add_var("input:rerun%s:wsr" % (i))
-                if re_twr == 0.:
-                    sb.add_var("input:rerun%s:twr" % (i))
-
-                re_indr   = self.getValue("input:rerun%s:missin:Basic:indr" % (i))
-                re_fact   = self.getValue("input:rerun%s:missin:Basic:fact" % (i))
-                re_fleak  = self.getValue("input:rerun%s:missin:Basic:fleak" % (i))
-                re_fcdo   = self.getValue("input:rerun%s:missin:Basic:fcdo" % (i))
-                re_fcdi   = self.getValue("input:rerun%s:missin:Basic:fcdi" % (i))
-                re_fcdsub = self.getValue("input:rerun%s:missin:Basic:fcdsub" % (i))
-                re_fcdsup = self.getValue("input:rerun%s:missin:Basic:fcdsup" % (i))
-                re_iskal  = self.getValue("input:rerun%s:missin:Basic:iskal" % (i))
-                re_owfact = self.getValue("input:rerun%s:missin:Basic:owfact" % (i))
-                re_iflag  = self.getValue("input:rerun%s:missin:Basic:iflag" % (i))
-                re_msumpt = self.getValue("input:rerun%s:missin:Basic:msumpt" % (i))
-                re_dtc    = self.getValue("input:rerun%s:missin:Basic:dtc" % (i))
-                re_irw    = self.getValue("input:rerun%s:missin:Basic:irw" % (i))
-                re_rtol   = self.getValue("input:rerun%s:missin:Basic:rtol" % (i))
-                re_nhold  = self.getValue("input:rerun%s:missin:Basic:nhold" % (i))
-                re_iata   = self.getValue("input:rerun%s:missin:Basic:iata" % (i))
-                re_tlwind = self.getValue("input:rerun%s:missin:Basic:tlwind" % (i))
-
-                sb.add_group('MISSIN')
-
-                if re_indr != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:indr" % (i))
-                if re_fact != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:fact" % (i))
-                if re_fleak != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:fleak" % (i))
-                if re_fcdo != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:fcdo" % (i))
-                if re_fcdi != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:fcdi" % (i))
-                if re_fcdsub != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:fcdsub" % (i))
-                if re_fcdsup != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:fcdsup" % (i))
-                if re_iskal != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:iskal" % (i))
-                if re_owfact != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:owfact" % (i))
-                if re_iflag != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:iflag" % (i))
-                if re_msumpt != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:msumpt" % (i))
-                if re_dtc != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:dtc" % (i))
-                if re_irw != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:irw" % (i))
-                if re_rtol != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:rtol" % (i))
-                if re_nhold != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:nhold" % (i))
-                if re_iata != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:iata" % (i))
-                if re_tlwind != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:tlwind" % (i))
-
-                re_dwt    = self.getValue("input:rerun%s:missin:Basic:dwt" % (i))
-                re_offdr  = self.getValue("input:rerun%s:missin:Basic:offdr" % (i))
-                re_idoq   = self.getValue("input:rerun%s:missin:Basic:idoq" % (i))
-                re_nsout  = self.getValue("input:rerun%s:missin:Basic:nsout" % (i))
-                re_nsadj  = self.getValue("input:rerun%s:missin:Basic:nsadj" % (i))
-                re_mirror = self.getValue("input:rerun%s:missin:Basic:mirror" % (i))
-                re_stma   = self.getValue("input:rerun%s:missin:Store_Drag:stma" % (i))
-                re_cdst   = self.getValue("input:rerun%s:missin:Store_Drag:cdst" % (i))
-                re_istcl  = self.getValue("input:rerun%s:missin:Store_Drag:istcl" % (i))
-                re_istcr  = self.getValue("input:rerun%s:missin:Store_Drag:istcr" % (i))
-                re_istde  = self.getValue("input:rerun%s:missin:Store_Drag:istde" % (i))
-                re_mywts  = self.getValue("input:rerun%s:missin:User_Weights:mywts" % (i))
-                re_rampwt = self.getValue("input:rerun%s:missin:User_Weights:rampwt" % (i))
-                re_dowe   = self.getValue("input:rerun%s:missin:User_Weights:dowe" % (i))
-                re_paylod = self.getValue("input:rerun%s:missin:User_Weights:paylod" % (i))
-                re_fuemax = self.getValue("input:rerun%s:missin:User_Weights:fuemax" % (i))
-                re_takotm = self.getValue("input:rerun%s:missin:Ground_Operations:takotm" % (i))
-                re_taxotm = self.getValue("input:rerun%s:missin:Ground_Operations:taxotm" % (i))
-                re_apprtm = self.getValue("input:rerun%s:missin:Ground_Operations:apprtm" % (i))
-                re_appfff = self.getValue("input:rerun%s:missin:Ground_Operations:appfff" % (i))
-                re_taxitm = self.getValue("input:rerun%s:missin:Ground_Operations:taxitm" % (i))
-                re_ittff  = self.getValue("input:rerun%s:missin:Ground_Operations:ittff" % (i))
-                re_takoff = self.getValue("input:rerun%s:missin:Ground_Operations:takoff" % (i))
-                re_txfufl = self.getValue("input:rerun%s:missin:Ground_Operations:txfufl" % (i))
-                re_ftkofl = self.getValue("input:rerun%s:missin:Ground_Operations:ftkofl" % (i))
-                re_ftxofl = self.getValue("input:rerun%s:missin:Ground_Operations:ftxofl" % (i))
-                re_ftxifl = self.getValue("input:rerun%s:missin:Ground_Operations:ftxifl" % (i))
-                re_faprfl = self.getValue("input:rerun%s:missin:Ground_Operations:faprfl" % (i))
-                re_xnz    = self.getValue("input:rerun%s:missin:Turn_Segments:xnz" % (i))
-                re_xcl    = self.getValue("input:rerun%s:missin:Turn_Segments:xcl" % (i))
-                re_xmach  = self.getValue("input:rerun%s:missin:Turn_Segments:xmach" % (i))
-                re_nclimb = self.getValue("input:rerun%s:missin:Climb:nclimb" % (i))
-                re_clmmin = self.getValue("input:rerun%s:missin:Climb:clmmin" % (i))
-                re_clmmax = self.getValue("input:rerun%s:missin:Climb:clmmax" % (i))
-                re_clamin = self.getValue("input:rerun%s:missin:Climb:clamin" % (i))
-                re_clamax = self.getValue("input:rerun%s:missin:Climb:clamax" % (i))
-                re_nincl  = self.getValue("input:rerun%s:missin:Climb:nincl" % (i))
-                re_fwf    = self.getValue("input:rerun%s:missin:Climb:fwf" % (i))
-                re_ncrcl  = self.getValue("input:rerun%s:missin:Climb:ncrcl" % (i))
-                re_cldcd  = self.getValue("input:rerun%s:missin:Climb:cldcd" % (i))
-                re_ippcl  = self.getValue("input:rerun%s:missin:Climb:ippcl" % (i))
-                re_maxcl  = self.getValue("input:rerun%s:missin:Climb:maxcl" % (i))
-                re_no     = self.getValue("input:rerun%s:missin:Climb:no" % (i))
-                re_keasvc = self.getValue("input:rerun%s:missin:Climb:keasvc" % (i))
-                re_actab  = self.getValue("input:rerun%s:missin:Climb:actab" % (i))
-                re_vctab  = self.getValue("input:rerun%s:missin:Climb:vctab" % (i))
-                re_ifaacl = self.getValue("input:rerun%s:missin:Climb:ifaacl" % (i))
-                re_ifaade = self.getValue("input:rerun%s:missin:Climb:ifaade" % (i))
-                re_nodive = self.getValue("input:rerun%s:missin:Climb:nodive" % (i))
-                re_divlim = self.getValue("input:rerun%s:missin:Climb:divlim" % (i))
-                re_qlim   = self.getValue("input:rerun%s:missin:Climb:qlim" % (i))
-                re_spdlim = self.getValue("input:rerun%s:missin:Climb:spdlim" % (i))
-                re_qlalt  = self.getValue("input:rerun%s:missin:Climb:qlalt" % (i))
-                re_vqlm   = self.getValue("input:rerun%s:missin:Climb:vqlm" % (i))
-                re_ioc    = self.getValue("input:rerun%s:missin:Cruise:ioc" % (i))
-                re_crmach = self.getValue("input:rerun%s:missin:Cruise:crmach" % (i))
-                re_cralt  = self.getValue("input:rerun%s:missin:Cruise:cralt" % (i))
-                re_crdcd  = self.getValue("input:rerun%s:missin:Cruise:crdcd" % (i))
-                re_flrcr  = self.getValue("input:rerun%s:missin:Cruise:flrcr" % (i))
-                re_crmmin = self.getValue("input:rerun%s:missin:Cruise:crmmin" % (i))
-                re_crclmx = self.getValue("input:rerun%s:missin:Cruise:crclmx" % (i))
-                re_hpmin  = self.getValue("input:rerun%s:missin:Cruise:hpmin" % (i))
-                re_ffuel  = self.getValue("input:rerun%s:missin:Cruise:ffuel" % (i))
-                re_fnox   = self.getValue("input:rerun%s:missin:Cruise:fnox" % (i))
-                re_ifeath = self.getValue("input:rerun%s:missin:Cruise:ifeath" % (i))
-                re_feathf = self.getValue("input:rerun%s:missin:Cruise:feathf" % (i))
-                re_cdfeth = self.getValue("input:rerun%s:missin:Cruise:cdfeth" % (i))
-                re_dcwt   = self.getValue("input:rerun%s:missin:Cruise:dcwt" % (i))
-                re_rcin   = self.getValue("input:rerun%s:missin:Cruise:rcin" % (i))
-                re_wtbm   = self.getValue("input:rerun%s:missin:Cruise:wtbm" % (i))
-                re_altbm  = self.getValue("input:rerun%s:missin:Cruise:altbm" % (i))
-                re_ivs    = self.getValue("input:rerun%s:missin:Descent:ivs" % (i))
-                re_decl   = self.getValue("input:rerun%s:missin:Descent:decl" % (i))
-                re_demmin = self.getValue("input:rerun%s:missin:Descent:demmin" % (i))
-                re_demmax = self.getValue("input:rerun%s:missin:Descent:demmax" % (i))
-                re_deamin = self.getValue("input:rerun%s:missin:Descent:deamin" % (i))
-                re_deamax = self.getValue("input:rerun%s:missin:Descent:deamax" % (i))
-                re_ninde  = self.getValue("input:rerun%s:missin:Descent:ninde" % (i))
-                re_dedcd  = self.getValue("input:rerun%s:missin:Descent:dedcd" % (i))
-                re_rdlim  = self.getValue("input:rerun%s:missin:Descent:rdlim" % (i))
-                re_ns     = self.getValue("input:rerun%s:missin:Descent:ns" % (i))
-                re_irs    = self.getValue("input:rerun%s:missin:Reserve:irs" % (i))
-                re_resrfu = self.getValue("input:rerun%s:missin:Reserve:resrfu" % (i))
-                re_restrp = self.getValue("input:rerun%s:missin:Reserve:restrp" % (i))
-                re_timmap = self.getValue("input:rerun%s:missin:Reserve:timmap" % (i))
-                re_altran = self.getValue("input:rerun%s:missin:Reserve:altran" % (i))
-                re_nclres = self.getValue("input:rerun%s:missin:Reserve:nclres" % (i))
-                re_ncrres = self.getValue("input:rerun%s:missin:Reserve:ncrres" % (i))
-                re_sremch = self.getValue("input:rerun%s:missin:Reserve:sremch" % (i))
-                re_eremch = self.getValue("input:rerun%s:missin:Reserve:eremch" % (i))
-                re_srealt = self.getValue("input:rerun%s:missin:Reserve:srealt" % (i))
-                re_erealt = self.getValue("input:rerun%s:missin:Reserve:erealt" % (i))
-                re_holdtm = self.getValue("input:rerun%s:missin:Reserve:holdtm" % (i))
-                re_ncrhol = self.getValue("input:rerun%s:missin:Reserve:ncrhol" % (i))
-                re_ihopos = self.getValue("input:rerun%s:missin:Reserve:ihopos" % (i))
-                re_icron  = self.getValue("input:rerun%s:missin:Reserve:icron" % (i))
-                re_thold  = self.getValue("input:rerun%s:missin:Reserve:thold" % (i))
-                re_ncrth  = self.getValue("input:rerun%s:missin:Reserve:ncrth" % (i))
-
-                if re_dwt != -999.:
-                    sb.add_var("input:rerun%s:missin:Basic:dwt" % (i))
-                if len(re_offdr) > 0:
-                    sb.add_var("input:rerun%s:missin:Basic:offdr" % (i))
-                if re_idoq != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:idoq" % (i))
-                if re_nsout != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:nsout" % (i))
-                if re_nsadj != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:nsadj" % (i))
-                if re_mirror != -999:
-                    sb.add_var("input:rerun%s:missin:Basic:mirror" % (i))
-                if len(re_stma) > 0:
-                    sb.add_var("input:rerun%s:missin:Store_Drag:stma" % (i))
-                if len(re_cdst) > 0:
-                    sb.add_var("input:rerun%s:missin:Store_Drag:cdst" % (i))
-                if len(re_istcl) > 0:
-                    sb.add_var("input:rerun%s:missin:Store_Drag:istcl" % (i))
-                if len(re_istcr) > 0:
-                    sb.add_var("input:rerun%s:missin:Store_Drag:istcr" % (i))
-                if re_istde != -999:
-                    sb.add_var("input:rerun%s:missin:Store_Drag:istde" % (i))
-                if re_mywts != -999:
-                    sb.add_var("input:rerun%s:missin:User_Weights:mywts" % (i))
-                if re_rampwt != -999.:
-                    sb.add_var("input:rerun%s:missin:User_Weights:rampwt" % (i))
-                if re_dowe != -999.:
-                    sb.add_var("input:rerun%s:missin:User_Weights:dowe" % (i))
-                if re_paylod != -999.:
-                    sb.add_var("input:rerun%s:missin:User_Weights:paylod" % (i))
-                if re_fuemax != -999.:
-                    sb.add_var("input:rerun%s:missin:User_Weights:fuemax" % (i))
-                if re_takotm != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:takotm" % (i))
-                if re_taxotm != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:taxotm" % (i))
-                if re_apprtm != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:apprtm" % (i))
-                if re_appfff != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:appfff" % (i))
-                if re_taxitm != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:taxitm" % (i))
-                if re_ittff != -999:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:ittff" % (i))
-                if re_takoff != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:takoff" % (i))
-                if re_txfufl != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:txfufl" % (i))
-                if re_ftkofl != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:ftkofl" % (i))
-                if re_ftxofl != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:ftxofl" % (i))
-                if re_ftxifl != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:ftxifl" % (i))
-                if re_faprfl != -999.:
-                    sb.add_var("input:rerun%s:missin:Ground_Operations:faprfl" % (i))
-                if len(re_xnz) > 0:
-                    sb.add_var("input:rerun%s:missin:Turn_Segments:xnz" % (i))
-                if len(re_xcl) > 0:
-                    sb.add_var("input:rerun%s:missin:Turn_Segments:xcl" % (i))
-                if len(re_xmach) > 0:
-                    sb.add_var("input:rerun%s:missin:Turn_Segments:xmach" % (i))
-                if re_nclimb > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:nclimb" % (i))
-                if len(re_clmmin) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:clmmin" % (i))
-                if len(re_clmmax) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:clmmax" % (i))
-                if len(re_clamin) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:clamin" % (i))
-                if len(re_clamax) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:clamax" % (i))
-                if len(re_nincl) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:nincl" % (i))
-                if len(re_fwf) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:fwf" % (i))
-                if len(re_ncrcl) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:ncrcl" % (i))
-                if len(re_cldcd) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:cldcd" % (i))
-                if len(re_ippcl) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:ippcl" % (i))
-                if len(re_maxcl) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:maxcl" % (i))
-                if len(re_no) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:no" % (i))
-                if re_keasvc != -999:
-                    sb.add_var("input:rerun%s:missin:Climb:keasvc" % (i))
-                if len(re_actab) > 0:
-                    sb.add_var2d("input:rerun%s:missin:Climb:actab" % (i))
-                if len(re_vctab) > 0:
-                    sb.add_var2d("input:rerun%s:missin:Climb:vctab" % (i))
-                if re_ifaacl != -999:
-                    sb.add_var("input:rerun%s:missin:Climb:ifaacl" % (i))
-                if re_ifaade != -999:
-                    sb.add_var("input:rerun%s:missin:Climb:ifaade" % (i))
-                if re_nodive != -999:
-                    sb.add_var("input:rerun%s:missin:Climb:nodive" % (i))
-                if re_divlim != -999.:
-                    sb.add_var("input:rerun%s:missin:Climb:divlim" % (i))
-                if re_qlim != -999.:
-                    sb.add_var("input:rerun%s:missin:Climb:qlim" % (i))
-                if re_spdlim != -999.:
-                    sb.add_var("input:rerun%s:missin:Climb:spdlim" % (i))
-                if len(re_qlalt) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:qlalt" % (i))
-                if len(re_vqlm) > 0:
-                    sb.add_var("input:rerun%s:missin:Climb:vqlm" % (i))
-                if len(re_ioc) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:ioc" % (i))
-                if len(re_crmach) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:crmach" % (i))
-                if len(re_cralt) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:cralt" % (i))
-                if len(re_crdcd) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:crdcd" % (i))
-                if len(re_flrcr) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:flrcr" % (i))
-                if len(re_crmmin) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:crmmin" % (i))
-                if len(re_crclmx) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:crclmx" % (i))
-                if len(re_hpmin) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:hpmin" % (i))
-                if len(re_ffuel) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:ffuel" % (i))
-                if len(re_fnox) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:fnox" % (i))
-                if len(re_ifeath) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:ifeath" % (i))
-                if len(re_feathf) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:feathf" % (i))
-                if len(re_cdfeth) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:cdfeth" % (i))
-                if re_dcwt != -999.:
-                    sb.add_var("input:rerun%s:missin:Cruise:dcwt" % (i))
-                if re_rcin != -999.:
-                    sb.add_var("input:rerun%s:missin:Cruise:rcin" % (i))
-                if len(re_wtbm) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:wtbm" % (i))
-                if len(re_altbm) > 0:
-                    sb.add_var("input:rerun%s:missin:Cruise:altbm" % (i))
-                if re_ivs != -999:
-                    sb.add_var("input:rerun%s:missin:Descent:ivs" % (i))
-                if re_decl != -999.:
-                    sb.add_var("input:rerun%s:missin:Descent:decl" % (i))
-                if re_demmin != -999.:
-                    sb.add_var("input:rerun%s:missin:Descent:demmin" % (i))
-                if re_demmax != -999.:
-                    sb.add_var("input:rerun%s:missin:Descent:demmax" % (i))
-                if re_deamin != -999.:
-                    sb.add_var("input:rerun%s:missin:Descent:deamin" % (i))
-                if re_deamax != -999.:
-                    sb.add_var("input:rerun%s:missin:Descent:deamax" % (i))
-                if re_ninde != -999:
-                    sb.add_var("input:rerun%s:missin:Descent:ninde" % (i))
-                if re_dedcd != -999.:
-                    sb.add_var("input:rerun%s:missin:Descent:dedcd" % (i))
-                if re_rdlim != -999.:
-                    sb.add_var("input:rerun%s:missin:Descent:rdlim" % (i))
-
-                ns = len(self.getValue("input:rerun%s:missin:Descent:adtab" % (i)))
-                if  ns > 0:
-                    sb.add_comment("\n  ! Input Descent Schedule\n")
-                    sb.add_newvar('ns', ns)
-                    sb.add_var("input:rerun%s:missin:Descent:keasvd" % (i))
-                    sb.add_var("input:rerun%s:missin:Descent:adtab" % (i))
-                    sb.add_var("input:rerun%s:missin:Descent:vdtab" % (i))
-
-                if re_irs != -999:
-                    sb.add_var("input:rerun%s:missin:Reserve:irs" % (i))
-                if re_resrfu != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:resrfu" % (i))
-                if re_restrp != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:restrp" % (i))
-                if re_timmap != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:timmap" % (i))
-                if re_altran != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:altran" % (i))
-                if re_nclres != -999:
-                    sb.add_var("input:rerun%s:missin:Reserve:nclres" % (i))
-                if re_ncrres != -999:
-                    sb.add_var("input:rerun%s:missin:Reserve:ncrres" % (i))
-                if re_sremch != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:sremch" % (i))
-                if re_eremch != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:eremch" % (i))
-                if re_srealt != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:srealt" % (i))
-                if re_erealt != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:erealt" % (i))
-                if re_holdtm != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:holdtm" % (i))
-                if re_ncrhol != -999:
-                    sb.add_var("input:rerun%s:missin:Reserve:ncrhol" % (i))
-                if re_ihopos != -999:
-                    sb.add_var("input:rerun%s:missin:Reserve:ihopos" % (i))
-                if re_icron != -999:
-                    sb.add_var("input:rerun%s:missin:Reserve:icron" % (i))
-                if re_thold != -999.:
-                    sb.add_var("input:rerun%s:missin:Reserve:thold" % (i))
-                if re_ncrth != -999:
-                    sb.add_var("input:rerun%s:missin:Reserve:ncrth" % (i))
-
-
-                sb.add_newvar("NPCON", self.npcons0[i])
-
-                # Insert the new mission definition.
-                #infile = self.getValue("input:rerun%s:mission" % (i)).open()
-                #mission = infile.read()
-                #infile.close()
-                #sb.add_comment(mission)
-
-                # Get the mission definition
-
-                mission = self.getValue("input:rerun%s:mission_definition" % i)
-
-                for seg in mission:
-                    sb.add_group(seg)
-
-                # Insert the &PCONIN namelists
-                for j in range(0, self.npcons0[i]):
-
-                    re_conalt = self.getValue("input:rerun%s:pconin%s:conalt" % (i, j))
-                    re_conmch = self.getValue("input:rerun%s:pconin%s:conmch" % (i, j))
-                    re_connz  = self.getValue("input:rerun%s:pconin%s:connz" % (i, j))
-                    re_conpc  = self.getValue("input:rerun%s:pconin%s:conpc" % (i, j))
-                    re_conlim = self.getValue("input:rerun%s:pconin%s:conlim" % (i, j))
-                    re_conaux = self.getValue("input:rerun%s:pconin%s:conaux" % (i, j))
-                    re_neo    = self.getValue("input:rerun%s:pconin%s:neo" % (i, j))
-                    re_icstdg = self.getValue("input:rerun%s:pconin%s:icstdg" % (i, j))
-                    re_conwt  = self.getValue("input:rerun%s:pconin%s:conwt" % (i, j))
-                    re_iconsg = self.getValue("input:rerun%s:pconin%s:iconsg" % (i, j))
-                    re_confm  = self.getValue("input:rerun%s:pconin%s:confm" % (i, j))
-                    re_conwta = self.getValue("input:rerun%s:pconin%s:conwta" % (i, j))
-                    re_icontp = self.getValue("input:rerun%s:pconin%s:icontp" % (i, j))
-
-                    sb.add_group('PCONIN')
-
-                    if  re_conalt >= 0.:
-                        sb.add_newvar("CONALT", re_conalt)
-                    if  re_conmch >= 0.:
-                        sb.add_newvar("CONMCH", re_conmch)
-                    if  re_connz >= 0.:
-                        sb.add_newvar("CONNZ", re_connz)
-                    if  re_conpc > -10.:
-                        sb.add_newvar("CONPC", re_conpc)
-                    if  re_conlim != -999.:
-                        sb.add_newvar("CONLIM", re_conlim)
-                    if  re_conaux > -1.:
-                        sb.add_newvar("CONAUX", re_conaux)
-                    if  re_neo >= 0:
-                        sb.append("NEO", re_neo)
-                    if  re_icstdg >= 0:
-                        sb.add_newvar("ICSTDG", re_icstdg)
-                    if  re_conwt >= 0.:
-                        sb.add_newvar("CONWT", re_conwt)
-                    if  re_iconsg >= 0:
-                        sb.add_newvar("ICONSG", re_iconsg)
-                    if  re_confm >= 0.:
-                        sb.add_newvar("CONFM", re_confm)
-                    if  re_conwta != -999.:
-                        sb.add_newvar("CONWTA", re_conwta)
-                    if  re_icontp >= 0:
-                        sb.add_newvar("ICONTP", re_icontp)
-
-        # Generate the input file for FLOPS
-
-
-        sb.generate()
-
-    def parse_output(self):
-        """Parses the FLOPS output file(s) and populates the component
-        outputs with the data.
-        """
-
-        out = FileParser()
-        #out.set_file(self.stdout)
-        out.set_file(self.output_filepath)
-        # added error check Thu Nov 15 2007
-        ERROR = self.ERROR
-        HINT  = self.HINT
-
-        # Check for namelist read error
-        # Throw new Exception for fatal errors
-        # Continue processing for FLOPS failures (may want to return error
-        # codes to optimizers sometime in the future)
-        out.set_delimiters(" ")
-
-        try:
-            out.mark_anchor("ERROR READING NAMELIST")
-        except RuntimeError:
-            pass
-        else:
-            ERROR = out.transfer_line(0)
-            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
-
-        out.reset_anchor()
-        try:
-            out.mark_anchor("ERROR READING AERODYNAMIC")
-        except RuntimeError:
-            pass
-        else:
-            ERROR = out.transfer_line(0)
-            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
-
-        out.reset_anchor()
-        try:
-            out.mark_anchor("* * * ENGINE DECK MISSING * * *")
-        except RuntimeError:
-            pass
-        else:
-            ERROR = out.transfer_line(0)
-            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR + \
-                  '\n\nCheck links from "Engine" to "Flops". Make sure EIFILE' + \
-                  'points to an existing file (default is "ENGDECK.txt" in UserDir.\n\n*****************')
-
-        out.reset_anchor()
-        try:
-            out.mark_anchor("* * * ONLY ONE ALTITUDE FOR MACH NUMBER")
-        except RuntimeError:
-            pass
-        else:
-            ERROR = out.transfer_line(0)
-
-            # TODO - Why does MC wrapper do this?
-            # commented out for now
-            #self.output.Performance.range = 0.
-            #self.output.Performance.rampwt = 0.
-            #self.output.Performance.fuel = 0.
-
-            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
-
-        out.reset_anchor()
-        try:
-            out.mark_anchor("* * * ILLEGAL DATA IN ENGINE DECK * * *")
-        except RuntimeError:
-            pass
-        else:
-            ERROR = out.transfer_line(0)
-            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
-
-        out.reset_anchor()
-        try:
-            #out.mark_anchor("ERROR READING MISSION DEFINITION DATA FROM UNIT")
-            # Loosened this up to find any read error; i've found others
-            out.mark_anchor("ERROR READING")
-        except RuntimeError:
-            pass
-        else:
-            ERROR = out.transfer_line(0)
-            raise RuntimeError('Error reading a file during FLOPS execution.\n %s' % ERROR)
-
-        out.reset_anchor()
-        try:
-            out.mark_anchor("ERROR IN SEGMENT INPUT DATA")
-        except RuntimeError:
-            pass
-        else:
-            ERROR = out.transfer_line(0)
-            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
-
-
-        # Modified this section Fri Mar  5 15:05:09 EST 2010
-        # there could be failures that recover during optimization
-
-        iopt = self.getValue("input:option:Program_Control:iopt")
-
-        out.reset_anchor()
-        try:
-            if iopt != 3:
-                out.mark_anchor("TITLE, BEGIN OUTPUT OF RESULTS")
-            else:
-                out.mark_anchor("FINAL ANALYSIS")
-
-        except RuntimeError:
-
-            # Check invalid results
-            errorArray = [
-               "* * * ENGINE DECK MISSING * * *",
-               "NO WEIGHT AVAILABLE FOR FUEL",
-               "FAILURE FOR CLIMB SEGMENT",
-               "FAILURE FOR CRUISE CONDITION",
-               "FAILURE FOR DESCENT SEGMENT",
-               "ANALYSIS COULD NOT RECOVER",
-               "INITIAL DESIGN UNACCEPTABLE"
-               ]
-            descArray = [
-               "Check links from \"Engine\" to \"Flops\". Make sure EIFILE points to an existing file (default is \"ENGDECK.txt\" in UserDir",
-               "Try increasing gross weight (confin.variables.GW1)",
-               "Try increasing thrust and/or wing area and see flops.man",
-               "Try increasing thrust and/or wing area and see flops.man",
-               "Check thrust at flight idle. May need to set IDLE to 1 and see flops.man",
-               "Try tweaking SYNTIN inputs to resolve this (AnalysisControl.syntin.control). Also check for other nonfatal failures like failed missed approach climb criterion.",
-               "Make sure any initial design variable are within the upper and lower bounds"
-               ]
-
-            for i in range(0, len(errorArray)):
-                try:
-                    out.reset_anchor()
-                    out.mark_anchor(errorArray[i])
-                    ERROR = out.transfer_line(0)
-                    HINT = descArray[i]
-                    self.assignValueOutput("output:Performance:range",0.)
-                    self.assignValueOutput("output:Performance:rampwt",0.)
-                    self.assignValueOutput("output:Performance:fuel",0.)
-                    break
-                except RuntimeError:
-                    ERROR = "None"
-                    HINT = "n/a"
-
-
-        iopt   = self.getValue("input:option:Program_Control:iopt")
-        ianal  = self.getValue("input:option:Program_Control:ianal")
-        ifite  = self.getValue("input:option:Program_Control:ifite")
-        mywts  = self.getValue("input:wtin:Basic:mywts")
-        inrtia = self.getValue("input:wtin:Inertia:inrtia")
-        msumpt = self.getValue("input:missin:Basic:msumpt")
-        noffdr = len(self.getValue("input:missin:Basic:offdr"))
-
-        out.reset_anchor()
-
-        if ifite == 3:
-            out.mark_anchor("PRESSURIZED CABIN DIMENSIONS FOR A")
-
-
-            self.assignValueOutput("output:Geometry:BWB:xlp", out.transfer_var(1, 5))
-            self.assignValueOutput("output:Geometry:BWB:xlw", out.transfer_var(2, 6))
-            self.assignValueOutput("output:Geometry:BWB:wf ", out.transfer_var(3, 5))
-            self.assignValueOutput("output:Geometry:BWB:acabin", out.transfer_var(4, 4))
-            self.assignValueOutput("output:Geometry:BWB:nbaw", out.transfer_var(5, 5))
-            self.assignValueOutput("output:Geometry:BWB:bayw", out.transfer_var(6, 5))
-            self.assignValueOutput("output:Geometry:BWB:nlava", out.transfer_var(7, 5))
-            self.assignValueOutput("output:Geometry:BWB:ngally", out.transfer_var(8, 5))
-            self.assignValueOutput("output:Geometry:BWB:nclset", out.transfer_var(9, 5))
-            self.assignValueOutput("output:Geometry:BWB:xl", out.transfer_var(10, 5))
-            self.assignValueOutput("output:Geometry:BWB:df", out.transfer_var(11, 5))
-
-        out.reset_anchor()
-        out.mark_anchor("FUSELAGE DATA")
-
-        self.assignValueOutput("output:Geometry:xl" ,out.transfer_var(2, 4))
-        self.assignValueOutput("output:Geometry:wf",out.transfer_var(3, 4))
-        self.assignValueOutput("output:Geometry:df", out.transfer_var(4, 4))
-        self.assignValueOutput("output:Geometry:xlp",out.transfer_var(6, 5))
-
-        out.reset_anchor()
-        out.mark_anchor( "CREW AND PAYLOAD DATA" )
-
-        if ifite != 1:
-            self.assignValueOutput("output:Payload:npf", out.transfer_var(1, 5))
-            self.assignValueOutput("output:Payload:npb", out.transfer_var(2, 4))
-            self.assignValueOutput("output:Payload:npt", out.transfer_var(3, 4))
-            self.assignValueOutput("output:Payload:nstu", out.transfer_var(4, 3))
-            self.assignValueOutput("output:Payload:ngalc", out.transfer_var(5, 4))
-            self.assignValueOutput("output:Payload:wppass", out.transfer_var(7, 5))
-            self.assignValueOutput("output:Payload:bpp", out.transfer_var(8, 5))
-            self.assignValueOutput("output:Payload:cargow",out.transfer_var(9, 5))
-            self.assignValueOutput("output:Payload:cargof",out.transfer_var(10, 5))
-        else:
-            self.assignValueOutput("output:Payload:cargow", out.transfer_var(2, 6))
-            self.assignValueOutput("output:Payload:cargof", out.transfer_var(3, 6))
-
-        out.reset_anchor()
-        out.mark_anchor( "CARGO AND BAGGAGE CONTAIN." )
-        self.assignValueOutput("output:Payload:wcon", out.transfer_var(0, 6))
-
-        if mywts == 0:
-            out.reset_anchor()
-            out.mark_anchor( "CREW AND BAGGAGE-FLIGHT" )
-            self.assignValueOutput("output:Payload:nflcr",out.transfer_var(0, 4))
-            if ifite != 1:
-                self.assignValueOutput("output:Payload:nstuag", out.transfer_var(1, 2))
-
-        if iopt == 3:
-            # In optimization mode, find the last design mission
-            nos = 0
-            while True:
-                try:
-                    out.reset_anchor()
-                    out.mark_anchor( "#OBJ/VAR/CONSTR SUMMARY",
-                                  noffdr+nos+1+self.nrern0 )
-                except RuntimeError:
-                    break
-                else:
-                    nos += 1
-
-            nit = noffdr + nos
-        else:
-            nit = nos = 1
-
-        if nit > 0:
-
-            # Read output from the weights module
-
-            if mywts == 0:
-
-                out.reset_anchor()
-                try:
-                    out.mark_anchor( "WING SPAN               ", nos)
-                except RuntimeError:
-                    ndd = self.getValue("input:syntin:Optimization_Control:ndd")
-                    if ndd == 0:
-                        msg = "\n\n***************** \n\n"
-                        msg += "There was only one iteration in optimization mode \n\n"
-                        msg += "and we happen to be looking for the final solution, which isn't there. \n\n"
-                        msg += "ndd = %" % ndd + "\n\n"
-                        msg += "Try setting flops.input.syntin.Optimization_Control.ndd to 3 or 4.\n\n"
-                        msg += "*****************"
-                        raise RuntimeError(msg)
-                    else:
-                        msg = "\n\n***************** \n\n"
-                        msg += "There was only one iteration in optimization mode \n\n"
-                        msg += "and we happen to be looking for the final solution, which isn't there. \n\n"
-                        msg += "Something is wrong here and someone needs to figure it out before we can proceed.\n\n"
-                        msg += "*****************"
-                        raise RuntimeError(msg)
-
-                self.assignValueOutput("output:Geometry:span", out.transfer_var(0, 3))
-                self.assignValueOutput("output:Geometry:glov", out.transfer_var(1, 4))
-                self.assignValueOutput("output:Geometry:sht", out.transfer_var(3, 4))
-                self.assignValueOutput("output:Geometry:svt", out.transfer_var(5, 4))
-                self.assignValueOutput("output:Geometry:xnac", out.transfer_var(8, 3))
-                self.assignValueOutput("output:Geometry:dnac", out.transfer_var(9, 3))
-                self.assignValueOutput("output:Geometry:xmlg", out.transfer_var(11, 5))
-                self.assignValueOutput("output:Geometry:xnlg", out.transfer_var(12, 5))
-
-                self.assignValueOutput("output:Weight:wldg", out.transfer_var(14, 4))
-                self.assignValueOutput("output:Weight:fultot",out.transfer_var(19, 4))
-                self.assignValueOutput("output:Weight:exsful", out.transfer_var(20, 4))
-
-                out.reset_anchor()
-                out.mark_anchor( "WING BENDING FACTOR", nos)
-
-                self.assignValueOutput("output:Weight:Wing:w", out.transfer_var(0, 4))
-                self.assignValueOutput("output:Weight:Wing:ew", out.transfer_var(1, 5))
-                self.assignValueOutput("output:Weight:Wing:w1", out.transfer_var(4, 3))
-                self.assignValueOutput("output:Weight:Wing:w2", out.transfer_var(5, 3))
-                self.assignValueOutput("output:Weight:Wing:w3", out.transfer_var(6, 3))
-
-                        # Read mass and balance summary data
-
-                out.reset_anchor()
-                out.mark_anchor( "MASS AND BALANCE SUMMARY", nos)
-
-                if ifite == 1:
-                    self.assignValueOutput("output:Weight:frwi",out.transfer_keyvar("WING ",2))
-                    self.assignValueOutput("output:Weight:frht",out.transfer_keyvar("HORIZONTAL TAIL ",2))
-                    self.assignValueOutput("output:Weight:frvt",out.transfer_keyvar("VERTICAL TAIL ",2))
-                    self.assignValueOutput("output:Weight:frfin",out.transfer_keyvar("VERTICAL FIN ",2))
-                    self.assignValueOutput("output:Weight:frcan",out.transfer_keyvar("CANARD ",2))
-                    self.assignValueOutput("output:Weight:frfu",out.transfer_keyvar("FUSELAGE ",2))
-                    self.assignValueOutput("output:Weight:wlg",out.transfer_keyvar("LANDING GEAR ",2))
-                    self.assignValueOutput("output:Weight:frna",out.transfer_keyvar("NACELLE (AIR INDUCTION) ",2))
-                    self.assignValueOutput("output:Weight:wengt",out.transfer_keyvar("ENGINES ",2))
-                    self.assignValueOutput("output:Weight:wthr",out.transfer_keyvar("THRUST REVERSERS ",2))
-                    self.assignValueOutput("output:Weight:wpmisc",out.transfer_keyvar("MISCELLANEOUS SYSTEMS ",2))
-                    self.assignValueOutput("output:Weight:wfsys",out.transfer_keyvar("FUEL SYSTEM-TANKS AND PLUMBING ",2))
-                    self.assignValueOutput("output:Weight:frsc",out.transfer_keyvar("SURFACE CONTROLS ",2))
-                    self.assignValueOutput("output:Weight:wapu",out.transfer_keyvar("AUXILIARY POWER ",2))
-                    self.assignValueOutput("output:Weight:win",out.transfer_keyvar("INSTRUMENTS ",2))
-                    self.assignValueOutput("output:Weight:whyd",out.transfer_keyvar("HYDRAULICS ",2))
-                    self.assignValueOutput("output:Weight:welec",out.transfer_keyvar("ELECTRICAL ",2))
-                    self.assignValueOutput("output:Weight:wavonc",out.transfer_keyvar("AVIONICS ",2))
-                    self.assignValueOutput("output:Weight:wfurn",out.transfer_keyvar("FURNISHINGS AND EQUIPMENT ",2))
-                    self.assignValueOutput("output:Weight:wac",out.transfer_keyvar("AIR CONDITIONING ",2))
-                    self.assignValueOutput("output:Weight:wai",out.transfer_keyvar("AUXILIARY GEAR ",2))
-                    self.assignValueOutput("output:Weight:wempty",out.transfer_keyvar(" WEIGHT EMPTY ",2))
-                    self.assignValueOutput("output:Weight:wflcrbw",out.transfer_keyvar("CREW AND BAGGAGE-FLIGHT,", 3))
-                    self.assignValueOutput("output:Weight:wuf",out.transfer_keyvar("UNUSABLE FUEL ",2))
-                    self.assignValueOutput("output:Weight:woil",out.transfer_keyvar("ENGINE OIL ",2))
-                    self.assignValueOutput("output:Weight:wsrv",out.transfer_keyvar("AMMUNITION, ETC. ",2))
-                    self.assignValueOutput("output:Weight:wbomb",out.transfer_keyvar("AUXILIARY TANKS ",2))
-                    self.assignValueOutput("output:Weight:dowe",out.transfer_keyvar("OPERATING WEIGHT  ",2))
-                    self.assignValueOutput("output:Weight:zfw",out.transfer_keyvar("ZERO FUEL WEIGHT ",2))
-                else:
-                    self.assignValueOutput("output:Weight:frwi",out.transfer_keyvar("WING ",2))
-                    self.assignValueOutput("output:Weight:frht",out.transfer_keyvar("HORIZONTAL TAIL ",2))
-                    self.assignValueOutput("output:Weight:frvt",out.transfer_keyvar("VERTICAL TAIL ",2))
-                    self.assignValueOutput("output:Weight:frfin",out.transfer_keyvar("VERTICAL FIN ",2))
-                    self.assignValueOutput("output:Weight:frcan",out.transfer_keyvar("CANARD ",2))
-                    self.assignValueOutput("output:Weight:frfu",out.transfer_keyvar("FUSELAGE ",2))
-                    self.assignValueOutput("output:Weight:wlg",out.transfer_keyvar("LANDING GEAR ",2))
-                    self.assignValueOutput("output:Weight:frna",out.transfer_keyvar("NACELLE (AIR INDUCTION) ",2))
-                    self.assignValueOutput("output:Weight:wengt",out.transfer_keyvar("ENGINES ",2))
-                    self.assignValueOutput("output:Weight:wthr",out.transfer_keyvar("THRUST REVERSERS ",2))
-                    self.assignValueOutput("output:Weight:wpmisc",out.transfer_keyvar("MISCELLANEOUS SYSTEMS ",2))
-                    self.assignValueOutput("output:Weight:wfsys",out.transfer_keyvar("FUEL SYSTEM-TANKS AND PLUMBING ",2))
-                    self.assignValueOutput("output:Weight:frsc",out.transfer_keyvar("SURFACE CONTROLS ",2))
-                    self.assignValueOutput("output:Weight:wapu",out.transfer_keyvar("AUXILIARY POWER ",2))
-                    self.assignValueOutput("output:Weight:win",out.transfer_keyvar("INSTRUMENTS ",2))
-                    self.assignValueOutput("output:Weight:whyd",out.transfer_keyvar("HYDRAULICS ",2))
-                    self.assignValueOutput("output:Weight:welec",out.transfer_keyvar("ELECTRICAL ",2))
-                    self.assignValueOutput("output:Weight:wavonc",out.transfer_keyvar("AVIONICS ",2))
-                    self.assignValueOutput("output:Weight:wfurn",out.transfer_keyvar("FURNISHINGS AND EQUIPMENT ",2))
-                    self.assignValueOutput("output:Weight:wac",out.transfer_keyvar("AIR CONDITIONING ",2))
-                    self.assignValueOutput("output:Weight:wai",out.transfer_keyvar("ANTI-ICING ",2))
-                    self.assignValueOutput("output:Weight:wempty",out.transfer_keyvar(" WEIGHT EMPTY ",2))
-                    self.assignValueOutput("output:Weight:wflcrbw",out.transfer_keyvar("CREW AND BAGGAGE-FLIGHT,", 3))
-                    self.assignValueOutput("output:Weight:wwstuab",out.transfer_keyvar("-CABIN, ", 3))
-                    self.assignValueOutput("output:Weight:wuf",out.transfer_keyvar("UNUSABLE FUEL ",2))
-                    self.assignValueOutput("output:Weight:woil",out.transfer_keyvar("ENGINE OIL ",2))
-                    self.assignValueOutput("output:Weight:wsrv",out.transfer_keyvar("PASSENGER SERVICE ",2))
-                    self.assignValueOutput("output:Weight:dowe",out.transfer_keyvar("OPERATING WEIGHT  ",2))
-                    self.assignValueOutput("output:Weight:zfw",out.transfer_keyvar("ZERO FUEL WEIGHT ",2))
-
-                # Read inertia data
-
-                if inrtia > 0:
-                    out.reset_anchor()
-                    out.mark_anchor( "#  INERTIA DATA FOR AIRCRAFT", nos)
-
-                    nfcon = self.getValue("input:wtin:Inertia:tf").shape[0]
-
-                    self.assignValueOutput("output:Weight:Inertia:cgx",zeros(1+nfcon))
-                    self.assignValueOutput("output:Weight:Inertia:cgy",zeros(1+nfcon))
-                    self.assignValueOutput("output:Weight:Inertia:cgz",zeros(1+nfcon))
-                    self.assignValueOutput("output:Weight:Inertia:ixxroll",zeros(1+nfcon))
-                    self.assignValueOutput("output:Weight:Inertia:ixxptch",zeros(1+nfcon))
-                    self.assignValueOutput("output:Weight:Inertia:ixxyaw",zeros(1+nfcon))
-                    self.assignValueOutput("output:Weight:Inertia:ixz",zeros(1+nfcon))
-
-                    out.reset_anchor()
-                    out.mark_anchor( " AIRCRAFT OWE OR ZFW", 1)
-                    self.assignValueOutput("output:Weight:Inertia:cgx",out.transfer_var(0, 6),index=0)
-                    self.assignValueOutput("output:Weight:Inertia:cgy",out.transfer_var(0, 7),index=0)
-                    self.assignValueOutput("output:Weight:Inertia:cgz",out.transfer_var(0, 8),index=0)
-
-                    out.reset_anchor()
-                    out.mark_anchor( " AIRCRAFT OWE OR ZFW",2)
-                    self.assignValueOutput("output:Weight:Inertia:ixxroll",out.transfer_var(0, 5),index=0)
-                    self.assignValueOutput("output:Weight:Inertia:ixxptch",out.transfer_var(0, 6),index=0)
-                    self.assignValueOutput("output:Weight:Inertia:ixxyaw",out.transfer_var(0, 7),index=0)
-                    self.assignValueOutput("output:Weight:Inertia:ixz",out.transfer_var(0, 8),index=0)
-
-                    out.reset_anchor()
-                    if nfcon > 0:
-                        for i in range(1, nfcon+1):
-                            out.mark_anchor( "INERTIA DATA FOR FUEL CONDITION" )
-
-                            out.mark_anchor( " TOTAL WEIGHT " )
-                            self.assignValueOutput("output:Weight:Inertia:cgx",out.transfer_var(0, 4),index=i)
-                            self.assignValueOutput("output:Weight:Inertia:cgy",out.transfer_var(0, 5),index=i)
-                            self.assignValueOutput("output:Weight:Inertia:cgz",out.transfer_var(0, 6),index=i)
-
-                            out.mark_anchor( " TOTAL AIRCRAFT " )
-                            self.assignValueOutput("output:Weight:Inertia:ixxroll",out.transfer_var(0, 3),index=i)
-                            self.assignValueOutput("output:Weight:Inertia:ixxptch",out.transfer_var(0, 4),index=i)
-                            self.assignValueOutput("output:Weight:Inertia:ixxyaw",out.transfer_var(0, 5),index=i)
-                            self.assignValueOutput("output:Weight:Inertia:ixz",out.transfer_var(0, 6),index=i)
-
-            else:
-
-                # set weights to zero
-                self.assignValueOutput("output:Geometry:span",0.0)
-                self.assignValueOutput("output:Geometry:glov",0.0)
-                self.assignValueOutput("output:Geometry:sht",0.0)
-                self.assignValueOutput("output:Geometry:svt",0.0)
-                self.assignValueOutput("output:Geometry:xnac",0.0)
-                self.assignValueOutput("output:Geometry:dnac",0.0)
-                self.assignValueOutput("output:Geometry:xmlg",0.0)
-                self.assignValueOutput("output:Geometry:xnlg",0.0)
-                self.assignValueOutput("output:Weight:wldg",0.0)
-                self.assignValueOutput("output:Weight:fultot",0.0)
-                self.assignValueOutput("output:Weight:exsful",0.0)
-                self.assignValueOutput("output:Weight:frwi",0.0)
-                self.assignValueOutput("output:Weight:frht",0.0)
-                self.assignValueOutput("output:Weight:frvt",0.0)
-                self.assignValueOutput("output:Weight:frfin",0.0)
-                self.assignValueOutput("output:Weight:frcan",0.0)
-                self.assignValueOutput("output:Weight:frfu",0.0)
-                self.assignValueOutput("output:Weight:wlg",0.0)
-                self.assignValueOutput("output:Weight:frna",0.0)
-                self.assignValueOutput("output:Weight:wengt",0.0)
-                self.assignValueOutput("output:Weight:wthr",0.0)
-                self.assignValueOutput("output:Weight:wpmisc",0.0)
-                self.assignValueOutput("output:Weight:wfsys",0.0)
-                self.assignValueOutput("output:Weight:frsc",0.0)
-                self.assignValueOutput("output:Weight:wapu",0.0)
-                self.assignValueOutput("output:Weight:win",0.0)
-                self.assignValueOutput("output:Weight:whyd",0.0)
-                self.assignValueOutput("output:Weight:welec",0.0)
-                self.assignValueOutput("output:Weight:wavonc",0.0)
-                self.assignValueOutput("output:Weight:wfurn",0.0)
-                self.assignValueOutput("output:Weight:wac",0.0)
-                self.assignValueOutput("output:Weight:wai",0.0)
-                self.assignValueOutput("output:Weight:wempty",0.0)
-                self.assignValueOutput("output:Weight:wflcrbw",0.0)
-                self.assignValueOutput("output:Weight:wwstuab",0.0)
-                self.assignValueOutput("output:Weight:wuf",0.0)
-                self.assignValueOutput("output:Weight:woil",0.0)
-                self.assignValueOutput("output:Weight:wsrv",0.0)
-                self.assignValueOutput("output:Weight:dowe",0.0)
-                self.assignValueOutput("output:Weight:zfw",0.0)
-                self.assignValueOutput("output:Weight:wbomb",0.0)
-
-                # inertia data
-                self.assignValueOutput("output:Weight:Inertia:cgx",zeros(0))
-                self.assignValueOutput("output:Weight:Inertia:cgy",zeros(0))
-                self.assignValueOutput("output:Weight:Inertia:cgz",zeros(0))
-                self.assignValueOutput("output:Weight:Inertia:ixxroll",zeros(0))
-                self.assignValueOutput("output:Weight:Inertia:ixxptch",zeros(0))
-                self.assignValueOutput("output:Weight:Inertia:ixxyaw",zeros(0))
-                self.assignValueOutput("output:Weight:Inertia:ixz",zeros(0))
-
-            # Read performance contraints summary
-         
-            if self.npcon0 > 0 and ianal == 3:
-                out.reset_anchor()
-                out.mark_anchor( "PERFORMANCE CONSTRAINT SUMMARY", nos)
-
-                out.set_delimiters("columns")
-                self.assignValueOutput("output:Performance:Constraints:constraint",out.transfer_array(4, 16, 3+self.npcon0, 29))
-                self.assignValueOutput("output:Performance:Constraints:value",out.transfer_array(4, 32, 3+self.npcon0, 40))
-                self.assignValueOutput("output:Performance:Constraints:units",out.transfer_array(4, 41, 3+self.npcon0, 47))
-                self.assignValueOutput("output:Performance:Constraints:limit",out.transfer_array(4, 48, 3+self.npcon0, 56))
-
-                weight = out.transfer_array(4, 56, 3+self.npcon0, 65)
-
-
-                if isinstance(weight[0], str):
-                    self.assignValueOutput("output:Performance:Constraints:location",out.transfer_array(4, 58, 3+self.npcon0, 87))
-                else:
-                    self.assignValueOutput("output:Performance:Constraints:location",array([]))
-                    self.assignValueOutput("output:Performance:Constraints:weight", weight)
-                    self.assignValueOutput("output:Performance:Constraints:mach",out.transfer_array(4, 66, 3+self.npcon0, 74))
-                    self.assignValueOutput("output:Performance:Constraints:alt",out.transfer_array(4, 75, 3+self.npcon0, 85))
-                    self.assignValueOutput("output:Performance:Constraints:g",out.transfer_array(4, 86, 3+self.npcon0, 98))
-
-                out.set_delimiters(" ")
-
-            # Read sizing and performance results
-
-            if ianal == 3:
-                out.reset_anchor()
-                out.mark_anchor( "CONFIGURATION DATA AFTER RESIZING (IF ANY)", nit)
-
-                self.assignValueOutput("output:Weight:dowe",out.transfer_var(2, 4))
-                self.assignValueOutput("output:Weight:paylod",out.transfer_var(3,2))
-                self.assignValueOutput("output:Weight:fuel",out.transfer_var(4, 3))
-                self.assignValueOutput("output:Weight:rampwt",out.transfer_var(5, 3))
-                self.assignValueOutput("output:Weight:wsr",out.transfer_var(8, 3))
-                self.assignValueOutput("output:Weight:thrso",out.transfer_var(10, 4))
-                self.assignValueOutput("output:Weight:esf",out.transfer_var(11, 4))
-                self.assignValueOutput("output:Weight:twr",out.transfer_var(12, 3))
-
-                self.assignValueOutput("output:Performance:thrso", self.getValueOutput("output:Weight:thrso"))
-                self.assignValueOutput("output:Performance:esf", self.getValueOutput("output:Weight:esf"))
-
-            # Read detailed flight segment summary
-
-            if ianal == 3 and msumpt > 0:
-                out.reset_anchor()
-                out.mark_anchor( "DETAILED FLIGHT SEGMENT SUMMARY")
-
-                for i in range(0, self.nmseg):
-                    if i < 9:
-                        out.mark_anchor( "SEGMENT  " + str(i+1) + "   ")
-                    else:
-                        out.mark_anchor( "SEGMENT " + str(i+1) + "   " )
-
-                    self.assignValueOutput("output:Performance:Segments:segment",out.transfer_var(0, 3),i)
-                    self.assignValueOutput("output:Performance:Segments:weights",out.transfer_var(5, 1),i)
-                    self.assignValueOutput("output:Performance:Segments:alts",out.transfer_var(5,2),i)
-                    self.assignValueOutput("output:Performance:Segments:machs",out.transfer_var(5, 3),i)
-                    self.assignValueOutput("output:Performance:Segments:thrusts",out.transfer_var(5, 7),i)
-                    self.assignValueOutput("output:Performance:Segments:lods",out.transfer_var(5, 12),i)
-                    self.assignValueOutput("output:Performance:Segments:totmaxs",out.transfer_var(6, 6),i)
-                    self.assignValueOutput("output:Performance:Segments:sfcs",out.transfer_var(6, 7),i)
-                    self.assignValueOutput("output:Performance:Segments:engparms",out.transfer_var(6, 13),i)
-
-                    # This seems a bit klugey, but it actually works.
-                    j = 0
-                    while True:
-                        try:
-                            self.assignValueOutput("output:Performance:Segments:weighte",out.transfer_var(j+5, 1),i)
-                            self.assignValueOutput("output:Performance:Segments:alte",out.transfer_var(j+5,2),i)
-                            self.assignValueOutput("output:Performance:Segments:mache",out.transfer_var(j+5, 3),i)
-                            self.assignValueOutput("output:Performance:Segments:thruste",out.transfer_var(j+5, 7),i)
-                            self.assignValueOutput("output:Performance:Segments:lode",out.transfer_var(j+5, 12),i)
-                            self.assignValueOutput("output:Performance:Segments:totmaxe",out.transfer_var(j+6, 6),i)
-                            self.assignValueOutput("output:Performance:Segments:sfce",out.transfer_var(j+6, 7),i)
-                            self.assignValueOutput("output:Performance:Segments:engparme",out.transfer_var(j+6, 13),i)
-
-                        except ValueError:
-                            break
-
-                        j += 3
-
-                # Read the mission summary
-
-                out.reset_anchor()
-                out.mark_anchor( "M I S S I O N   S U M M A R Y", nos)
-
-                self.assignValueOutput("output:Performance:taxofl",out.transfer_var(5, 4))
-
-            # Read the objective, variable and constraint summary
-
-            out.reset_anchor()
-            out.mark_anchor( "#OBJ/VAR/CONSTR SUMMARY", nos)
-            out.set_delimiters("columns")
-
-            # Changed based on Karl's fix to bug I reported
-            if ianal == 3:
-
-                self.assignValueOutput("output:Performance:fuel",out.transfer_var(3, 1, 10))
-                self.assignValueOutput("output:Performance:range",out.transfer_var(3, 11, 17))
-                self.assignValueOutput("output:Performance:vapp",out.transfer_var(3, 18, 23))
-
-                # TODO - Again, there's got to be a better way
-                try:
-                    self.assignValueOutput("output:Performance:faroff",out.transfer_var(3, 24, 30))
-                except(RuntimeError, IndexError):
-                    self.assignValueOutput("output:Performance:faroff", 1.0e10)
-
-                self.assignValueOutput("output:Performance:farldg",out.transfer_var(3, 31, 37))
-                self.assignValueOutput("output:Performance:amfor",out.transfer_var(3, 38, 45))
-                self.assignValueOutput("output:Performance:ssfor",out.transfer_var(3, 46, 53))
-
-                self.assignValueOutput("output:Geometry:ar",out.transfer_var(3, 65, 70))
-                self.assignValueOutput("output:Geometry:sw",out.transfer_var(3, 80, 87))
-                self.assignValueOutput("output:Geometry:tr",out.transfer_var(3, 88, 93))
-                self.assignValueOutput("output:Geometry:sweep",out.transfer_var(3, 94, 99))
-                self.assignValueOutput("output:Geometry:tca",out.transfer_var(3, 100, 106))
-
-                if self.getValue("input:wtin:Basic:vmmo") > 0.:
-                    self.assignValueOutput("output:Performance:vmmo", self.getValue("input:wtin:Basic:vmmo"))
-                else:
-                    self.assignValueOutput("output:Performance:vmmo",out.transfer_var(3, 107, 112))
-
-            if self.getValueOutput("output:Weight:fuel") == 0.:
-                self.assignValueOutput("output:Weight:fuel",out.transfer_var(3, 1, 10))
-
-            if self.getValueOutput("output:Weight:rampwt") == 0.:
-                self.assignValueOutput("output:Weight:rampwt",out.transfer_var(3, 54, 64))
-
-            if self.getValueOutput("output:Weight:thrso") == 0.:
-                self.assignValueOutput("output:Weight:thrso",out.transfer_var(3, 72, 78))
-                self.assignValueOutput("output:Weight:thrsop",self.getValueOutput("output:Performance:thrso"))
-
-            if self.getValueOutput("output:Weight:wsr") == 0.:
-                self.assignValueOutput("output:Weight:wsr",out.transfer_var(3, 121, 126))
-
-            if self.getValueOutput("output:Weight:twr") == 0.:
-                self.assignValueOutput("output:Weight:twr",out.transfer_var(3, 127, 132))
-
-            out.set_delimiters(" ")
-
-            # Read off-design mission data
-
-            if ianal == 3:
-
-                ndim = 1 + noffdr + self.nrern0
-                self.assignValueOutput("output:Econ:sl",zeros(ndim))
-                self.assignValueOutput("output:Econ:blockt",zeros(ndim))
-                self.assignValueOutput("output:Econ:blockf",zeros(ndim))
-                self.assignValueOutput("output:Econ:blockNx",zeros(ndim))
-                self.assignValueOutput("output:Econ:wpayl",zeros(ndim))
-                self.assignValueOutput("output:Econ:wgross",zeros(ndim))
-                self.assignValueOutput("output:Econ:range",zeros(ndim))
-                self.assignValueOutput("output:Econ:vapp",zeros(ndim))
-                self.assignValueOutput("output:Econ:faroff",zeros(ndim))
-                self.assignValueOutput("output:Econ:farldg",zeros(ndim))
-                self.assignValueOutput("output:Econ:amfor",zeros(ndim))
-                self.assignValueOutput("output:Econ:ssfor",zeros(ndim))
-
-                for i in range(0, ndim):
-
-                    out.reset_anchor()
-                    out.mark_anchor( "CONFIGURATION DATA AFTER RESIZING", (nos-1)*(1 + noffdr) + 1 + i)
-
-                    self.assignValueOutput("output:Econ:wpayl",out.transfer_var(3,2),i)
-                    self.assignValueOutput("output:Econ:wgross",out.transfer_var(5, 3),i)
-
-                    out.mark_anchor( "DESIGN RANGE" )
-                    self.assignValueOutput("output:Econ:sl",out.transfer_var(0, 3),i)
-
-                    out.mark_anchor( "BLOCK TIME =" )
-                    self.assignValueOutput("output:Econ:blockt",out.transfer_var(0, 4),i)
-                    self.assignValueOutput("output:Econ:blockf",out.transfer_var(1, 4),i)
-                    self.assignValueOutput("output:Econ:blockNx",out.transfer_var(2, 6),i)
-
-                    out.mark_anchor( "#OBJ/VAR/CONSTR SUMMARY" );
-
-                    out.set_delimiters("columns")
-                    self.assignValueOutput("output:Econ:range",out.transfer_var(3, 11, 17),i)
-                    self.assignValueOutput("output:Econ:vapp",out.transfer_var(3, 18, 23),i)
-
-                    try:
-                        self.assignValueOutput("output:Econ:faroff",out.transfer_var(3, 24, 30),i)
-                    except (RuntimeError, IndexError):
-                        self.assignValueOutput("output:Econ:faroff",1.0e10,i)
-
-                    self.assignValueOutput("output:Econ:farldg",out.transfer_var(3, 31, 37),i)
-                    self.assignValueOutput("output:Econ:amfor",out.transfer_var(3, 38, 45),i)
-                    self.assignValueOutput("output:Econ:ssfor",out.transfer_var(3, 46, 53),i)
-
-                    out.set_delimiters(" ")
-
-
-
-
-
-
-
     def loadInputVars(self):
         # adding input variables to the model
         #aerin 
@@ -3125,24 +598,6 @@ class FlopsWrapper(ExternalCode):
         self.FlopsWrapper_input_wtin_Crew_Payload()
         self.FlopsWrapper_input_wtin_Center_of_Gravity()
         self.FlopsWrapper_input_wtin_Basic()
-
-    def loadOutputVars(self):
-                
-        self.FlopsWrapper_output_Weight_Wing()
-        self.FlopsWrapper_output_Weight_Inertia()
-        self.FlopsWrapper_output_Weight()
-        self.FlopsWrapper_output_Plot_Files()
-        self.FlopsWrapper_output_Performance_Segments()
-        self.FlopsWrapper_output_Performance_Constraints()
-        self.FlopsWrapper_output_Performance()
-        self.FlopsWrapper_output_Payload()
-        self.FlopsWrapper_output_Noise()
-        self.FlopsWrapper_output_Geometry_BWB()
-        self.FlopsWrapper_output_Geometry()
-        self.FlopsWrapper_output_Engine()
-        self.FlopsWrapper_output_Econ()
-
-
 
 
     def FlopsWrapper_input_option_Plot_Files(self):
@@ -5232,9 +2687,6 @@ class FlopsWrapper(ExternalCode):
 
 
 
-
-
-
         self.add_param('input:'+name+':missin:Cruise:ncruse', val=-999)
         self.add_param('input:'+name+':missin:Cruise:ioc', val=array([]))
         self.add_param('input:'+name+':missin:Cruise:crmach', val=array([]))
@@ -5290,12 +2742,2495 @@ class FlopsWrapper(ExternalCode):
 
 
 
+    def generate_input(self):
 
-  
+        paramList = list(self._params_dict.keys())
+        for param in paramList:
+            if 'typeVar' in self._params_dict[param]:
+                keyVar = self._params_dict[param]
+                if keyVar['typeVar']=='Array,int' and isinstance(keyVar['val'],ndarray):              
+                        self._params_dict[param]['val'] = array(self._params_dict[param]['val'],dtype=numpy_int64 ).tolist()
+                if (keyVar['typeVar'].lower()=='list' or keyVar['typeVar']=='Array,int')   and isinstance(keyVar['val'],int):              
+                        self._params_dict[param]['val'] = array([self._params_dict[param]['val']])
 
-       
-      
-    
+
+                elif keyVar['typeVar']=='Array,float' and isinstance(keyVar['val'],ndarray):
+                        self._params_dict[param]['val'] = array(self._params_dict[param]['val'] ,dtype=numpy_float64)
+                elif keyVar['typeVar']=='Float' and isinstance(keyVar['val'],int):
+                        self._params_dict[param]['val'] = float(self._params_dict[param]['val'] )
+
+
+        sb = Namelist(self)
+        sb.set_filename(self.input_filepath)
+        sb.set_title(self.getValue('input:title'))
+
+        #-------------------
+        # Namelist &OPTION
+        #-------------------
+
+        sb.add_group('OPTION')
+        sb.add_comment("\n  ! Program Control, Execution, Analysis and Plot Option Data")
+
+        iopt = self.getValue('input:option:Program_Control:iopt')
+        ianal = self.getValue('input:option:Program_Control:ianal')
+        ineng = self.getValue('input:option:Program_Control:ineng')
+        itakof = self.getValue('input:option:Program_Control:itakof')
+        iland = self.getValue('input:option:Program_Control:iland')
+        nopro = self.getValue('input:option:Program_Control:nopro')
+        noise = self.getValue('input:option:Program_Control:noise')
+        icost = self.getValue('input:option:Program_Control:icost')
+        ifite = self.getValue('input:option:Program_Control:ifite')
+        mywts = self.getValue('input:wtin:Basic:mywts')
+
+        sb.add_container("input:option:Program_Control")
+
+        sb.add_comment("\n  ! Plot files for XFLOPS Graphical Interface Postprocessor (MSMPLOT)")
+        sb.add_var("input:option:Plot_Files:ixfl")
+
+        sb.add_comment("\n  ! Takeoff and Climb Profile File for Noise Calculations (NPROF)")
+        sb.add_var("input:option:Plot_Files:npfile")
+
+        sb.add_comment("\n  ! Drag Polar Plot File (POLPLOT)")
+        sb.add_var("input:option:Plot_Files:ipolp")
+        sb.add_var("input:option:Plot_Files:polalt")
+
+        nmach = len(self.getValue('input:option:Plot_Files:pmach'))
+        if nmach > 0:
+            sb.add_newvar("nmach", nmach)
+            sb.add_var("input:option:Plot_Files:pmach")
+
+        sb.add_comment("\n  ! Engine Performance Data Plot File (THRPLOT)")
+        sb.add_var("input:option:Plot_Files:ipltth")
+
+        sb.add_comment("\n  ! Design History Plot File (HISPLOT)")
+        sb.add_var("input:option:Plot_Files:iplths")
+
+        ipltps = len(self.getValue("input:option:Excess_Power_Plot:pltnz"))
+        if ipltps > 0:
+            sb.add_comment("\n  ! Excess Power Plot File (PSPLOT)")
+            sb.add_newvar("ipltps", ipltps)
+            sb.add_container("input:option:Excess_Power_Plot")
+
+        # Plotfile names
+        sb.add_comment("\n  ! Plotfile Names")
+        if self.getValue("input:option:Plot_Files:cnfile"):
+            sb.add_var("input:option:Plot_Files:cnfile")
+        if self.getValue("input:option:Plot_Files:msfile"):
+            sb.add_var("input:option:Plot_Files:msfile")
+        if self.getValue("input:option:Plot_Files:crfile"):
+            sb.add_var("input:option:Plot_Files:crfile")
+        if self.getValue("input:option:Plot_Files:tofile") :
+            sb.add_var("input:option:Plot_Files:tofile")
+        if self.getValue("input:option:Plot_Files:nofile"):
+            sb.add_var("input:option:Plot_Files:nofile")
+        if self.getValue("input:option:Plot_Files:apfile") :
+            sb.add_var("input:option:Plot_Files:apfile")
+        if self.getValue("input:option:Plot_Files:thfile") :
+            sb.add_var("input:option:Plot_Files:thfile ")
+        if self.getValue("input:option:Plot_Files:hsfile") :
+            sb.add_var("input:option:Plot_Files:hsfile")
+        if self.getValue("input:option:Plot_Files:psfile") :
+            sb.add_var("input:option:Plot_Files:psfile")
+
+        #-------------------
+        # Namelist &WTIN
+        #-------------------
+
+        sb.add_group('WTIN')
+
+        sb.add_comment("\n  ! Geometric, Weight, Balance and Inertia Data")
+        sb.add_container("input:wtin:Basic")
+
+        sb.add_comment("\n  ! Special Option for Operating Weight Empty Calculations")
+        sb.add_container("input:wtin:OEW_Calculations")
+
+        sb.add_comment("\n  ! Wing Data")
+        sb.add_container("input:wtin:Wing_Data")
+
+        netaw = len(self.getValue("input:wtin:Detailed_Wing:etaw"))
+
+        if netaw > 0:
+            sb.add_comment("\n  ! Detailed Wing Data")
+            sb.add_newvar("netaw", netaw)
+            sb.add_var("input:wtin:Detailed_Wing:etaw")
+            sb.add_var("input:wtin:Detailed_Wing:chd")
+            sb.add_var("input:wtin:Detailed_Wing:toc")
+            sb.add_var("input:wtin:Detailed_Wing:swl")
+            sb.add_var("input:wtin:Detailed_Wing:etae")
+            sb.add_var("input:wtin:Detailed_Wing:pctl")
+            sb.add_var("input:wtin:Detailed_Wing:arref")
+            sb.add_var("input:wtin:Detailed_Wing:tcref")
+            sb.add_var("input:wtin:Detailed_Wing:nstd")
+
+            pdist = self.getValue("input:wtin:Detailed_Wing:pdist")
+            sb.add_var("input:wtin:Detailed_Wing:pdist")
+            if pdist < 0.0001:
+                sb.add_var("input:wtin:Detailed_Wing:etap")
+                sb.add_var("input:wtin:Detailed_Wing:pval")
+
+        sb.add_comment("\n  ! Tails, Fins, Canards")
+        sb.add_comment("\n  ! Horizontal Tail Data")
+        sb.add_var("input:wtin:Tails_Fins:sht")
+        sb.add_var("input:wtin:Tails_Fins:swpht")
+        sb.add_var("input:wtin:Tails_Fins:arht")
+        sb.add_var("input:wtin:Tails_Fins:trht")
+        sb.add_var("input:wtin:Tails_Fins:tcht")
+        sb.add_var("input:wtin:Tails_Fins:hht")
+
+        nvert = self.getValue("input:wtin:Tails_Fins:nvert")
+        if nvert != 0:
+            sb.add_comment("\n  ! Vertical Tail Data")
+            sb.add_var("input:wtin:Tails_Fins:nvert")
+            sb.add_var("input:wtin:Tails_Fins:svt")
+            sb.add_var("input:wtin:Tails_Fins:swpvt")
+            sb.add_var("input:wtin:Tails_Fins:arvt")
+            sb.add_var("input:wtin:Tails_Fins:trvt")
+            sb.add_var("input:wtin:Tails_Fins:tcvt")
+
+        nfin = self.getValue("input:wtin:Tails_Fins:nfin")
+        if nfin != 0:
+            sb.add_comment("\n  ! Fin Data")
+            sb.add_var("input:wtin:Tails_Fins:nfin")
+            sb.add_var("input:wtin:Tails_Fins:sfin")
+            sb.add_var("input:wtin:Tails_Fins:arfin")
+            sb.add_var("input:wtin:Tails_Fins:trfin")
+            sb.add_var("input:wtin:Tails_Fins:swpfin")
+            sb.add_var("input:wtin:Tails_Fins:tcfin")
+
+        scan = self.getValue("input:wtin:Tails_Fins:scan")
+        if scan != 0:
+            sb.add_comment("\n  ! Canard Data")
+            sb.add_var("input:wtin:Tails_Fins:scan")
+            sb.add_var("input:wtin:Tails_Fins:swpcan")
+            sb.add_var("input:wtin:Tails_Fins:arcan")
+            sb.add_var("input:wtin:Tails_Fins:trcan")
+            sb.add_var("input:wtin:Tails_Fins:tccan")
+
+        sb.add_comment("\n  ! Fuselage Data")
+        sb.add_container("input:wtin:Fuselage")
+
+        sb.add_comment("\n  ! Landing Gear Data")
+        sb.add_container("input:wtin:Landing_Gear")
+
+        sb.add_comment("\n  ! Propulsion System Data")
+        sb.add_container("input:wtin:Propulsion")
+
+        sb.add_comment("\n  ! Fuel System Data")
+        sb.add_var("input:wtin:Fuel_System:ntank")
+        sb.add_var("input:wtin:Fuel_System:fulwmx")
+        sb.add_var("input:wtin:Fuel_System:fulden")
+        sb.add_var("input:wtin:Fuel_System:fulfmx")
+        sb.add_var("input:wtin:Fuel_System:ifufu")
+        sb.add_var("input:wtin:Fuel_System:fulaux")
+
+        fuscla = self.getValue("input:wtin:Fuel_System:fuscla")
+        if fuscla > 0.000001:
+            sb.add_comment("\n  ! Special method for scaling wing fuel capacity")
+            sb.add_var("input:wtin:Fuel_System:fuelrf")
+            sb.add_var("input:wtin:Fuel_System:fswref")
+            sb.add_var("input:wtin:Fuel_System:fuscla")
+            sb.add_var("input:wtin:Fuel_System:fusclb")
+
+        sb.add_comment("\n  ! Crew and Payload Data")
+        sb.add_container("input:wtin:Crew_Payload")
+
+        sb.add_comment("\n  ! Override Parameters")
+        sb.add_container("input:wtin:Override")
+
+        sb.add_comment("\n  ! Center of Gravity (C.G.) Data")
+        sb.add_container("input:wtin:Center_of_Gravity")
+
+        inrtia = self.getValue("input:wtin:Inertia:inrtia")
+        if inrtia != 0:
+            sb.add_comment("\n  ! Inertia Data")
+            sb.add_newvar("inrtia", inrtia)
+            sb.add_var("input:wtin:Inertia:zht")
+            sb.add_var("input:wtin:Inertia:zvt")
+            sb.add_var("input:wtin:Inertia:zfin")
+            sb.add_var("input:wtin:Inertia:yfin")
+            sb.add_var("input:wtin:Inertia:zef")
+            sb.add_var("input:wtin:Inertia:yef")
+            sb.add_var("input:wtin:Inertia:zea")
+            sb.add_var("input:wtin:Inertia:yea")
+            sb.add_var("input:wtin:Inertia:zbw")
+            sb.add_var("input:wtin:Inertia:zap")
+            sb.add_var("input:wtin:Inertia:zrvt")
+            sb.add_var("input:wtin:Inertia:ymlg")
+            sb.add_var("input:wtin:Inertia:yfuse")
+            sb.add_var("input:wtin:Inertia:yvert")
+            sb.add_var("input:wtin:Inertia:swtff")
+            sb.add_var("input:wtin:Inertia:tcr")
+            sb.add_var("input:wtin:Inertia:tct")
+            sb.add_var("input:wtin:Inertia:incpay")
+
+            l = len(self.getValue("input:wtin:Inertia:tx"))
+            sb.add_newvar("itank", l)
+            if l > 0:
+                sb.add_var("input:wtin:Inertia:tx")
+                sb.add_var("input:wtin:Inertia:ty")
+                sb.add_var("input:wtin:Inertia:tz")
+
+            j = len(self.getValue("input:wtin:Inertia:tl"))
+            if j > 0:
+                sb.add_var("input:wtin:Inertia:tl")
+                sb.add_var("input:wtin:Inertia:tw")
+                sb.add_var("input:wtin:Inertia:td")
+
+            j = self.getValue("input:wtin:Inertia:tf").shape[0]
+            sb.add_newvar("nfcon", j)
+            if l*j > 0:
+                sb.add_var("input:wtin:Inertia:tf")
+
+        #-------------------
+        # Namelist &FUSEIN
+        #-------------------
+
+        # Namelist &FUSEIN is only required if XL=0 or IFITE=3.
+        xl = self.getValue("input:wtin:Fuselage:xl")
+        if xl < 0.0000001 or ifite == 3:
+
+            sb.add_group('FUSEIN')
+            sb.add_comment("\n  ! Fuselage Design Data")
+            sb.add_container("input:fusein:Basic")
+            sb.add_container("input:fusein:BWB")
+
+        #-------------------
+        # Namelist &CONFIN
+        #-------------------
+
+        sb.add_group('CONFIN')
+        sb.add_container("input:confin:Basic")
+
+        # MC Flops wrapper didn't write these out if iopt was less than 3
+        # I changed it to match expected behavior when comparing manual FLOPS
+        # if iopt >= 3:
+        sb.add_comment("\n  ! Objective Function Definition")
+        sb.add_container("input:confin:Objective")
+
+        sb.add_comment("\n  ! Design Variables")
+        sb.add_var("input:confin:Design_Variables:gw")
+        sb.add_var("input:confin:Design_Variables:ar")
+        sb.add_var("input:confin:Design_Variables:thrust")
+        sb.add_var("input:confin:Design_Variables:sw")
+        sb.add_var("input:confin:Design_Variables:tr")
+        sb.add_var("input:confin:Design_Variables:sweep")
+        sb.add_var("input:confin:Design_Variables:tca")
+        sb.add_var("input:confin:Design_Variables:vcmn")
+        sb.add_var("input:confin:Design_Variables:ch")
+        sb.add_var("input:confin:Design_Variables:varth")
+        sb.add_var("input:confin:Design_Variables:rotvel")
+        sb.add_var("input:confin:Design_Variables:plr")
+
+        igenen = self.getValue("input:engdin:Basic:igenen")
+        if igenen in (1, -2):
+            sb.add_comment("\n  ! Engine Design Variables")
+            sb.add_var("input:confin:Design_Variables:etit")
+            sb.add_var("input:confin:Design_Variables:eopr")
+            sb.add_var("input:confin:Design_Variables:efpr")
+            sb.add_var("input:confin:Design_Variables:ebpr")
+            sb.add_var("input:confin:Design_Variables:ettr")
+            sb.add_var("input:confin:Design_Variables:ebla")
+
+        #-------------------
+        # Namelist &AERIN
+        #-------------------
+
+        sb.add_group('AERIN')
+
+        myaero = self.getValue("input:aerin:Basic:myaero")
+        iwave = self.getValue("input:aerin:Basic:iwave")
+        if myaero != 0:
+            sb.add_comment("\n  ! Externally Computed Aerodynamics")
+            sb.add_var("input:aerin:Basic:myaero")
+            sb.add_var("input:aerin:Basic:iwave")
+            if iwave != 0:
+                sb.add_var("input:aerin:Basic:fwave")
+            sb.add_var("input:aerin:Basic:itpaer")
+            sb.add_var("input:aerin:Basic:ibo")
+        else:
+            sb.add_comment("\n  ! Internally Computed Aerodynamics")
+            sb.add_container("input:aerin:Internal_Aero")
+
+        sb.add_container("input:aerin:Takeoff_Landing")
+
+        #-------------------
+        # Namelist &COSTIN
+        #-------------------
+
+        # Namelist &COSTIN is only required if ICOST=1.
+        if icost != 0:
+            sb.add_group('COSTIN')
+
+            sb.add_comment("\n  ! Cost Calculation Data")
+            sb.add_container("input:costin:Basic")
+            sb.add_comment("\n  ! Mission Performance Data")
+            sb.add_container("input:costin:Mission_Performance")
+            sb.add_comment("\n  ! Cost Technology Parameters")
+            sb.add_container("input:costin:Cost_Technology")
+
+        #-------------------
+        # Namelist &ENGDIN
+        #-------------------
+
+        # Namelist &ENGDIN is only required in IANAL=3 or 4 or INENG=1.
+        if ianal in (3, 4) or ineng == 1:
+            sb.add_group('ENGDIN')
+
+            sb.add_comment("\n  ! Engine Deck Control, Scaling and Usage Data")
+            sb.add_var("input:engdin:Basic:ngprt")
+            sb.add_var("input:engdin:Basic:igenen")
+            sb.add_var("input:engdin:Basic:extfac")
+            sb.add_var("input:engdin:Basic:fffsub")
+            sb.add_var("input:engdin:Basic:fffsup")
+            sb.add_var("input:engdin:Basic:idle")
+            sb.add_var("input:engdin:Basic:noneg")
+            sb.add_var("input:engdin:Basic:fidmin")
+            sb.add_var("input:engdin:Basic:fidmax")
+            sb.add_var("input:engdin:Basic:ixtrap")
+            sb.add_var("input:engdin:Basic:ifill")
+            sb.add_var("input:engdin:Basic:maxcr")
+            sb.add_var("input:engdin:Basic:nox")
+
+            npcode =  len(self.getValue("input:engdin:Basic:pcode"))
+            if npcode > 0:
+                sb.add_newvar("npcode", npcode)
+                sb.add_var("input:engdin:Basic:pcode")
+
+            sb.add_var("input:engdin:Basic:boost")
+            sb.add_var("input:engdin:Basic:igeo")
+            sb.add_var("input:engdin:Special_Options:dffac")
+            sb.add_var("input:engdin:Special_Options:fffac")
+
+            if igenen in (1, -2):
+                j =  len(self.getValue("input:engdin:Special_Options:emach"))
+                l =  self.getValue("input:engdin:Special_Options:alt").shape[0]
+                if j > 0:
+                    # TODO - Find out about fake 2d for new FLOPS double prop
+                    # capability.
+                    sb.add_var("input:engdin:Special_Options:emach")
+                    if l*j > 0:
+                        # TODO - Find out about fake 3d for new FLOPS double prop
+                        # capability.
+                        sb.add_var("input:engdin:Special_Options:alt")
+
+            insdrg =  self.getValue("input:engdin:Special_Options:insdrg")
+            if insdrg != 0:
+                sb.add_comment("\n  ! Nozzle installation drag using table look-up")
+                sb.add_newvar("insdrg", insdrg)
+                sb.add_var("input:engdin:Special_Options:nab")
+                sb.add_var("input:engdin:Special_Options:nabref")
+                sb.add_var("input:engdin:Special_Options:a10")
+                sb.add_var("input:engdin:Special_Options:a10ref")
+                sb.add_var("input:engdin:Special_Options:a9ref")
+                sb.add_var("input:engdin:Special_Options:xnoz")
+                sb.add_var("input:engdin:Special_Options:xnref")
+                sb.add_var("input:engdin:Special_Options:rcrv")
+
+                # TODO - rawInputFile( cdfile, "ENDRAG" );
+                #cdfile.open
+
+            # Write out the eifile. This is a new addition.
+            if self.getValue("input:engdin:eifile"):
+                sb.add_var("input:engdin:eifile")
+
+
+            #----------------------
+            # Namelist Engine deck
+            #----------------------
+
+            # Insert the engine deck into the flops input file
+
+            # If IGENEN=0 the engine deck is part of the input file, otherwise it is an
+            # external file.
+
+            engine_deck  = self.getValue("input:engine_deck:engdek")
+            if igenen in (0, -2):
+                # engine_deck contains the raw engine deck
+                sb.add_group(engine_deck)
+            else:
+                # engine_deck contains the name of the engine deck file
+                if engine_deck:
+                    sb.add_var("input:engine_deck:engdek")
+
+        #-------------------
+        # Namelist &ENGINE
+        #-------------------
+
+        # Namelist &ENGINE is only required if IGENEN=-2 or 1.
+        if igenen in (-2, 1):
+
+            sb.add_group('ENGINE')
+
+            nginwt =  self.getValue("input:engine:Engine_Weight:nginwt")
+            ieng = self.getValue("input:engine:Basic:ieng")
+
+            sb.add_var("input:engine:Basic:ieng")
+            sb.add_var("input:engine:Basic:iprint")
+            sb.add_var("input:engine:Basic:gendek")
+            sb.add_var("input:engine:Basic:ithrot")
+            sb.add_var("input:engine:Basic:npab")
+            sb.add_var("input:engine:Basic:npdry")
+            sb.add_var("input:engine:Basic:xidle")
+            sb.add_var("input:engine:Basic:nitmax")
+
+            if self.getValue("input:engine:Basic:xmmax") > 0:
+                sb.add_var("input:engine:Basic:xmmax")
+            if self.getValue("input:engine:Basic:amax") > 0:
+                sb.add_var("input:engine:Basic:amax")
+            if self.getValue("input:engine:Basic:xminc") > 0:
+                sb.add_var("input:engine:Basic:xminc")
+            if self.getValue("input:engine:Basic:ainc") > 0:
+                sb.add_var("input:engine:Basic:ainc")
+            if self.getValue("input:engine:Basic:qmin") > 0:
+                sb.add_var("input:engine:Basic:qmin")
+            if self.getValue("input:engine:Basic:qmax") > 0:
+                sb.add_var("input:engine:Basic:qmax")
+
+            sb.add_newvar("nginwt", nginwt)
+            sb.add_container("input:engine:Noise_Data")
+
+            if self.getValue("input:engine:Design_Point:desfn") > 0:
+                sb.add_var("input:engine:Design_Point:desfn")
+            if self.getValue("input:engine:Design_Point:xmdes") > 0:
+                sb.add_var("input:engine:Design_Point:xmdes")
+            if self.getValue("input:engine:Design_Point:xades") > 0:
+                sb.add_var("input:engine:Design_Point:xades")
+
+            sb.add_var("input:engine:Design_Point:oprdes")
+            sb.add_var("input:engine:Design_Point:fprdes")
+            sb.add_var("input:engine:Design_Point:bprdes")
+            sb.add_var("input:engine:Design_Point:tetdes")
+            sb.add_var("input:engine:Design_Point:ttrdes")
+            sb.add_var("input:engine:Other:hpcpr")
+            sb.add_var("input:engine:Other:aburn")
+            sb.add_var("input:engine:Other:dburn")
+            sb.add_var("input:engine:Other:effab")
+            sb.add_var("input:engine:Other:tabmax")
+            sb.add_var("input:engine:Other:ven")
+            sb.add_var("input:engine:Other:costbl")
+            sb.add_var("input:engine:Other:fanbl")
+            sb.add_var("input:engine:Other:hpext")
+            sb.add_var("input:engine:Other:wcool")
+            sb.add_var("input:engine:Other:fhv")
+            sb.add_var("input:engine:Other:dtce")
+            sb.add_var("input:engine:Other:alc")
+            sb.add_var("input:engine:Other:year")
+            sb.add_comment("\n  ! Installation effects")
+            sb.add_var("input:engine:Other:boat")
+            sb.add_var("input:engine:Other:ajmax")
+
+            if self.getValue("input:engine:Other:spill"):
+                sb.add_comment("\n  ! Installation effects")
+                sb.add_var("input:engine:Other:spill")
+                sb.add_var("input:engine:Other:lip")
+                sb.add_var("input:engine:Other:blmax")
+                sb.add_var("input:engine:Other:spldes")
+                sb.add_var("input:engine:Other:aminds")
+                sb.add_var("input:engine:Other:alinds")
+
+            sb.add_var("input:engine:Other:etaprp")
+            sb.add_var("input:engine:Other:shpowa")
+            sb.add_comment("\n  ! Engine operating constraints")
+            sb.add_var("input:engine:Other:cdtmax")
+            sb.add_var("input:engine:Other:cdpmax")
+            sb.add_var("input:engine:Other:vjmax")
+            sb.add_var("input:engine:Other:stmin")
+            sb.add_var("input:engine:Other:armax")
+            sb.add_var("input:engine:Other:limcd")
+
+            if nginwt != 0:
+                sb.add_comment("\n  ! Engine Weight Calculation Data")
+                sb.add_var("input:engine:Engine_Weight:iwtprt")
+                sb.add_var("input:engine:Engine_Weight:iwtplt")
+                sb.add_var("input:engine:Engine_Weight:gratio")
+                sb.add_var("input:engine:Engine_Weight:utip1")
+                sb.add_var("input:engine:Engine_Weight:rh2t1")
+                sb.add_var("input:engine:Engine_Weight:igvw")
+                sb.add_var("input:engine:Engine_Weight:trbrpm")
+                sb.add_var("input:engine:Engine_Weight:trban2")
+                sb.add_var("input:engine:Engine_Weight:trbstr")
+                sb.add_var("input:engine:Engine_Weight:cmpan2")
+                sb.add_var("input:engine:Engine_Weight:cmpstr")
+                sb.add_var("input:engine:Engine_Weight:vjpnlt")
+                sb.add_var("input:engine:Engine_Weight:wtebu")
+                sb.add_var("input:engine:Engine_Weight:wtcon")
+
+            if ieng == 101:
+                sb.add_var("input:engine:IC_Engine:ncyl")
+                sb.add_var("input:engine:IC_Engine:deshp")
+                sb.add_var("input:engine:IC_Engine:alcrit")
+                sb.add_var("input:engine:IC_Engine:sfcmax")
+                sb.add_var("input:engine:IC_Engine:sfcmin")
+                sb.add_var("input:engine:IC_Engine:pwrmin")
+                sb.add_var("input:engine:IC_Engine:engspd")
+                sb.add_var("input:engine:IC_Engine:prpspd")
+
+            if ieng == 101 or igenen == -2 and nginwt > 0:
+                sb.add_var("input:engine:IC_Engine:iwc")
+                sb.add_var("input:engine:IC_Engine:ecid")
+                sb.add_var("input:engine:IC_Engine:ecr")
+
+            if ieng == 101 or igenen == -2:
+                sb.add_var("input:engine:IC_Engine:eht")
+                sb.add_var("input:engine:IC_Engine:ewid")
+                sb.add_var("input:engine:IC_Engine:elen")
+                sb.add_var("input:engine:IC_Engine:ntyp")
+                sb.add_var("input:engine:IC_Engine:af")
+                sb.add_var("input:engine:IC_Engine:cli")
+                sb.add_var("input:engine:IC_Engine:blang")
+                sb.add_var("input:engine:IC_Engine:dprop")
+                sb.add_var("input:engine:IC_Engine:nblade")
+                sb.add_var("input:engine:IC_Engine:gbloss")
+
+            nrpm =  len(self.getValue("input:engine:IC_Engine:arrpm"))
+            if nrpm > 0:
+                sb.add_comment("  ! power curve input data")
+                sb.add_newvar("nrpm", nrpm)
+                sb.add_var("input:engine:IC_Engine:arrpm")
+                sb.add_var("input:engine:IC_Engine:arpwr")
+                sb.add_var("input:engine:IC_Engine:arful")
+                if self.input.engine.IC_Engine.lfuun != 0:
+                    sb.add_var("input:engine:IC_Engine:lfuun")
+                    sb.add_var("input:engine:IC_Engine:feng")
+
+            sb.add_var("input:engine:IC_Engine:fprop")
+            sb.add_var("input:engine:IC_Engine:fgbox")
+
+            ifile = self.getValue("input:engine:ifile")
+            tfile = self.getValue("input:engine:tfile")
+
+            # The name of the engine cycle definition file to be read in is
+            # set by the value of if IENG.
+            filenames = { 0: "MYCYCL",
+                          1: "TURJET",
+                          2: "TFNSEP",
+                          3: "TFNMIX",
+                          4: "TURPRP",
+                          5: "TBYPAS",
+                          6: "TFNSP3",
+                          7: "TFNMX3",
+                          8: "TFN3SH",
+                          9: "TURJT2",
+                          101: "MYCYCL" }
+            try:
+                ifilNam = filenames[ieng]
+            except KeyError:
+                msg = "Illegal value %s for input:engine:Basic:IENG" % ieng
+                raise KeyError(msg)
+
+            # TODO - rawInputFile( ifile, ifilNam )
+            # TODO - rawInputFile( tfile, "ENGTAB" )
+            sb.add_newvar("tfile", tfile)
+            sb.add_newvar("ifile", ifilNam)
+
+            #-------------------
+            # Namelist &NACELL
+            #-------------------
+
+            # Namelist &NACELL is only required if NGINWT != 0
+            # (note:, still in IGENEN=-2 or 1.)
+            if nginwt != 0:
+
+                sb.add_group('NACELL')
+                sb.add_comment("\n  ! Data for Computation of Nacelle Weight.")
+                sb.add_container("input:nacell")
+
+        #-------------------
+        # Namelist &MISSIN
+        #-------------------
+
+        # Namelist &MISSIN is only required if IANAL=3
+
+        npcon = self.getValue("input:missin:Basic:npcon")
+
+        if ianal == 3:
+
+            sb.add_group('MISSIN')
+
+            sb.add_comment("\n  ! Performance Controls and Factors and Mission Segment Definition")
+            sb.add_var("input:missin:Basic:indr")
+            sb.add_var("input:missin:Basic:fact")
+            sb.add_var("input:missin:Basic:fleak")
+            sb.add_var("input:missin:Basic:fcdo")
+            sb.add_var("input:missin:Basic:fcdi")
+            sb.add_var("input:missin:Basic:fcdsub")
+            sb.add_var("input:missin:Basic:fcdsup")
+            sb.add_var("input:missin:Basic:iskal")
+            sb.add_var("input:missin:Basic:owfact")
+            sb.add_var("input:missin:Basic:iflag")
+            sb.add_var("input:missin:Basic:msumpt")
+            sb.add_var("input:missin:Basic:dtc")
+            sb.add_var("input:missin:Basic:irw")
+            sb.add_var("input:missin:Basic:rtol")
+            sb.add_var("input:missin:Basic:nhold")
+            sb.add_var("input:missin:Basic:iata")
+            sb.add_var("input:missin:Basic:tlwind")
+            sb.add_var("input:missin:Basic:dwt")
+
+            if len(self.getValue("input:missin:Basic:offdr")) > 0:
+                sb.add_var("input:missin:Basic:offdr")
+
+            sb.add_var("input:missin:Basic:idoq")
+            sb.add_newvar("npcon", npcon)
+
+            nsout =  self.getValue("input:missin:Basic:nsout")
+            if nsout > 0:
+                sb.add_comment("\n  ! Combat Radius Mission\n")
+                sb.add_newvar("nsout", nsout)
+                sb.add_var("input:missin:Basic:nsadj")
+                sb.add_var("input:missin:Basic:mirror")
+
+            i =  len(self.getValue("input:missin:Store_Drag:stma"))
+            if i > 0:
+                sb.add_comment("\n  ! Store Drags")
+                sb.add_container("input:missin:Store_Drag")
+
+            sb.add_var("input:missin:User_Weights:mywts")
+            if mywts == 1:
+                sb.add_comment("\n  ! User-Specified Weights")
+                sb.add_var("input:missin:User_Weights:rampwt")
+                sb.add_var("input:missin:User_Weights:dowe")
+                sb.add_var("input:missin:User_Weights:paylod")
+                sb.add_var("input:missin:User_Weights:fuemax")
+
+            sb.add_comment("\n  ! Ground Operations and Takeoff and Approach Allowances")
+            sb.add_container("input:missin:Ground_Operations")
+
+            if len(self.getValue("input:missin:Turn_Segments:xnz")) > 0:
+                sb.add_var("input:missin:Turn_Segments:xnz")
+            if len(self.getValue("input:missin:Turn_Segments:xcl")) > 0:
+                sb.add_var("input:missin:Turn_Segments:xcl")
+            if len(self.getValue("input:missin:Turn_Segments:xmach")) > 0:
+                sb.add_var("input:missin:Turn_Segments:xmach")
+            
+            nclimb = max( len(self.getValue("input:missin:Climb:clmmin")),
+                          len(self.getValue("input:missin:Climb:clmmax")),
+                          len(self.getValue("input:missin:Climb:clamax")),
+                          len(self.getValue("input:missin:Climb:nincl")),
+                          len(self.getValue("input:missin:Climb:fwf")),
+                          len(self.getValue("input:missin:Climb:ncrcl")),
+                          len(self.getValue("input:missin:Climb:cldcd")),
+                          len(self.getValue("input:missin:Climb:ippcl")),
+                          len(self.getValue("input:missin:Climb:maxcl")) )
+
+            # TODO - Ask Karl or Jeff about this
+            # I've removed ioc and ifeath from this. These are parameters, so
+            # their "length" should have nothing to do with how many Cruise
+            # Schedules are in the model.
+            ncruse = max( len(self.getValue("input:missin:Cruise:crmach")),
+                          len(self.getValue("input:missin:Cruise:cralt")),
+                          len(self.getValue("input:missin:Cruise:crdcd")),
+                          len(self.getValue("input:missin:Cruise:flrcr")),
+                          len(self.getValue("input:missin:Cruise:crmmin")),
+                          len(self.getValue("input:missin:Cruise:crclmx")),
+                          len(self.getValue("input:missin:Cruise:hpmin")),
+                          len(self.getValue("input:missin:Cruise:ffuel")),
+                          len(self.getValue("input:missin:Cruise:fnox")),
+                          len(self.getValue("input:missin:Cruise:feathf")),
+                          len(self.getValue("input:missin:Cruise:cdfeth")) )
+
+            nql = len(self.getValue("input:missin:Climb:qlalt"))
+            ns = len(self.getValue("input:missin:Descent:adtab"))
+
+            sb.add_comment("\n  ! Climb Schedule Definition")
+            sb.add_newvar("nclimb", nclimb)
+            sb.add_var("input:missin:Climb:clmmin")
+            sb.add_var("input:missin:Climb:clmmax")
+            sb.add_var("input:missin:Climb:clamin")
+            sb.add_var("input:missin:Climb:clamax")
+            sb.add_var("input:missin:Climb:nincl")
+            sb.add_var("input:missin:Climb:fwf")
+            sb.add_var("input:missin:Climb:ncrcl")
+            sb.add_var("input:missin:Climb:cldcd")
+            sb.add_var("input:missin:Climb:ippcl")
+            sb.add_var("input:missin:Climb:maxcl")
+            sb.add_var("input:missin:Climb:keasvc")
+
+            actab = self.getValue("input:missin:Climb:actab")
+            no = actab.shape[1]
+            if no == 0:
+                no = actab.shape[0]
+            elif no > 0:
+                noval = ""
+                for i in range(0, nclimb):
+                    if actab.shape[1] > 0:
+                        for j in range(0, actab.shape[1]):
+                            if actab[i, j] >= 0.0:
+                                n = j+1
+                                noval += n + ", "
+                            else:
+                                break
+                    else:
+                        noval += "0, "
+
+                sb.add_newvar("no", noval)
+                sb.add_var("input:missin:Climb:actab")
+                sb.add_var("input:missin:Climb:vctab")
+
+            sb.add_var("input:missin:Climb:ifaacl")
+            sb.add_var("input:missin:Climb:ifaade")
+            sb.add_var("input:missin:Climb:nodive")
+            sb.add_var("input:missin:Climb:divlim")
+            sb.add_var("input:missin:Climb:qlim")
+            sb.add_var("input:missin:Climb:spdlim")
+            if nql > 0:
+                sb.add_var("input:missin:Climb:qlalt")
+                sb.add_var("input:missin:Climb:vqlm")
+
+            sb.add_comment("\n  ! Cruise Schedule Definition\n")
+            sb.add_newvar("ncruse", ncruse)
+            sb.add_var("input:missin:Cruise:ioc")
+            sb.add_var("input:missin:Cruise:crmach")
+            sb.add_var("input:missin:Cruise:cralt")
+            sb.add_var("input:missin:Cruise:crdcd")
+            sb.add_var("input:missin:Cruise:flrcr")
+            sb.add_var("input:missin:Cruise:crmmin")
+            sb.add_var("input:missin:Cruise:crclmx")
+            sb.add_var("input:missin:Cruise:hpmin")
+            sb.add_var("input:missin:Cruise:ffuel")
+            sb.add_var("input:missin:Cruise:fnox")
+            sb.add_var("input:missin:Cruise:ifeath")
+            sb.add_var("input:missin:Cruise:feathf")
+            sb.add_var("input:missin:Cruise:cdfeth")
+            sb.add_var("input:missin:Cruise:dcwt")
+            sb.add_var("input:missin:Cruise:rcin")
+            if len(self.getValue("input:missin:Cruise:wtbm")) > 0:
+                sb.add_var("input:missin:Cruise:wtbm")
+            if len(self.getValue("input:missin:Cruise:altbm")) > 0:
+                sb.add_var("input:missin:Cruise:altbm")
+
+            sb.add_comment("\n  ! Descent Schedule Definition")
+            sb.add_var("input:missin:Descent:ivs")
+            sb.add_var("input:missin:Descent:decl")
+            sb.add_var("input:missin:Descent:demmin")
+            sb.add_var("input:missin:Descent:demmax")
+            sb.add_var("input:missin:Descent:deamin")
+            sb.add_var("input:missin:Descent:deamax")
+            sb.add_var("input:missin:Descent:ninde")
+            sb.add_var("input:missin:Descent:dedcd")
+            sb.add_var("input:missin:Descent:rdlim")
+            sb.add_var("input:missin:Descent:keasvd")
+            if ns > 0:
+                sb.add_newvar("ns", ns)
+                sb.add_var("input:missin:Descent:adtab")
+                sb.add_var("input:missin:Descent:vdtab")
+
+            sb.add_container("input:missin:Reserve")
+
+            #----------------------
+            # Mission definition
+            #----------------------
+
+            mission = self.getValue("input:mission_definition:mission")
+
+            for seg in mission:
+                sb.add_group(seg)
+
+            self.nmseg = mission.count('CLIMB') + mission.count('CRUISE') + \
+                         mission.count('REFUEL') + mission.count('RELEASE') + \
+                         mission.count('ACCEL') + mission.count('TURN') + \
+                         mission.count('COMBAT') + mission.count('HOLD') + \
+                         mission.count('DESCENT')
+
+        #-------------------
+        # Namelist &PCONIN
+        #-------------------
+
+        # One or more &PCONIN namelists may have been created by the user.
+        if npcon > 0 and ianal == 3:
+
+            for i in range(0, npcon):
+
+                sb.add_group('PCONIN')
+                sb.add_comment("\n  ! Performance Constraint")
+
+                if self.getValue("input:pconin%s:conalt" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:conalt" % (i))
+                if self.getValue("input:pconin%s:conmch" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:conmch" % (i))
+                if self.getValue("input:pconin%s:connz" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:connz" % (i))
+                if self.getValue("input:pconin%s:conpc" % (i)) > -10.:
+                    sb.add_var("input:pconin%s:conpc" % (i))
+                if self.getValue("input:pconin%s:conlim" % (i)) != -999.:
+                    sb.add_var("input:pconin%s:conlim" % (i))
+                if self.getValue("input:pconin%s:conaux" % (i)) > -1.:
+                    sb.add_var("input:pconin%s:conaux" % (i))
+                if self.getValue("input:pconin%s:neo" % (i)) >= 0:
+                    sb.add_var("input:pconin%s:neo" % (i))
+                if self.getValue("input:pconin%s:icstdg" % (i)) >= 0:
+                    sb.add_var("input:pconin%s:icstdg" % (i))
+                if self.getValue("input:pconin%s:conwt" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:conwt" % (i))
+                if self.getValue("input:pconin%s:iconsg" % (i)) >= 0:
+                    sb.add_var("input:pconin%s:iconsg" % (i))
+                if self.getValue("input:pconin%s:confm" % (i)) >= 0.:
+                    sb.add_var("input:pconin%s:confm" % (i))
+                if self.getValue("input:pconin%s:conwta" % (i)) != -999.:
+                    sb.add_var("input:pconin%s:conwta" % (i))
+                if self.getValue("input:pconin%s:icontp" % (i)) >= 0:
+                    sb.add_var("input:pconin%s:icontp" % (i))
+
+        #--------------------
+        # Aerodynamic data
+        #--------------------
+
+        # Aerodynamic data are placed in the input file if MYAERO > 0.  If MYAERO=3,
+        # insert the aerodynamic data after namelist &RFHIN (below), otherwise insert
+        # them here.
+
+        if myaero > 0 and myaero != 3 and ianal == 3:
+
+            # aerodat contains the raw aero data
+            sb.add_group(self.getValue("input:aero_data:aerodat"))
+
+        #-------------------
+        # Namelist &RFHIN
+        #-------------------
+
+        # Namelist &RFHIN is only required if MYAERO=3.
+
+        elif myaero == 3:
+
+            sb.add_group('RFHIN')
+
+            mmach = len(self.getValue("input:rfhin:tmach"))
+            sb.add_comment("  ! Aerodynamic Data for Parabolic Drag Polars")
+            sb.add_newvar("mmach", mmach)
+            sb.add_container("input:rfhin")
+
+            # If MYAERO=3, insert the aerodynamic data here.  Otherwise it may have already
+            # been inserted above.
+
+            # aerodat contains the raw aero data
+            sb.add_group(self.getValue("input:aero_data:aerodat"))
+
+
+        #-------------------
+        # Namelist &ASCLIN
+        #-------------------
+
+        # Namelist &ASCLIN is only required if MYAERO=2.
+
+        if myaero == 2:
+
+            sb.add_group('ASCLIN')
+
+            sb.add_comment("  ! Scaling Data for Lift Independent Drag")
+            sb.add_var("input:asclin:sref")
+            sb.add_var("input:asclin:tref")
+            sb.add_var("input:asclin:awetn")
+            sb.add_var("input:asclin:eltot")
+            sb.add_var("input:asclin:voltot")
+
+            if len(self.getValue("input:asclin:awett")) > 0:
+                sb.add_var("input:asclin:awett")
+            if len(self.getValue("input:asclin:awetw")) > 0:
+                sb.add_var("input:asclin:awetw")
+            if len(self.getValue("input:asclin:elw")) > 0:
+                sb.add_var("input:asclin:elw")
+            if len(self.getValue("input:asclin:volw")) > 0:
+                sb.add_var("input:asclin:volw")
+            if len(self.getValue("input:asclin:form")) > 0:
+                sb.add_var("input:asclin:form")
+            if len(self.getValue("input:asclin:eql")) > 0:
+                sb.add_var("input:asclin:eql")
+
+            ncdwav = len(self.getValue("input:asclin:cdwav"))
+            if ncdwav > 0:
+                sb.add_var("input:asclin:cdwav")
+                sb.add_var("input:asclin:dcdnac")
+
+        #-------------------
+        # Namelist &TOLIN
+        #-------------------
+
+        if itakof == 1 or iland == 1 or nopro == 1:
+
+            sb.add_group('TOLIN')
+
+            sb.add_var("input:tolin:Basic:apa")
+            sb.add_var("input:tolin:Basic:dtct")
+            if self.getValue("input:tolin:Basic:swref") > 0:
+                sb.add_var("input:tolin:Basic:swref")
+            if self.getValue("input:tolin:Basic:arret") > 0:
+                sb.add_var("input:tolin:Basic:arret")
+            sb.add_var("input:tolin:Basic:whgt")
+            sb.add_var("input:tolin:Basic:alprun")
+            sb.add_var("input:tolin:Basic:tinc")
+            sb.add_var("input:tolin:Basic:rollmu")
+            sb.add_var("input:tolin:Basic:brakmu")
+            sb.add_var("input:tolin:Basic:cdgear")
+            sb.add_var("input:tolin:Basic:cdeout")
+            sb.add_var("input:tolin:Basic:clspol")
+            sb.add_var("input:tolin:Basic:cdspol")
+            sb.add_var("input:tolin:Basic:incgef")
+            sb.add_var("input:tolin:Basic:argef")
+            sb.add_var("input:tolin:Basic:itime")
+
+            sb.add_comment("\n  ! Thrust Reverser")
+            sb.add_var("input:tolin:Thrust_Reverser:inthrv")
+            sb.add_var("input:tolin:Thrust_Reverser:rvfact")
+            if len(self.getValue("input:tolin:Thrust_Reverser:velrv")) > 0:
+                sb.add_var("input:tolin:Thrust_Reverser:velrv")
+                sb.add_var("input:tolin:Thrust_Reverser:thrrv")
+
+            sb.add_var("input:tolin:Thrust_Reverser:tirvrs")
+            sb.add_var("input:tolin:Thrust_Reverser:revcut")
+            sb.add_var("input:tolin:Thrust_Reverser:clrev")
+            sb.add_var("input:tolin:Thrust_Reverser:cdrev")
+
+            sb.add_comment("\n  ! Integration Intervals  (Default values will provide a precision of +/-.25 ft)")
+            sb.add_container("input:tolin:Integration_Intervals")
+
+            sb.add_comment("\n  ! Takeoff Data")
+            if self.getValue("input:tolin:Takeoff:cltom") > 0:
+                sb.add_var("input:tolin:Takeoff:cltom")
+            sb.add_var("input:tolin:Takeoff:cdmto")
+            sb.add_var("input:tolin:Takeoff:fcdmto")
+            sb.add_var("input:tolin:Takeoff:almxto")
+            if self.getValue("input:tolin:Takeoff:obsto") > 0:
+                sb.add_var("input:tolin:Takeoff:obsto")
+            sb.add_var("input:tolin:Takeoff:alpto")
+            sb.add_var("input:tolin:Takeoff:clto")
+            sb.add_var("input:tolin:Takeoff:cdto")
+            sb.add_var("input:tolin:Takeoff:inthto")
+
+            if len(self.getValue("input:tolin:Takeoff:velto")) > 0:
+                sb.add_var("input:tolin:Takeoff:velto")
+                sb.add_var("input:tolin:Takeoff:thrto")
+            if self.getValue("input:tolin:Takeoff:alprot") > -99:
+                sb.add_var("input:tolin:Takeoff:alprot")
+
+            sb.add_var("input:tolin:Takeoff:vrotat")
+            sb.add_var("input:tolin:Takeoff:vangl")
+            sb.add_var("input:tolin:Takeoff:thfact")
+            sb.add_var("input:tolin:Takeoff:ftocl")
+            sb.add_var("input:tolin:Takeoff:ftocd")
+            sb.add_var("input:tolin:Takeoff:igobs")
+            sb.add_var("input:tolin:Takeoff:tdelg")
+            sb.add_var("input:tolin:Takeoff:tigear")
+            sb.add_var("input:tolin:Takeoff:ibal")
+            sb.add_var("input:tolin:Takeoff:itxout")
+
+            sb.add_comment("\n  ! Aborted Takeoff Data")
+            sb.add_var("input:tolin:Takeoff:pilott")
+            sb.add_var("input:tolin:Takeoff:tispa")
+            sb.add_var("input:tolin:Takeoff:tibra")
+            sb.add_var("input:tolin:Takeoff:tirva")
+            sb.add_var("input:tolin:Takeoff:ispol")
+            sb.add_var("input:tolin:Takeoff:irev")
+
+            sb.add_comment("\n  ! Landing Data")
+            if self.getValue("input:tolin:Landing:clldm") > 0:
+                sb.add_var("input:tolin:Landing:clldm")
+            sb.add_var("input:tolin:Landing:cdmld")
+            if self.getValue("input:tolin:Landing:fcdmld") > 0:
+                sb.add_var("input:tolin:Landing:fcdmld")
+            sb.add_var("input:tolin:Landing:almxld")
+            sb.add_var("input:tolin:Landing:obsld")
+            sb.add_var("input:tolin:Landing:alpld")
+            sb.add_var("input:tolin:Landing:clld")
+            sb.add_var("input:tolin:Landing:cdld")
+            sb.add_var("input:tolin:Landing:inthld")
+            if len(self.getValue("input:tolin:Landing:velld")) > 0:
+                sb.add_var("input:tolin:Landing:velld")
+                sb.add_var("input:tolin:Landing:thrld")
+
+            sb.add_var("input:tolin:Landing:thrld")
+            if self.getValue("input:tolin:Landing:thdry") > 0:
+                sb.add_var("input:tolin:Landing:thdry")
+            sb.add_var("input:tolin:Landing:aprhgt")
+            sb.add_var("input:tolin:Landing:aprang")
+            sb.add_var("input:tolin:Landing:fldcl")
+            sb.add_var("input:tolin:Landing:fldcd")
+            sb.add_var("input:tolin:Landing:tdsink")
+            if self.getValue("input:tolin:Landing:vangld") > 0:
+                sb.add_var("input:tolin:Landing:vangld")
+            sb.add_var("input:tolin:Landing:noflar")
+            sb.add_var("input:tolin:Landing:tispol")
+            sb.add_var("input:tolin:Landing:ticut")
+            sb.add_var("input:tolin:Landing:tibrak")
+            sb.add_var("input:tolin:Landing:acclim")
+            if self.getValue("input:tolin:Landing:magrup") > 0:
+                sb.add_var("input:tolin:Landing:magrup")
+
+        #-------------------
+        # Namelist &PROIN
+        #-------------------
+
+        # Namelist &PROIN is only required if NOPRO=1.
+        if nopro > 0:
+
+            npol = len(self.getValue("input:proin:dflap"))
+
+            sb.add_group('PROIN')
+            sb.add_var("input:proin:npol")
+
+            if npol > 0:
+                sb.add_var("input:proin:alpro")
+                sb.add_var("input:proin:clpro")
+                sb.add_var("input:proin:cdpro")
+                sb.add_var("input:proin:dflap")
+
+            sb.add_var("input:proin:ntime")
+            sb.add_var("input:proin:ipcmax")
+            sb.add_var("input:proin:txf")
+            sb.add_var("input:proin:alpmin")
+            sb.add_var("input:proin:gamlim")
+
+            inm = self.getValue("input:proin:inm")
+            if inm == 1:
+                sb.add_var("input:proin:inm")
+                sb.add_var("input:proin:iatr")
+                sb.add_var("input:proin:fzf")
+                sb.add_var("input:proin:thclmb")
+                sb.add_var("input:proin:flapid")
+
+        #-------------------
+        # Namelist &SEGIN
+        #-------------------
+
+        # One or more &SEGIN namelists may have been created by the user.
+        #nseg = self.nseg
+        if nopro > 0 and self.nseg0 > 0:
+
+            for i in range(0, self.nseg0):
+
+                key    = self.getValue("input:segin%s:key" % (i))
+                nflap  = self.getValue("input:segin%s:nflap" % (i))
+                ifix   = self.getValue("input:segin%s:ifix" % (i))
+                engscl = self.getValue("input:segin%s:engscl" % (i))
+                afix   = self.getValue("input:segin%s:afix" % (i))
+                gfix   = self.getValue("input:segin%s:gfix" % (i))
+                vfix   = self.getValue("input:segin%s:vfix" % (i))
+                hstop  = self.getValue("input:segin%s:hstop" % (i))
+                dstop  = self.getValue("input:segin%s:dstop" % (i))
+                tstop  = self.getValue("input:segin%s:tstop" % (i))
+                vstop  = self.getValue("input:segin%s:vstop" % (i))
+                hmin   = self.getValue("input:segin%s:hmin" % (i))
+                sprate = self.getValue("input:segin%s:sprate" % (i))
+                iplr   = self.getValue("input:segin%s:iplr" % (i))
+                delt   = self.getValue("input:segin%s:delt" % (i))
+                grdaeo = self.getValue("input:segin%s:grdaeo" % (i))
+                grdoeo = self.getValue("input:segin%s:grdoeo" % (i))
+
+                sb.add_group('SEGIN')
+                sb.add_newvar("key", key)
+
+                if nflap > 0:
+                    sb.add_newvar("nflap", nflap)
+                if ifix > 0:
+                    sb.add_newvar("ifix", ifix)
+                if engscl >= 0.:
+                    sb.add_newvar("engscl", engscl)
+                if afix > -10.:
+                    sb.add_newvar("afix", afix)
+                if gfix > -10.:
+                    sb.add_newvar("gfix", gfix)
+                if vfix > 0.:
+                    sb.add_newvar("vfix", vfix)
+                if hstop > 0.:
+                    sb.add_newvar("hstop", hstop)
+                if dstop > 0.:
+                    sb.add_newvar("dstop", dstop)
+                if tstop > 0.:
+                    sb.add_newvar("tstop", tstop)
+                if vstop > 0.:
+                    sb.add_newvar("vstop", vstop)
+                if hmin > 0.:
+                    sb.add_newvar("hmin", hmin)
+                if sprate >= 0.:
+                    sb.add_newvar("sprate", sprate)
+                if iplr >= 0.:
+                    sb.add_newvar("iplr", iplr)
+                if delt > 0.:
+                    sb.add_newvar("delt", delt)
+                if grdaeo > -1.:
+                    sb.add_newvar("grdaeo", grdaeo)
+                if grdoeo > -1.:
+                    sb.add_newvar("grdoeo", grdoeo)
+
+        #-------------------
+        # Namelist &NOISIN
+        #-------------------
+
+        # Namelist &NOISIN is only required if NOISIN=1.
+        if noise == 1:
+
+            sb.add_group('NOISIN')
+
+            sb.add_comment("\n  ! Data for Noise Calculations\n  ! Noise regulation control")
+            sb.add_var("input:noisin:Basic:iepn")
+            sb.add_var("input:noisin:Basic:depnt")
+            sb.add_var("input:noisin:Basic:depns")
+            sb.add_var("input:noisin:Basic:depnl")
+            sb.add_var("input:noisin:Basic:itrade")
+
+            sb.add_comment("\n  ! Noise sources to be included")
+            ijet = self.getValue("input:noisin:Basic:ijet")
+            ifan = self.getValue("input:noisin:Basic:ifan")
+            icore = self.getValue("input:noisin:Basic:icore")
+            iturb = self.getValue("input:noisin:Basic:iturb")
+            iprop = self.getValue("input:noisin:Basic:iprop")
+            iflap = self.getValue("input:noisin:Basic:iflap")
+            iairf = self.getValue("input:noisin:Basic:iairf")
+            igear = self.getValue("input:noisin:Basic:igear")
+            ishld = self.getValue("input:noisin:Propagation:ishld")
+            ignd = self.getValue("input:noisin:Propagation:ignd")
+            if ijet > 0:
+                sb.add_newvar("ijet", ijet)
+            if ifan > 0:
+                sb.add_newvar("ifan", ifan)
+            if icore > 0:
+                sb.add_newvar("icore", icore)
+            if iturb > 0:
+                sb.add_newvar("iturb", iturb)
+            if iprop > 0:
+                sb.add_newvar("iprop", iprop)
+            if iflap > 0:
+                sb.add_newvar("iflap", iflap)
+            if iairf > 0:
+                sb.add_newvar("iairf", iairf)
+            if igear > 0:
+                sb.add_newvar("igear", igear)
+
+            sb.add_comment("\n  ! Noise Propagation Corrections")
+            sb.add_var("input:noisin:Propagation:isupp")
+            sb.add_var("input:noisin:Propagation:idop")
+            sb.add_newvar("ignd", ignd)
+            sb.add_var("input:noisin:Propagation:iatm")
+            sb.add_var("input:noisin:Propagation:iega")
+            sb.add_newvar("ishld", ishld)
+            sb.add_var("input:noisin:Propagation:deldb")
+            sb.add_var("input:noisin:Propagation:heng")
+            sb.add_var("input:noisin:Propagation:filbw")
+            sb.add_var("input:noisin:Propagation:tdi")
+            sb.add_var("input:noisin:Propagation:rh")
+
+            sb.add_comment("\n  ! Observer Locations")
+            nob = len(self.getValue("input:noisin:Observers:xo"))
+            if nob > 0:
+                sb.add_newvar("nob", nob)
+                sb.add_var("input:noisin:Observers:xo")
+                sb.add_var("input:noisin:Observers:yo")
+
+            sb.add_var("input:noisin:Observers:zo")
+            sb.add_var("input:noisin:Observers:ndprt")
+            sb.add_var("input:noisin:Observers:ifoot")
+            sb.add_var("input:noisin:Observers:igeom")
+            if self.getValue("input:noisin:Observers:thrn") > 0:
+                sb.add_var("input:noisin:Observers:thrn")
+
+            sb.add_var("input:noisin:Observers:icorr")
+            sb.add_var("input:noisin:Observers:tcorxp")
+
+            nparam = len(self.getValue("input:noisin:Engine_Parameters:aepp"))
+            if nparam > 0:
+                sb.add_comment("\n  ! Engine Noise Parameters")
+                sb.add_newvar("nparam", nparam)
+                sb.add_container("input:noisin:Engine_Parameters")
+
+            if ijet != 0:
+                sb.add_comment("\n  ! Jet Noise Input Data")
+                sb.add_var("input:noisin:Jet:inoz")
+                sb.add_var("input:noisin:Jet:iplug")
+                sb.add_var("input:noisin:Jet:islot")
+                sb.add_var("input:noisin:Jet:iaz")
+                sb.add_var("input:noisin:Jet:dbaz")
+                sb.add_var("input:noisin:Jet:ejdop")
+                sb.add_var("input:noisin:Jet:zmdc")
+                sb.add_var("input:noisin:Jet:gammac")
+                sb.add_var("input:noisin:Jet:gasrc")
+                sb.add_var("input:noisin:Jet:annht")
+                sb.add_var("input:noisin:Jet:zmdf")
+                sb.add_var("input:noisin:Jet:gammap")
+                sb.add_var("input:noisin:Jet:gasrf")
+                sb.add_var("input:noisin:Jet:annhtf")
+                if self.getValue("input:noisin:Jet:dhc") > 0:
+                    sb.add_var("input:noisin:Jet:dhc")
+                sb.add_var("input:noisin:Jet:dhf")
+                sb.add_var("input:noisin:Jet:zl2")
+                sb.add_var("input:noisin:Jet:ifwd")
+                sb.add_var("input:noisin:Jet:ishock")
+                sb.add_var("input:noisin:Jet:zjsupp")
+
+            if ijet == 5:
+                sb.add_comment("\n  ! Jet Noise Input Data for MSjet")
+                sb.add_container("input:noisin:MSJet")
+
+            if ifan > 0:
+                sb.add_comment("\n  ! Fan Noise Data")
+                sb.add_var("input:noisin:Fan:igv")
+                sb.add_var("input:noisin:Fan:ifd")
+                sb.add_var("input:noisin:Fan:iexh")
+                sb.add_var("input:noisin:Fan:nfh")
+
+                if self.getValue("input:noisin:Fan:nstg") > 0:
+                    sb.add_var("input:noisin:Fan:nstg")
+
+                sb.add_var("input:noisin:Fan:suppin")
+                sb.add_var("input:noisin:Fan:suppex")
+                sb.add_var("input:noisin:Fan:methtip")
+                sb.add_var("input:noisin:Fan:icomb")
+                sb.add_var("input:noisin:Fan:decmpt")
+                sb.add_var("input:noisin:Fan:gammaf")
+
+                if self.getValue("input:noisin:Fan:nbl") > 0:
+                    sb.add_var("input:noisin:Fan:nbl")
+                if self.getValue("input:noisin:Fan:nvan") > 0:
+                    sb.add_var("input:noisin:Fan:nvan")
+                if self.getValue("input:noisin:Fan:fandia") > 0:
+                    sb.add_var("input:noisin:Fan:fandia")
+                if self.getValue("input:noisin:Fan:fanhub") > 0:
+                    sb.add_var("input:noisin:Fan:fanhub")
+                if self.getValue("input:noisin:Fan:tipmd") > 0:
+                    sb.add_var("input:noisin:Fan:tipmd")
+
+                sb.add_var("input:noisin:Fan:rss")
+                sb.add_var("input:noisin:Fan:efdop")
+                sb.add_var("input:noisin:Fan:faneff")
+
+                if self.getValue("input:noisin:Fan:nbl2") > 0:
+                    sb.add_var("input:noisin:Fan:nbl2")
+                if self.getValue("input:noisin:Fan:nvan2") > 0:
+                    sb.add_var("input:noisin:Fan:nvan2")
+                if self.getValue("input:noisin:Fan:fand2") > 0:
+                    sb.add_var("input:noisin:Fan:fand2")
+                if self.getValue("input:noisin:Fan:tipmd2") > 0:
+                    sb.add_var("input:noisin:Fan:tipmd2")
+
+                sb.add_var("input:noisin:Fan:rss2")
+                sb.add_var("input:noisin:Fan:efdop2")
+                sb.add_var("input:noisin:Fan:fanef2")
+
+                if self.getValue("input:noisin:Fan:trat") > 0:
+                    sb.add_var("input:noisin:Fan:trat")
+                if igenen not in [1, -2] and self.getValue("input:noisin:Fan:prat") > 0:
+                    sb.add_var("input:noisin:Fan:prat")
+
+            if icore > 0:
+                sb.add_comment("\n  ! Core Noise Data")
+                sb.add_var("input:noisin:Core:csupp")
+                sb.add_var("input:noisin:Core:gamma")
+                sb.add_var("input:noisin:Core:imod")
+                if self.getValue("input:noisin:Core:dtemd") > 0:
+                    sb.add_var("input:noisin:Core:dtemd")
+                sb.add_var("input:noisin:Core:ecdop")
+
+            if iturb > 0:
+                sb.add_comment("\n  ! Core Noise Data")
+                sb.add_var("input:noisin:Turbine:tsupp")
+                if self.getValue("input:noisin:Turbine:tbndia") > 0:
+                    sb.add_var("input:noisin:Turbine:tbndia")
+                sb.add_var("input:noisin:Turbine:gear")
+                sb.add_var("input:noisin:Turbine:cs")
+                if self.getValue("input:noisin:Turbine:nblr") > 0:
+                    sb.add_var("input:noisin:Turbine:nblr")
+                sb.add_var("input:noisin:Turbine:ityptb")
+                sb.add_var("input:noisin:Turbine:etdop")
+
+            if iprop > 0:
+                sb.add_comment("\n  ! Propeller Noise Data")
+                sb.add_container("input:noisin:Propeller")
+
+            if ishld > 0:
+                sb.add_comment("\n  ! Shielding Effects Data")
+                sb.add_container("input:noisin:Shielding")
+
+            if iflap > 0:
+                sb.add_comment("\n  ! Flap Noise Data")
+                sb.add_container("input:noisin:Flap_Noise")
+
+            if iairf > 0:
+                sb.add_comment("\n  ! Flap Noise Data")
+                sb.add_container("input:noisin:Airframe")
+
+            if ignd > 0:
+                sb.add_comment("\n  ! Ground Reflection Effects Data")
+                sb.add_var("input:noisin:Ground_Effects:itone")
+
+                nht = len(self.getValue("input:noisin:Ground_Effects:dk"))
+                if nht > 0:
+                    sb.add_newvar("nht", nht)
+                    sb.add_var("input:noisin:Ground_Effects:dk")
+
+        #-------------------
+        # Namelist &SYNTIN
+        #-------------------
+
+        # Namelist &SYNTIN is only required if IOPT=3.
+        if iopt == 3:
+
+            sb.add_group('SYNTIN')
+
+            if self.getValue("input:syntin:Variables:desrng") > 0:
+                sb.add_var("input:syntin:Variables:desrng")
+            if self.getValue("input:syntin:Variables:vappr") > 0:
+                sb.add_var("input:syntin:Variables:vappr")
+            if self.getValue("input:syntin:Variables:flto") > 0:
+                sb.add_var("input:syntin:Variables:flto")
+            if self.getValue("input:syntin:Variables:flldg")> 0:
+                sb.add_var("input:syntin:Variables:flldg")
+
+            sb.add_var("input:syntin:Variables:exfcap")
+            if igenen == 1:
+                if self.getValue("input:syntin:Variables:cdtmax") > 0:
+                    sb.add_var("input:syntin:Variables:cdtmax")
+                if self.getValue("input:syntin:Variables:cdpmax") > 0:
+                    sb.add_var("input:syntin:Variables:cdpmax")
+                if self.getValue("input:syntin:Variables:vjmax") > 0:
+                    sb.add_var("input:syntin:Variables:vjmax")
+                if self.getValue("input:syntin:Variables:stmin") > 0:
+                    sb.add_var("input:syntin:Variables:stmin")
+                if self.getValue("input:syntin:Variables:armax") > 0:
+                    sb.add_var("input:syntin:Variables:armax")
+
+            sb.add_var("input:syntin:Variables:gnox")
+            sb.add_var("input:syntin:Variables:roclim")
+            sb.add_var("input:syntin:Variables:dhdtlm")
+            sb.add_var("input:syntin:Variables:tmglim")
+            sb.add_var("input:syntin:Variables:ig")
+            sb.add_var("input:syntin:Variables:ibfgs")
+            sb.add_var("input:syntin:Variables:itfine")
+
+            sb.add_comment("\n  ! Optimization Control")
+            sb.add_var("input:syntin:Optimization_Control:ndd")
+            sb.add_var("input:syntin:Optimization_Control:rk")
+            sb.add_var("input:syntin:Optimization_Control:fdd")
+
+            if self.getValue("input:syntin:Optimization_Control:nlin") > 0:
+                sb.add_var("input:syntin:Optimization_Control:nlin")
+
+            sb.add_var("input:syntin:Optimization_Control:nstep")
+            sb.add_var("input:syntin:Optimization_Control:ef")
+            sb.add_var("input:syntin:Optimization_Control:eps")
+            sb.add_var("input:syntin:Optimization_Control:amult")
+            sb.add_var("input:syntin:Optimization_Control:dep")
+            sb.add_var("input:syntin:Optimization_Control:accux")
+            sb.add_var("input:syntin:Optimization_Control:glm")
+
+            if len(self.getValue("input:syntin:Optimization_Control:gfact")) > 0:
+                sb.add_var("input:syntin:Optimization_Control:gfact")
+
+            sb.add_var("input:syntin:Optimization_Control:autscl")
+            sb.add_var("input:syntin:Optimization_Control:icent")
+            sb.add_var("input:syntin:Optimization_Control:rhomin")
+            sb.add_var("input:syntin:Optimization_Control:rhomax")
+            sb.add_var("input:syntin:Optimization_Control:rhodel")
+            sb.add_var("input:syntin:Optimization_Control:itmax")
+            sb.add_var("input:syntin:Optimization_Control:jprnt")
+            sb.add_var("input:syntin:Optimization_Control:rdfun")
+            sb.add_var("input:syntin:Optimization_Control:adfun")
+
+        #-------------------
+        # Namelist &RERUN
+        #-------------------
+
+        # One or more &RERUN namelists may have been created by the user.
+
+        #nrerun = self.nrerun
+        if self.nrern0 > 0:
+
+            for i in range(0, self.nrern0):
+
+                sb.add_group('RERUN')
+
+                re_desrng = self.getValue("input:rerun%s:desrng" % (i))
+                re_mywts  = self.getValue("input:rerun%s:mywts" % (i))
+                re_rampwt = self.getValue("input:rerun%s:rampwt" % (i))
+                re_dowe   = self.getValue("input:rerun%s:dowe" % (i))
+                re_paylod = self.getValue("input:rerun%s:paylod" % (i))
+                re_fuemax = self.getValue("input:rerun%s:fuemax" % (i))
+                re_itakof = self.getValue("input:rerun%s:itakof" % (i))
+                re_iland  = self.getValue("input:rerun%s:iland" % (i))
+                re_nopro  = self.getValue("input:rerun%s:nopro" % (i))
+                re_noise  = self.getValue("input:rerun%s:noise" % (i))
+                re_icost  = self.getValue("input:rerun%s:icost" % (i))
+                re_wsr    = self.getValue("input:rerun%s:wsr" % (i))
+                re_twr    = self.getValue("input:rerun%s:twr" % (i))
+
+                if re_desrng > 0.:
+                    sb.add_var("input:rerun%s:desrng" % (i))
+                if re_mywts >= 0:
+                    sb.add_var("input:rerun%s:mywts" % (i))
+                if re_rampwt >= 0.:
+                    sb.add_var("input:rerun%s:rampwt" % (i))
+                if re_dowe > 0.:
+                    sb.add_var("input:rerun%s:dowe" % (i))
+                if re_paylod > 0.:
+                    sb.add_var("input:rerun%s:paylod" % (i))
+                if re_fuemax > 0.:
+                    sb.add_var("input:rerun%s:fuemax" % (i))
+                if re_itakof == 0:
+                    sb.add_var("input:rerun%s:itakof" % (i))
+                if re_iland == 0:
+                    sb.add_var("input:rerun%s:iland" % (i))
+                if re_nopro == 0:
+                    sb.add_var("input:rerun%s:nopro" % (i))
+                if re_noise == 0:
+                    sb.add_var("input:rerun%s:noise" % (i))
+                if re_icost == 0:
+                    sb.add_var("input:rerun%s:icost" % (i))
+                if re_wsr == 0.:
+                    sb.add_var("input:rerun%s:wsr" % (i))
+                if re_twr == 0.:
+                    sb.add_var("input:rerun%s:twr" % (i))
+
+                re_indr   = self.getValue("input:rerun%s:missin:Basic:indr" % (i))
+                re_fact   = self.getValue("input:rerun%s:missin:Basic:fact" % (i))
+                re_fleak  = self.getValue("input:rerun%s:missin:Basic:fleak" % (i))
+                re_fcdo   = self.getValue("input:rerun%s:missin:Basic:fcdo" % (i))
+                re_fcdi   = self.getValue("input:rerun%s:missin:Basic:fcdi" % (i))
+                re_fcdsub = self.getValue("input:rerun%s:missin:Basic:fcdsub" % (i))
+                re_fcdsup = self.getValue("input:rerun%s:missin:Basic:fcdsup" % (i))
+                re_iskal  = self.getValue("input:rerun%s:missin:Basic:iskal" % (i))
+                re_owfact = self.getValue("input:rerun%s:missin:Basic:owfact" % (i))
+                re_iflag  = self.getValue("input:rerun%s:missin:Basic:iflag" % (i))
+                re_msumpt = self.getValue("input:rerun%s:missin:Basic:msumpt" % (i))
+                re_dtc    = self.getValue("input:rerun%s:missin:Basic:dtc" % (i))
+                re_irw    = self.getValue("input:rerun%s:missin:Basic:irw" % (i))
+                re_rtol   = self.getValue("input:rerun%s:missin:Basic:rtol" % (i))
+                re_nhold  = self.getValue("input:rerun%s:missin:Basic:nhold" % (i))
+                re_iata   = self.getValue("input:rerun%s:missin:Basic:iata" % (i))
+                re_tlwind = self.getValue("input:rerun%s:missin:Basic:tlwind" % (i))
+
+                sb.add_group('MISSIN')
+
+                if re_indr != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:indr" % (i))
+                if re_fact != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fact" % (i))
+                if re_fleak != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fleak" % (i))
+                if re_fcdo != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fcdo" % (i))
+                if re_fcdi != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fcdi" % (i))
+                if re_fcdsub != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fcdsub" % (i))
+                if re_fcdsup != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:fcdsup" % (i))
+                if re_iskal != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:iskal" % (i))
+                if re_owfact != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:owfact" % (i))
+                if re_iflag != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:iflag" % (i))
+                if re_msumpt != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:msumpt" % (i))
+                if re_dtc != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:dtc" % (i))
+                if re_irw != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:irw" % (i))
+                if re_rtol != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:rtol" % (i))
+                if re_nhold != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:nhold" % (i))
+                if re_iata != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:iata" % (i))
+                if re_tlwind != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:tlwind" % (i))
+
+                re_dwt    = self.getValue("input:rerun%s:missin:Basic:dwt" % (i))
+                re_offdr  = self.getValue("input:rerun%s:missin:Basic:offdr" % (i))
+                re_idoq   = self.getValue("input:rerun%s:missin:Basic:idoq" % (i))
+                re_nsout  = self.getValue("input:rerun%s:missin:Basic:nsout" % (i))
+                re_nsadj  = self.getValue("input:rerun%s:missin:Basic:nsadj" % (i))
+                re_mirror = self.getValue("input:rerun%s:missin:Basic:mirror" % (i))
+                re_stma   = self.getValue("input:rerun%s:missin:Store_Drag:stma" % (i))
+                re_cdst   = self.getValue("input:rerun%s:missin:Store_Drag:cdst" % (i))
+                re_istcl  = self.getValue("input:rerun%s:missin:Store_Drag:istcl" % (i))
+                re_istcr  = self.getValue("input:rerun%s:missin:Store_Drag:istcr" % (i))
+                re_istde  = self.getValue("input:rerun%s:missin:Store_Drag:istde" % (i))
+                re_mywts  = self.getValue("input:rerun%s:missin:User_Weights:mywts" % (i))
+                re_rampwt = self.getValue("input:rerun%s:missin:User_Weights:rampwt" % (i))
+                re_dowe   = self.getValue("input:rerun%s:missin:User_Weights:dowe" % (i))
+                re_paylod = self.getValue("input:rerun%s:missin:User_Weights:paylod" % (i))
+                re_fuemax = self.getValue("input:rerun%s:missin:User_Weights:fuemax" % (i))
+                re_takotm = self.getValue("input:rerun%s:missin:Ground_Operations:takotm" % (i))
+                re_taxotm = self.getValue("input:rerun%s:missin:Ground_Operations:taxotm" % (i))
+                re_apprtm = self.getValue("input:rerun%s:missin:Ground_Operations:apprtm" % (i))
+                re_appfff = self.getValue("input:rerun%s:missin:Ground_Operations:appfff" % (i))
+                re_taxitm = self.getValue("input:rerun%s:missin:Ground_Operations:taxitm" % (i))
+                re_ittff  = self.getValue("input:rerun%s:missin:Ground_Operations:ittff" % (i))
+                re_takoff = self.getValue("input:rerun%s:missin:Ground_Operations:takoff" % (i))
+                re_txfufl = self.getValue("input:rerun%s:missin:Ground_Operations:txfufl" % (i))
+                re_ftkofl = self.getValue("input:rerun%s:missin:Ground_Operations:ftkofl" % (i))
+                re_ftxofl = self.getValue("input:rerun%s:missin:Ground_Operations:ftxofl" % (i))
+                re_ftxifl = self.getValue("input:rerun%s:missin:Ground_Operations:ftxifl" % (i))
+                re_faprfl = self.getValue("input:rerun%s:missin:Ground_Operations:faprfl" % (i))
+                re_xnz    = self.getValue("input:rerun%s:missin:Turn_Segments:xnz" % (i))
+                re_xcl    = self.getValue("input:rerun%s:missin:Turn_Segments:xcl" % (i))
+                re_xmach  = self.getValue("input:rerun%s:missin:Turn_Segments:xmach" % (i))
+                re_nclimb = self.getValue("input:rerun%s:missin:Climb:nclimb" % (i))
+                re_clmmin = self.getValue("input:rerun%s:missin:Climb:clmmin" % (i))
+                re_clmmax = self.getValue("input:rerun%s:missin:Climb:clmmax" % (i))
+                re_clamin = self.getValue("input:rerun%s:missin:Climb:clamin" % (i))
+                re_clamax = self.getValue("input:rerun%s:missin:Climb:clamax" % (i))
+                re_nincl  = self.getValue("input:rerun%s:missin:Climb:nincl" % (i))
+                re_fwf    = self.getValue("input:rerun%s:missin:Climb:fwf" % (i))
+                re_ncrcl  = self.getValue("input:rerun%s:missin:Climb:ncrcl" % (i))
+                re_cldcd  = self.getValue("input:rerun%s:missin:Climb:cldcd" % (i))
+                re_ippcl  = self.getValue("input:rerun%s:missin:Climb:ippcl" % (i))
+                re_maxcl  = self.getValue("input:rerun%s:missin:Climb:maxcl" % (i))
+                re_no     = self.getValue("input:rerun%s:missin:Climb:no" % (i))
+                re_keasvc = self.getValue("input:rerun%s:missin:Climb:keasvc" % (i))
+                re_actab  = self.getValue("input:rerun%s:missin:Climb:actab" % (i))
+                re_vctab  = self.getValue("input:rerun%s:missin:Climb:vctab" % (i))
+                re_ifaacl = self.getValue("input:rerun%s:missin:Climb:ifaacl" % (i))
+                re_ifaade = self.getValue("input:rerun%s:missin:Climb:ifaade" % (i))
+                re_nodive = self.getValue("input:rerun%s:missin:Climb:nodive" % (i))
+                re_divlim = self.getValue("input:rerun%s:missin:Climb:divlim" % (i))
+                re_qlim   = self.getValue("input:rerun%s:missin:Climb:qlim" % (i))
+                re_spdlim = self.getValue("input:rerun%s:missin:Climb:spdlim" % (i))
+                re_qlalt  = self.getValue("input:rerun%s:missin:Climb:qlalt" % (i))
+                re_vqlm   = self.getValue("input:rerun%s:missin:Climb:vqlm" % (i))
+                re_ioc    = self.getValue("input:rerun%s:missin:Cruise:ioc" % (i))
+                re_crmach = self.getValue("input:rerun%s:missin:Cruise:crmach" % (i))
+                re_cralt  = self.getValue("input:rerun%s:missin:Cruise:cralt" % (i))
+                re_crdcd  = self.getValue("input:rerun%s:missin:Cruise:crdcd" % (i))
+                re_flrcr  = self.getValue("input:rerun%s:missin:Cruise:flrcr" % (i))
+                re_crmmin = self.getValue("input:rerun%s:missin:Cruise:crmmin" % (i))
+                re_crclmx = self.getValue("input:rerun%s:missin:Cruise:crclmx" % (i))
+                re_hpmin  = self.getValue("input:rerun%s:missin:Cruise:hpmin" % (i))
+                re_ffuel  = self.getValue("input:rerun%s:missin:Cruise:ffuel" % (i))
+                re_fnox   = self.getValue("input:rerun%s:missin:Cruise:fnox" % (i))
+                re_ifeath = self.getValue("input:rerun%s:missin:Cruise:ifeath" % (i))
+                re_feathf = self.getValue("input:rerun%s:missin:Cruise:feathf" % (i))
+                re_cdfeth = self.getValue("input:rerun%s:missin:Cruise:cdfeth" % (i))
+                re_dcwt   = self.getValue("input:rerun%s:missin:Cruise:dcwt" % (i))
+                re_rcin   = self.getValue("input:rerun%s:missin:Cruise:rcin" % (i))
+                re_wtbm   = self.getValue("input:rerun%s:missin:Cruise:wtbm" % (i))
+                re_altbm  = self.getValue("input:rerun%s:missin:Cruise:altbm" % (i))
+                re_ivs    = self.getValue("input:rerun%s:missin:Descent:ivs" % (i))
+                re_decl   = self.getValue("input:rerun%s:missin:Descent:decl" % (i))
+                re_demmin = self.getValue("input:rerun%s:missin:Descent:demmin" % (i))
+                re_demmax = self.getValue("input:rerun%s:missin:Descent:demmax" % (i))
+                re_deamin = self.getValue("input:rerun%s:missin:Descent:deamin" % (i))
+                re_deamax = self.getValue("input:rerun%s:missin:Descent:deamax" % (i))
+                re_ninde  = self.getValue("input:rerun%s:missin:Descent:ninde" % (i))
+                re_dedcd  = self.getValue("input:rerun%s:missin:Descent:dedcd" % (i))
+                re_rdlim  = self.getValue("input:rerun%s:missin:Descent:rdlim" % (i))
+                re_ns     = self.getValue("input:rerun%s:missin:Descent:ns" % (i))
+                re_irs    = self.getValue("input:rerun%s:missin:Reserve:irs" % (i))
+                re_resrfu = self.getValue("input:rerun%s:missin:Reserve:resrfu" % (i))
+                re_restrp = self.getValue("input:rerun%s:missin:Reserve:restrp" % (i))
+                re_timmap = self.getValue("input:rerun%s:missin:Reserve:timmap" % (i))
+                re_altran = self.getValue("input:rerun%s:missin:Reserve:altran" % (i))
+                re_nclres = self.getValue("input:rerun%s:missin:Reserve:nclres" % (i))
+                re_ncrres = self.getValue("input:rerun%s:missin:Reserve:ncrres" % (i))
+                re_sremch = self.getValue("input:rerun%s:missin:Reserve:sremch" % (i))
+                re_eremch = self.getValue("input:rerun%s:missin:Reserve:eremch" % (i))
+                re_srealt = self.getValue("input:rerun%s:missin:Reserve:srealt" % (i))
+                re_erealt = self.getValue("input:rerun%s:missin:Reserve:erealt" % (i))
+                re_holdtm = self.getValue("input:rerun%s:missin:Reserve:holdtm" % (i))
+                re_ncrhol = self.getValue("input:rerun%s:missin:Reserve:ncrhol" % (i))
+                re_ihopos = self.getValue("input:rerun%s:missin:Reserve:ihopos" % (i))
+                re_icron  = self.getValue("input:rerun%s:missin:Reserve:icron" % (i))
+                re_thold  = self.getValue("input:rerun%s:missin:Reserve:thold" % (i))
+                re_ncrth  = self.getValue("input:rerun%s:missin:Reserve:ncrth" % (i))
+
+                if re_dwt != -999.:
+                    sb.add_var("input:rerun%s:missin:Basic:dwt" % (i))
+                if len(re_offdr) > 0:
+                    sb.add_var("input:rerun%s:missin:Basic:offdr" % (i))
+                if re_idoq != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:idoq" % (i))
+                if re_nsout != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:nsout" % (i))
+                if re_nsadj != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:nsadj" % (i))
+                if re_mirror != -999:
+                    sb.add_var("input:rerun%s:missin:Basic:mirror" % (i))
+                if len(re_stma) > 0:
+                    sb.add_var("input:rerun%s:missin:Store_Drag:stma" % (i))
+                if len(re_cdst) > 0:
+                    sb.add_var("input:rerun%s:missin:Store_Drag:cdst" % (i))
+                if len(re_istcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Store_Drag:istcl" % (i))
+                if len(re_istcr) > 0:
+                    sb.add_var("input:rerun%s:missin:Store_Drag:istcr" % (i))
+                if re_istde != -999:
+                    sb.add_var("input:rerun%s:missin:Store_Drag:istde" % (i))
+                if re_mywts != -999:
+                    sb.add_var("input:rerun%s:missin:User_Weights:mywts" % (i))
+                if re_rampwt != -999.:
+                    sb.add_var("input:rerun%s:missin:User_Weights:rampwt" % (i))
+                if re_dowe != -999.:
+                    sb.add_var("input:rerun%s:missin:User_Weights:dowe" % (i))
+                if re_paylod != -999.:
+                    sb.add_var("input:rerun%s:missin:User_Weights:paylod" % (i))
+                if re_fuemax != -999.:
+                    sb.add_var("input:rerun%s:missin:User_Weights:fuemax" % (i))
+                if re_takotm != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:takotm" % (i))
+                if re_taxotm != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:taxotm" % (i))
+                if re_apprtm != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:apprtm" % (i))
+                if re_appfff != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:appfff" % (i))
+                if re_taxitm != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:taxitm" % (i))
+                if re_ittff != -999:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:ittff" % (i))
+                if re_takoff != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:takoff" % (i))
+                if re_txfufl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:txfufl" % (i))
+                if re_ftkofl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:ftkofl" % (i))
+                if re_ftxofl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:ftxofl" % (i))
+                if re_ftxifl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:ftxifl" % (i))
+                if re_faprfl != -999.:
+                    sb.add_var("input:rerun%s:missin:Ground_Operations:faprfl" % (i))
+                if len(re_xnz) > 0:
+                    sb.add_var("input:rerun%s:missin:Turn_Segments:xnz" % (i))
+                if len(re_xcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Turn_Segments:xcl" % (i))
+                if len(re_xmach) > 0:
+                    sb.add_var("input:rerun%s:missin:Turn_Segments:xmach" % (i))
+                if re_nclimb > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:nclimb" % (i))
+                if len(re_clmmin) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:clmmin" % (i))
+                if len(re_clmmax) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:clmmax" % (i))
+                if len(re_clamin) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:clamin" % (i))
+                if len(re_clamax) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:clamax" % (i))
+                if len(re_nincl) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:nincl" % (i))
+                if len(re_fwf) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:fwf" % (i))
+                if len(re_ncrcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:ncrcl" % (i))
+                if len(re_cldcd) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:cldcd" % (i))
+                if len(re_ippcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:ippcl" % (i))
+                if len(re_maxcl) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:maxcl" % (i))
+                if len(re_no) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:no" % (i))
+                if re_keasvc != -999:
+                    sb.add_var("input:rerun%s:missin:Climb:keasvc" % (i))
+                if len(re_actab) > 0:
+                    sb.add_var2d("input:rerun%s:missin:Climb:actab" % (i))
+                if len(re_vctab) > 0:
+                    sb.add_var2d("input:rerun%s:missin:Climb:vctab" % (i))
+                if re_ifaacl != -999:
+                    sb.add_var("input:rerun%s:missin:Climb:ifaacl" % (i))
+                if re_ifaade != -999:
+                    sb.add_var("input:rerun%s:missin:Climb:ifaade" % (i))
+                if re_nodive != -999:
+                    sb.add_var("input:rerun%s:missin:Climb:nodive" % (i))
+                if re_divlim != -999.:
+                    sb.add_var("input:rerun%s:missin:Climb:divlim" % (i))
+                if re_qlim != -999.:
+                    sb.add_var("input:rerun%s:missin:Climb:qlim" % (i))
+                if re_spdlim != -999.:
+                    sb.add_var("input:rerun%s:missin:Climb:spdlim" % (i))
+                if len(re_qlalt) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:qlalt" % (i))
+                if len(re_vqlm) > 0:
+                    sb.add_var("input:rerun%s:missin:Climb:vqlm" % (i))
+                if len(re_ioc) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:ioc" % (i))
+                if len(re_crmach) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:crmach" % (i))
+                if len(re_cralt) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:cralt" % (i))
+                if len(re_crdcd) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:crdcd" % (i))
+                if len(re_flrcr) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:flrcr" % (i))
+                if len(re_crmmin) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:crmmin" % (i))
+                if len(re_crclmx) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:crclmx" % (i))
+                if len(re_hpmin) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:hpmin" % (i))
+                if len(re_ffuel) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:ffuel" % (i))
+                if len(re_fnox) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:fnox" % (i))
+                if len(re_ifeath) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:ifeath" % (i))
+                if len(re_feathf) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:feathf" % (i))
+                if len(re_cdfeth) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:cdfeth" % (i))
+                if re_dcwt != -999.:
+                    sb.add_var("input:rerun%s:missin:Cruise:dcwt" % (i))
+                if re_rcin != -999.:
+                    sb.add_var("input:rerun%s:missin:Cruise:rcin" % (i))
+                if len(re_wtbm) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:wtbm" % (i))
+                if len(re_altbm) > 0:
+                    sb.add_var("input:rerun%s:missin:Cruise:altbm" % (i))
+                if re_ivs != -999:
+                    sb.add_var("input:rerun%s:missin:Descent:ivs" % (i))
+                if re_decl != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:decl" % (i))
+                if re_demmin != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:demmin" % (i))
+                if re_demmax != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:demmax" % (i))
+                if re_deamin != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:deamin" % (i))
+                if re_deamax != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:deamax" % (i))
+                if re_ninde != -999:
+                    sb.add_var("input:rerun%s:missin:Descent:ninde" % (i))
+                if re_dedcd != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:dedcd" % (i))
+                if re_rdlim != -999.:
+                    sb.add_var("input:rerun%s:missin:Descent:rdlim" % (i))
+
+                ns = len(self.getValue("input:rerun%s:missin:Descent:adtab" % (i)))
+                if  ns > 0:
+                    sb.add_comment("\n  ! Input Descent Schedule\n")
+                    sb.add_newvar('ns', ns)
+                    sb.add_var("input:rerun%s:missin:Descent:keasvd" % (i))
+                    sb.add_var("input:rerun%s:missin:Descent:adtab" % (i))
+                    sb.add_var("input:rerun%s:missin:Descent:vdtab" % (i))
+
+                if re_irs != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:irs" % (i))
+                if re_resrfu != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:resrfu" % (i))
+                if re_restrp != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:restrp" % (i))
+                if re_timmap != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:timmap" % (i))
+                if re_altran != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:altran" % (i))
+                if re_nclres != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:nclres" % (i))
+                if re_ncrres != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:ncrres" % (i))
+                if re_sremch != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:sremch" % (i))
+                if re_eremch != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:eremch" % (i))
+                if re_srealt != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:srealt" % (i))
+                if re_erealt != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:erealt" % (i))
+                if re_holdtm != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:holdtm" % (i))
+                if re_ncrhol != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:ncrhol" % (i))
+                if re_ihopos != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:ihopos" % (i))
+                if re_icron != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:icron" % (i))
+                if re_thold != -999.:
+                    sb.add_var("input:rerun%s:missin:Reserve:thold" % (i))
+                if re_ncrth != -999:
+                    sb.add_var("input:rerun%s:missin:Reserve:ncrth" % (i))
+
+
+                sb.add_newvar("NPCON", self.npcons0[i])
+
+                # Insert the new mission definition.
+                #infile = self.getValue("input:rerun%s:mission" % (i)).open()
+                #mission = infile.read()
+                #infile.close()
+                #sb.add_comment(mission)
+
+                # Get the mission definition
+
+                mission = self.getValue("input:rerun%s:mission_definition" % i)
+
+                for seg in mission:
+                    sb.add_group(seg)
+
+                # Insert the &PCONIN namelists
+                for j in range(0, self.npcons0[i]):
+
+                    re_conalt = self.getValue("input:rerun%s:pconin%s:conalt" % (i, j))
+                    re_conmch = self.getValue("input:rerun%s:pconin%s:conmch" % (i, j))
+                    re_connz  = self.getValue("input:rerun%s:pconin%s:connz" % (i, j))
+                    re_conpc  = self.getValue("input:rerun%s:pconin%s:conpc" % (i, j))
+                    re_conlim = self.getValue("input:rerun%s:pconin%s:conlim" % (i, j))
+                    re_conaux = self.getValue("input:rerun%s:pconin%s:conaux" % (i, j))
+                    re_neo    = self.getValue("input:rerun%s:pconin%s:neo" % (i, j))
+                    re_icstdg = self.getValue("input:rerun%s:pconin%s:icstdg" % (i, j))
+                    re_conwt  = self.getValue("input:rerun%s:pconin%s:conwt" % (i, j))
+                    re_iconsg = self.getValue("input:rerun%s:pconin%s:iconsg" % (i, j))
+                    re_confm  = self.getValue("input:rerun%s:pconin%s:confm" % (i, j))
+                    re_conwta = self.getValue("input:rerun%s:pconin%s:conwta" % (i, j))
+                    re_icontp = self.getValue("input:rerun%s:pconin%s:icontp" % (i, j))
+
+                    sb.add_group('PCONIN')
+
+                    if  re_conalt >= 0.:
+                        sb.add_newvar("CONALT", re_conalt)
+                    if  re_conmch >= 0.:
+                        sb.add_newvar("CONMCH", re_conmch)
+                    if  re_connz >= 0.:
+                        sb.add_newvar("CONNZ", re_connz)
+                    if  re_conpc > -10.:
+                        sb.add_newvar("CONPC", re_conpc)
+                    if  re_conlim != -999.:
+                        sb.add_newvar("CONLIM", re_conlim)
+                    if  re_conaux > -1.:
+                        sb.add_newvar("CONAUX", re_conaux)
+                    if  re_neo >= 0:
+                        sb.append("NEO", re_neo)
+                    if  re_icstdg >= 0:
+                        sb.add_newvar("ICSTDG", re_icstdg)
+                    if  re_conwt >= 0.:
+                        sb.add_newvar("CONWT", re_conwt)
+                    if  re_iconsg >= 0:
+                        sb.add_newvar("ICONSG", re_iconsg)
+                    if  re_confm >= 0.:
+                        sb.add_newvar("CONFM", re_confm)
+                    if  re_conwta != -999.:
+                        sb.add_newvar("CONWTA", re_conwta)
+                    if  re_icontp >= 0:
+                        sb.add_newvar("ICONTP", re_icontp)
+
+        # Generate the input file for FLOPS
+
+
+        sb.generate()
+
+    def parse_output(self):
+        """Parses the FLOPS output file(s) and populates the component
+        outputs with the data.
+        """
+
+        out = FileParser()
+        #out.set_file(self.stdout)
+        out.set_file(self.output_filepath)
+
+
+
+        # Check for namelist read error
+        # Throw new Exception for fatal errors
+        # Continue processing for FLOPS failures (may want to return error
+        # codes to optimizers sometime in the future)
+        out.set_delimiters(" ")
+
+        try:
+            out.mark_anchor("ERROR READING NAMELIST")
+        except RuntimeError:
+            pass
+        else:
+            assignValueOutput('output:ERROR',out.transfer_line(0))
+            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
+
+        out.reset_anchor()
+        try:
+            out.mark_anchor("ERROR READING AERODYNAMIC")
+        except RuntimeError:
+            pass
+        else:
+            assignValueOutput('output:ERROR',out.transfer_line(0))
+            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
+
+        out.reset_anchor()
+        try:
+            out.mark_anchor("* * * ENGINE DECK MISSING * * *")
+        except RuntimeError:
+            pass
+        else:
+            assignValueOutput('output:ERROR',out.transfer_line(0))
+            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR + \
+                  '\n\nCheck links from "Engine" to "Flops". Make sure EIFILE' + \
+                  'points to an existing file (default is "ENGDECK.txt" in UserDir.\n\n*****************')
+
+        out.reset_anchor()
+        try:
+            out.mark_anchor("* * * ONLY ONE ALTITUDE FOR MACH NUMBER")
+        except RuntimeError:
+            pass
+        else:
+            assignValueOutput('output:ERROR',out.transfer_line(0))
+
+            # TODO - Why does MC wrapper do this?
+            # commented out for now
+            #self.output.Performance.range = 0.
+            #self.output.Performance.rampwt = 0.
+            #self.output.Performance.fuel = 0.
+
+            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
+
+        out.reset_anchor()
+        try:
+            out.mark_anchor("* * * ILLEGAL DATA IN ENGINE DECK * * *")
+        except RuntimeError:
+            pass
+        else:
+            assignValueOutput('output:ERROR',out.transfer_line(0))
+            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
+
+        out.reset_anchor()
+        try:
+            #out.mark_anchor("ERROR READING MISSION DEFINITION DATA FROM UNIT")
+            # Loosened this up to find any read error; i've found others
+            out.mark_anchor("ERROR READING")
+        except RuntimeError:
+            pass
+        else:
+            assignValueOutput('output:ERROR',out.transfer_line(0))
+            raise RuntimeError('Error reading a file during FLOPS execution.\n %s' % ERROR)
+
+        out.reset_anchor()
+        try:
+            out.mark_anchor("ERROR IN SEGMENT INPUT DATA")
+        except RuntimeError:
+            pass
+        else:
+            assignValueOutput('output:ERROR',out.transfer_line(0))
+            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
+
+
+        # Modified this section Fri Mar  5 15:05:09 EST 2010
+        # there could be failures that recover during optimization
+
+        iopt = self.getValue("input:option:Program_Control:iopt")
+
+        out.reset_anchor()
+        try:
+            if iopt != 3:
+                out.mark_anchor("TITLE, BEGIN OUTPUT OF RESULTS")
+            else:
+                out.mark_anchor("FINAL ANALYSIS")
+
+        except RuntimeError:
+
+            # Check invalid results
+            errorArray = [
+               "* * * ENGINE DECK MISSING * * *",
+               "NO WEIGHT AVAILABLE FOR FUEL",
+               "FAILURE FOR CLIMB SEGMENT",
+               "FAILURE FOR CRUISE CONDITION",
+               "FAILURE FOR DESCENT SEGMENT",
+               "ANALYSIS COULD NOT RECOVER",
+               "INITIAL DESIGN UNACCEPTABLE"
+               ]
+            descArray = [
+               "Check links from \"Engine\" to \"Flops\". Make sure EIFILE points to an existing file (default is \"ENGDECK.txt\" in UserDir",
+               "Try increasing gross weight (confin.variables.GW1)",
+               "Try increasing thrust and/or wing area and see flops.man",
+               "Try increasing thrust and/or wing area and see flops.man",
+               "Check thrust at flight idle. May need to set IDLE to 1 and see flops.man",
+               "Try tweaking SYNTIN inputs to resolve this (AnalysisControl.syntin.control). Also check for other nonfatal failures like failed missed approach climb criterion.",
+               "Make sure any initial design variable are within the upper and lower bounds"
+               ]
+
+            for i in range(0, len(errorArray)):
+                try:
+                    out.reset_anchor()
+                    out.mark_anchor(errorArray[i])
+                    assignValueOutput('output:ERROR',out.transfer_line(0))
+                    assignValueOutput('output:HINT' ,descArray[i])
+                    self.assignValueOutput("output:Performance:range",0.)
+                    self.assignValueOutput("output:Performance:rampwt",0.)
+                    self.assignValueOutput("output:Performance:fuel",0.)
+                    break
+                except RuntimeError:
+                    assignValueOutput('output:ERROR','None')
+                    assignValueOutput('output:HINT' ,'n/a')
+
+
+        iopt   = self.getValue("input:option:Program_Control:iopt")
+        ianal  = self.getValue("input:option:Program_Control:ianal")
+        ifite  = self.getValue("input:option:Program_Control:ifite")
+        mywts  = self.getValue("input:wtin:Basic:mywts")
+        inrtia = self.getValue("input:wtin:Inertia:inrtia")
+        msumpt = self.getValue("input:missin:Basic:msumpt")
+        noffdr = len(self.getValue("input:missin:Basic:offdr"))
+
+        out.reset_anchor()
+
+        if ifite == 3:
+            out.mark_anchor("PRESSURIZED CABIN DIMENSIONS FOR A")
+
+
+            self.assignValueOutput("output:Geometry:BWB:xlp", out.transfer_var(1, 5))
+            self.assignValueOutput("output:Geometry:BWB:xlw", out.transfer_var(2, 6))
+            self.assignValueOutput("output:Geometry:BWB:wf ", out.transfer_var(3, 5))
+            self.assignValueOutput("output:Geometry:BWB:acabin", out.transfer_var(4, 4))
+            self.assignValueOutput("output:Geometry:BWB:nbaw", out.transfer_var(5, 5))
+            self.assignValueOutput("output:Geometry:BWB:bayw", out.transfer_var(6, 5))
+            self.assignValueOutput("output:Geometry:BWB:nlava", out.transfer_var(7, 5))
+            self.assignValueOutput("output:Geometry:BWB:ngally", out.transfer_var(8, 5))
+            self.assignValueOutput("output:Geometry:BWB:nclset", out.transfer_var(9, 5))
+            self.assignValueOutput("output:Geometry:BWB:xl", out.transfer_var(10, 5))
+            self.assignValueOutput("output:Geometry:BWB:df", out.transfer_var(11, 5))
+
+        out.reset_anchor()
+        out.mark_anchor("FUSELAGE DATA")
+
+        self.assignValueOutput("output:Geometry:xl" ,out.transfer_var(2, 4))
+        self.assignValueOutput("output:Geometry:wf",out.transfer_var(3, 4))
+        self.assignValueOutput("output:Geometry:df", out.transfer_var(4, 4))
+        self.assignValueOutput("output:Geometry:xlp",out.transfer_var(6, 5))
+
+        out.reset_anchor()
+        out.mark_anchor( "CREW AND PAYLOAD DATA" )
+
+        if ifite != 1:
+            self.assignValueOutput("output:Payload:npf", out.transfer_var(1, 5))
+            self.assignValueOutput("output:Payload:npb", out.transfer_var(2, 4))
+            self.assignValueOutput("output:Payload:npt", out.transfer_var(3, 4))
+            self.assignValueOutput("output:Payload:nstu", out.transfer_var(4, 3))
+            self.assignValueOutput("output:Payload:ngalc", out.transfer_var(5, 4))
+            self.assignValueOutput("output:Payload:wppass", out.transfer_var(7, 5))
+            self.assignValueOutput("output:Payload:bpp", out.transfer_var(8, 5))
+            self.assignValueOutput("output:Payload:cargow",out.transfer_var(9, 5))
+            self.assignValueOutput("output:Payload:cargof",out.transfer_var(10, 5))
+        else:
+            self.assignValueOutput("output:Payload:cargow", out.transfer_var(2, 6))
+            self.assignValueOutput("output:Payload:cargof", out.transfer_var(3, 6))
+
+        out.reset_anchor()
+        out.mark_anchor( "CARGO AND BAGGAGE CONTAIN." )
+        self.assignValueOutput("output:Payload:wcon", out.transfer_var(0, 6))
+
+        if mywts == 0:
+            out.reset_anchor()
+            out.mark_anchor( "CREW AND BAGGAGE-FLIGHT" )
+            self.assignValueOutput("output:Payload:nflcr",out.transfer_var(0, 4))
+            if ifite != 1:
+                self.assignValueOutput("output:Payload:nstuag", out.transfer_var(1, 2))
+
+        if iopt == 3:
+            # In optimization mode, find the last design mission
+            nos = 0
+            while True:
+                try:
+                    out.reset_anchor()
+                    out.mark_anchor( "#OBJ/VAR/CONSTR SUMMARY",
+                                  noffdr+nos+1+self.nrern0 )
+                except RuntimeError:
+                    break
+                else:
+                    nos += 1
+
+            nit = noffdr + nos
+        else:
+            nit = nos = 1
+
+        if nit > 0:
+
+            # Read output from the weights module
+
+            if mywts == 0:
+
+                out.reset_anchor()
+                try:
+                    out.mark_anchor( "WING SPAN               ", nos)
+                except RuntimeError:
+                    ndd = self.getValue("input:syntin:Optimization_Control:ndd")
+                    if ndd == 0:
+                        msg = "\n\n***************** \n\n"
+                        msg += "There was only one iteration in optimization mode \n\n"
+                        msg += "and we happen to be looking for the final solution, which isn't there. \n\n"
+                        msg += "ndd = %" % ndd + "\n\n"
+                        msg += "Try setting flops.input.syntin.Optimization_Control.ndd to 3 or 4.\n\n"
+                        msg += "*****************"
+                        raise RuntimeError(msg)
+                    else:
+                        msg = "\n\n***************** \n\n"
+                        msg += "There was only one iteration in optimization mode \n\n"
+                        msg += "and we happen to be looking for the final solution, which isn't there. \n\n"
+                        msg += "Something is wrong here and someone needs to figure it out before we can proceed.\n\n"
+                        msg += "*****************"
+                        raise RuntimeError(msg)
+
+                self.assignValueOutput("output:Geometry:span", out.transfer_var(0, 3))
+                self.assignValueOutput("output:Geometry:glov", out.transfer_var(1, 4))
+                self.assignValueOutput("output:Geometry:sht", out.transfer_var(3, 4))
+                self.assignValueOutput("output:Geometry:svt", out.transfer_var(5, 4))
+                self.assignValueOutput("output:Geometry:xnac", out.transfer_var(8, 3))
+                self.assignValueOutput("output:Geometry:dnac", out.transfer_var(9, 3))
+                self.assignValueOutput("output:Geometry:xmlg", out.transfer_var(11, 5))
+                self.assignValueOutput("output:Geometry:xnlg", out.transfer_var(12, 5))
+
+                self.assignValueOutput("output:Weight:wldg", out.transfer_var(14, 4))
+                self.assignValueOutput("output:Weight:fultot",out.transfer_var(19, 4))
+                self.assignValueOutput("output:Weight:exsful", out.transfer_var(20, 4))
+
+                out.reset_anchor()
+                out.mark_anchor( "WING BENDING FACTOR", nos)
+
+                self.assignValueOutput("output:Weight:Wing:w", out.transfer_var(0, 4))
+                self.assignValueOutput("output:Weight:Wing:ew", out.transfer_var(1, 5))
+                self.assignValueOutput("output:Weight:Wing:w1", out.transfer_var(4, 3))
+                self.assignValueOutput("output:Weight:Wing:w2", out.transfer_var(5, 3))
+                self.assignValueOutput("output:Weight:Wing:w3", out.transfer_var(6, 3))
+
+                        # Read mass and balance summary data
+
+                out.reset_anchor()
+                out.mark_anchor( "MASS AND BALANCE SUMMARY", nos)
+
+                if ifite == 1:
+                    self.assignValueOutput("output:Weight:frwi",out.transfer_keyvar("WING ",2))
+                    self.assignValueOutput("output:Weight:frht",out.transfer_keyvar("HORIZONTAL TAIL ",2))
+                    self.assignValueOutput("output:Weight:frvt",out.transfer_keyvar("VERTICAL TAIL ",2))
+                    self.assignValueOutput("output:Weight:frfin",out.transfer_keyvar("VERTICAL FIN ",2))
+                    self.assignValueOutput("output:Weight:frcan",out.transfer_keyvar("CANARD ",2))
+                    self.assignValueOutput("output:Weight:frfu",out.transfer_keyvar("FUSELAGE ",2))
+                    self.assignValueOutput("output:Weight:wlg",out.transfer_keyvar("LANDING GEAR ",2))
+                    self.assignValueOutput("output:Weight:frna",out.transfer_keyvar("NACELLE (AIR INDUCTION) ",2))
+                    self.assignValueOutput("output:Weight:wengt",out.transfer_keyvar("ENGINES ",2))
+                    self.assignValueOutput("output:Weight:wthr",out.transfer_keyvar("THRUST REVERSERS ",2))
+                    self.assignValueOutput("output:Weight:wpmisc",out.transfer_keyvar("MISCELLANEOUS SYSTEMS ",2))
+                    self.assignValueOutput("output:Weight:wfsys",out.transfer_keyvar("FUEL SYSTEM-TANKS AND PLUMBING ",2))
+                    self.assignValueOutput("output:Weight:frsc",out.transfer_keyvar("SURFACE CONTROLS ",2))
+                    self.assignValueOutput("output:Weight:wapu",out.transfer_keyvar("AUXILIARY POWER ",2))
+                    self.assignValueOutput("output:Weight:win",out.transfer_keyvar("INSTRUMENTS ",2))
+                    self.assignValueOutput("output:Weight:whyd",out.transfer_keyvar("HYDRAULICS ",2))
+                    self.assignValueOutput("output:Weight:welec",out.transfer_keyvar("ELECTRICAL ",2))
+                    self.assignValueOutput("output:Weight:wavonc",out.transfer_keyvar("AVIONICS ",2))
+                    self.assignValueOutput("output:Weight:wfurn",out.transfer_keyvar("FURNISHINGS AND EQUIPMENT ",2))
+                    self.assignValueOutput("output:Weight:wac",out.transfer_keyvar("AIR CONDITIONING ",2))
+                    self.assignValueOutput("output:Weight:wai",out.transfer_keyvar("AUXILIARY GEAR ",2))
+                    self.assignValueOutput("output:Weight:wempty",out.transfer_keyvar(" WEIGHT EMPTY ",2))
+                    self.assignValueOutput("output:Weight:wflcrbw",out.transfer_keyvar("CREW AND BAGGAGE-FLIGHT,", 3))
+                    self.assignValueOutput("output:Weight:wuf",out.transfer_keyvar("UNUSABLE FUEL ",2))
+                    self.assignValueOutput("output:Weight:woil",out.transfer_keyvar("ENGINE OIL ",2))
+                    self.assignValueOutput("output:Weight:wsrv",out.transfer_keyvar("AMMUNITION, ETC. ",2))
+                    self.assignValueOutput("output:Weight:wbomb",out.transfer_keyvar("AUXILIARY TANKS ",2))
+                    self.assignValueOutput("output:Weight:dowe",out.transfer_keyvar("OPERATING WEIGHT  ",2))
+                    self.assignValueOutput("output:Weight:zfw",out.transfer_keyvar("ZERO FUEL WEIGHT ",2))
+                else:
+                    self.assignValueOutput("output:Weight:frwi",out.transfer_keyvar("WING ",2))
+                    self.assignValueOutput("output:Weight:frht",out.transfer_keyvar("HORIZONTAL TAIL ",2))
+                    self.assignValueOutput("output:Weight:frvt",out.transfer_keyvar("VERTICAL TAIL ",2))
+                    self.assignValueOutput("output:Weight:frfin",out.transfer_keyvar("VERTICAL FIN ",2))
+                    self.assignValueOutput("output:Weight:frcan",out.transfer_keyvar("CANARD ",2))
+                    self.assignValueOutput("output:Weight:frfu",out.transfer_keyvar("FUSELAGE ",2))
+                    self.assignValueOutput("output:Weight:wlg",out.transfer_keyvar("LANDING GEAR ",2))
+                    self.assignValueOutput("output:Weight:frna",out.transfer_keyvar("NACELLE (AIR INDUCTION) ",2))
+                    self.assignValueOutput("output:Weight:wengt",out.transfer_keyvar("ENGINES ",2))
+                    self.assignValueOutput("output:Weight:wthr",out.transfer_keyvar("THRUST REVERSERS ",2))
+                    self.assignValueOutput("output:Weight:wpmisc",out.transfer_keyvar("MISCELLANEOUS SYSTEMS ",2))
+                    self.assignValueOutput("output:Weight:wfsys",out.transfer_keyvar("FUEL SYSTEM-TANKS AND PLUMBING ",2))
+                    self.assignValueOutput("output:Weight:frsc",out.transfer_keyvar("SURFACE CONTROLS ",2))
+                    self.assignValueOutput("output:Weight:wapu",out.transfer_keyvar("AUXILIARY POWER ",2))
+                    self.assignValueOutput("output:Weight:win",out.transfer_keyvar("INSTRUMENTS ",2))
+                    self.assignValueOutput("output:Weight:whyd",out.transfer_keyvar("HYDRAULICS ",2))
+                    self.assignValueOutput("output:Weight:welec",out.transfer_keyvar("ELECTRICAL ",2))
+                    self.assignValueOutput("output:Weight:wavonc",out.transfer_keyvar("AVIONICS ",2))
+                    self.assignValueOutput("output:Weight:wfurn",out.transfer_keyvar("FURNISHINGS AND EQUIPMENT ",2))
+                    self.assignValueOutput("output:Weight:wac",out.transfer_keyvar("AIR CONDITIONING ",2))
+                    self.assignValueOutput("output:Weight:wai",out.transfer_keyvar("ANTI-ICING ",2))
+                    self.assignValueOutput("output:Weight:wempty",out.transfer_keyvar(" WEIGHT EMPTY ",2))
+                    self.assignValueOutput("output:Weight:wflcrbw",out.transfer_keyvar("CREW AND BAGGAGE-FLIGHT,", 3))
+                    self.assignValueOutput("output:Weight:wwstuab",out.transfer_keyvar("-CABIN, ", 3))
+                    self.assignValueOutput("output:Weight:wuf",out.transfer_keyvar("UNUSABLE FUEL ",2))
+                    self.assignValueOutput("output:Weight:woil",out.transfer_keyvar("ENGINE OIL ",2))
+                    self.assignValueOutput("output:Weight:wsrv",out.transfer_keyvar("PASSENGER SERVICE ",2))
+                    self.assignValueOutput("output:Weight:dowe",out.transfer_keyvar("OPERATING WEIGHT  ",2))
+                    self.assignValueOutput("output:Weight:zfw",out.transfer_keyvar("ZERO FUEL WEIGHT ",2))
+
+                # Read inertia data
+
+                if inrtia > 0:
+                    out.reset_anchor()
+                    out.mark_anchor( "#  INERTIA DATA FOR AIRCRAFT", nos)
+
+                    nfcon = self.getValue("input:wtin:Inertia:tf").shape[0]
+
+                    self.assignValueOutput("output:Weight:Inertia:cgx",zeros(1+nfcon))
+                    self.assignValueOutput("output:Weight:Inertia:cgy",zeros(1+nfcon))
+                    self.assignValueOutput("output:Weight:Inertia:cgz",zeros(1+nfcon))
+                    self.assignValueOutput("output:Weight:Inertia:ixxroll",zeros(1+nfcon))
+                    self.assignValueOutput("output:Weight:Inertia:ixxptch",zeros(1+nfcon))
+                    self.assignValueOutput("output:Weight:Inertia:ixxyaw",zeros(1+nfcon))
+                    self.assignValueOutput("output:Weight:Inertia:ixz",zeros(1+nfcon))
+
+                    out.reset_anchor()
+                    out.mark_anchor( " AIRCRAFT OWE OR ZFW", 1)
+                    self.assignValueOutput("output:Weight:Inertia:cgx",out.transfer_var(0, 6),index=0)
+                    self.assignValueOutput("output:Weight:Inertia:cgy",out.transfer_var(0, 7),index=0)
+                    self.assignValueOutput("output:Weight:Inertia:cgz",out.transfer_var(0, 8),index=0)
+
+                    out.reset_anchor()
+                    out.mark_anchor( " AIRCRAFT OWE OR ZFW",2)
+                    self.assignValueOutput("output:Weight:Inertia:ixxroll",out.transfer_var(0, 5),index=0)
+                    self.assignValueOutput("output:Weight:Inertia:ixxptch",out.transfer_var(0, 6),index=0)
+                    self.assignValueOutput("output:Weight:Inertia:ixxyaw",out.transfer_var(0, 7),index=0)
+                    self.assignValueOutput("output:Weight:Inertia:ixz",out.transfer_var(0, 8),index=0)
+
+                    out.reset_anchor()
+                    if nfcon > 0:
+                        for i in range(1, nfcon+1):
+                            out.mark_anchor( "INERTIA DATA FOR FUEL CONDITION" )
+
+                            out.mark_anchor( " TOTAL WEIGHT " )
+                            self.assignValueOutput("output:Weight:Inertia:cgx",out.transfer_var(0, 4),index=i)
+                            self.assignValueOutput("output:Weight:Inertia:cgy",out.transfer_var(0, 5),index=i)
+                            self.assignValueOutput("output:Weight:Inertia:cgz",out.transfer_var(0, 6),index=i)
+
+                            out.mark_anchor( " TOTAL AIRCRAFT " )
+                            self.assignValueOutput("output:Weight:Inertia:ixxroll",out.transfer_var(0, 3),index=i)
+                            self.assignValueOutput("output:Weight:Inertia:ixxptch",out.transfer_var(0, 4),index=i)
+                            self.assignValueOutput("output:Weight:Inertia:ixxyaw",out.transfer_var(0, 5),index=i)
+                            self.assignValueOutput("output:Weight:Inertia:ixz",out.transfer_var(0, 6),index=i)
+
+            else:
+
+                # set weights to zero
+                self.assignValueOutput("output:Geometry:span",0.0)
+                self.assignValueOutput("output:Geometry:glov",0.0)
+                self.assignValueOutput("output:Geometry:sht",0.0)
+                self.assignValueOutput("output:Geometry:svt",0.0)
+                self.assignValueOutput("output:Geometry:xnac",0.0)
+                self.assignValueOutput("output:Geometry:dnac",0.0)
+                self.assignValueOutput("output:Geometry:xmlg",0.0)
+                self.assignValueOutput("output:Geometry:xnlg",0.0)
+                self.assignValueOutput("output:Weight:wldg",0.0)
+                self.assignValueOutput("output:Weight:fultot",0.0)
+                self.assignValueOutput("output:Weight:exsful",0.0)
+                self.assignValueOutput("output:Weight:frwi",0.0)
+                self.assignValueOutput("output:Weight:frht",0.0)
+                self.assignValueOutput("output:Weight:frvt",0.0)
+                self.assignValueOutput("output:Weight:frfin",0.0)
+                self.assignValueOutput("output:Weight:frcan",0.0)
+                self.assignValueOutput("output:Weight:frfu",0.0)
+                self.assignValueOutput("output:Weight:wlg",0.0)
+                self.assignValueOutput("output:Weight:frna",0.0)
+                self.assignValueOutput("output:Weight:wengt",0.0)
+                self.assignValueOutput("output:Weight:wthr",0.0)
+                self.assignValueOutput("output:Weight:wpmisc",0.0)
+                self.assignValueOutput("output:Weight:wfsys",0.0)
+                self.assignValueOutput("output:Weight:frsc",0.0)
+                self.assignValueOutput("output:Weight:wapu",0.0)
+                self.assignValueOutput("output:Weight:win",0.0)
+                self.assignValueOutput("output:Weight:whyd",0.0)
+                self.assignValueOutput("output:Weight:welec",0.0)
+                self.assignValueOutput("output:Weight:wavonc",0.0)
+                self.assignValueOutput("output:Weight:wfurn",0.0)
+                self.assignValueOutput("output:Weight:wac",0.0)
+                self.assignValueOutput("output:Weight:wai",0.0)
+                self.assignValueOutput("output:Weight:wempty",0.0)
+                self.assignValueOutput("output:Weight:wflcrbw",0.0)
+                self.assignValueOutput("output:Weight:wwstuab",0.0)
+                self.assignValueOutput("output:Weight:wuf",0.0)
+                self.assignValueOutput("output:Weight:woil",0.0)
+                self.assignValueOutput("output:Weight:wsrv",0.0)
+                self.assignValueOutput("output:Weight:dowe",0.0)
+                self.assignValueOutput("output:Weight:zfw",0.0)
+                self.assignValueOutput("output:Weight:wbomb",0.0)
+
+                # inertia data
+                self.assignValueOutput("output:Weight:Inertia:cgx",zeros(0))
+                self.assignValueOutput("output:Weight:Inertia:cgy",zeros(0))
+                self.assignValueOutput("output:Weight:Inertia:cgz",zeros(0))
+                self.assignValueOutput("output:Weight:Inertia:ixxroll",zeros(0))
+                self.assignValueOutput("output:Weight:Inertia:ixxptch",zeros(0))
+                self.assignValueOutput("output:Weight:Inertia:ixxyaw",zeros(0))
+                self.assignValueOutput("output:Weight:Inertia:ixz",zeros(0))
+
+            # Read performance contraints summary
+         
+            if self.npcon0 > 0 and ianal == 3:
+                out.reset_anchor()
+                out.mark_anchor( "PERFORMANCE CONSTRAINT SUMMARY", nos)
+
+                out.set_delimiters("columns")
+                self.assignValueOutput("output:Performance:Constraints:constraint",out.transfer_array(4, 16, 3+self.npcon0, 29))
+                self.assignValueOutput("output:Performance:Constraints:value",out.transfer_array(4, 32, 3+self.npcon0, 40))
+                self.assignValueOutput("output:Performance:Constraints:units",out.transfer_array(4, 41, 3+self.npcon0, 47))
+                self.assignValueOutput("output:Performance:Constraints:limit",out.transfer_array(4, 48, 3+self.npcon0, 56))
+
+                weight = out.transfer_array(4, 56, 3+self.npcon0, 65)
+
+
+                if isinstance(weight[0], str):
+                    self.assignValueOutput("output:Performance:Constraints:location",out.transfer_array(4, 58, 3+self.npcon0, 87))
+                else:
+                    self.assignValueOutput("output:Performance:Constraints:location",array([]))
+                    self.assignValueOutput("output:Performance:Constraints:weight", weight)
+                    self.assignValueOutput("output:Performance:Constraints:mach",out.transfer_array(4, 66, 3+self.npcon0, 74))
+                    self.assignValueOutput("output:Performance:Constraints:alt",out.transfer_array(4, 75, 3+self.npcon0, 85))
+                    self.assignValueOutput("output:Performance:Constraints:g",out.transfer_array(4, 86, 3+self.npcon0, 98))
+
+                out.set_delimiters(" ")
+
+            # Read sizing and performance results
+
+            if ianal == 3:
+                out.reset_anchor()
+                out.mark_anchor( "CONFIGURATION DATA AFTER RESIZING (IF ANY)", nit)
+
+                self.assignValueOutput("output:Weight:dowe",out.transfer_var(2, 4))
+                self.assignValueOutput("output:Weight:paylod",out.transfer_var(3,2))
+                self.assignValueOutput("output:Weight:fuel",out.transfer_var(4, 3))
+                self.assignValueOutput("output:Weight:rampwt",out.transfer_var(5, 3))
+                self.assignValueOutput("output:Weight:wsr",out.transfer_var(8, 3))
+                self.assignValueOutput("output:Weight:thrso",out.transfer_var(10, 4))
+                self.assignValueOutput("output:Weight:esf",out.transfer_var(11, 4))
+                self.assignValueOutput("output:Weight:twr",out.transfer_var(12, 3))
+
+                self.assignValueOutput("output:Performance:thrso", self.getValueOutput("output:Weight:thrso"))
+                self.assignValueOutput("output:Performance:esf", self.getValueOutput("output:Weight:esf"))
+
+            # Read detailed flight segment summary
+
+            if ianal == 3 and msumpt > 0:
+                out.reset_anchor()
+                out.mark_anchor( "DETAILED FLIGHT SEGMENT SUMMARY")
+
+                for i in range(0, self.nmseg):
+                    if i < 9:
+                        out.mark_anchor( "SEGMENT  " + str(i+1) + "   ")
+                    else:
+                        out.mark_anchor( "SEGMENT " + str(i+1) + "   " )
+
+                    self.assignValueOutput("output:Performance:Segments:segment",out.transfer_var(0, 3),i)
+                    self.assignValueOutput("output:Performance:Segments:weights",out.transfer_var(5, 1),i)
+                    self.assignValueOutput("output:Performance:Segments:alts",out.transfer_var(5,2),i)
+                    self.assignValueOutput("output:Performance:Segments:machs",out.transfer_var(5, 3),i)
+                    self.assignValueOutput("output:Performance:Segments:thrusts",out.transfer_var(5, 7),i)
+                    self.assignValueOutput("output:Performance:Segments:lods",out.transfer_var(5, 12),i)
+                    self.assignValueOutput("output:Performance:Segments:totmaxs",out.transfer_var(6, 6),i)
+                    self.assignValueOutput("output:Performance:Segments:sfcs",out.transfer_var(6, 7),i)
+                    self.assignValueOutput("output:Performance:Segments:engparms",out.transfer_var(6, 13),i)
+
+                    # This seems a bit klugey, but it actually works.
+                    j = 0
+                    while True:
+                        try:
+                            self.assignValueOutput("output:Performance:Segments:weighte",out.transfer_var(j+5, 1),i)
+                            self.assignValueOutput("output:Performance:Segments:alte",out.transfer_var(j+5,2),i)
+                            self.assignValueOutput("output:Performance:Segments:mache",out.transfer_var(j+5, 3),i)
+                            self.assignValueOutput("output:Performance:Segments:thruste",out.transfer_var(j+5, 7),i)
+                            self.assignValueOutput("output:Performance:Segments:lode",out.transfer_var(j+5, 12),i)
+                            self.assignValueOutput("output:Performance:Segments:totmaxe",out.transfer_var(j+6, 6),i)
+                            self.assignValueOutput("output:Performance:Segments:sfce",out.transfer_var(j+6, 7),i)
+                            self.assignValueOutput("output:Performance:Segments:engparme",out.transfer_var(j+6, 13),i)
+
+                        except ValueError:
+                            break
+
+                        j += 3
+
+                # Read the mission summary
+
+                out.reset_anchor()
+                out.mark_anchor( "M I S S I O N   S U M M A R Y", nos)
+
+                self.assignValueOutput("output:Performance:taxofl",out.transfer_var(5, 4))
+
+            # Read the objective, variable and constraint summary
+
+            out.reset_anchor()
+            out.mark_anchor( "#OBJ/VAR/CONSTR SUMMARY", nos)
+            out.set_delimiters("columns")
+
+            # Changed based on Karl's fix to bug I reported
+            if ianal == 3:
+
+                self.assignValueOutput("output:Performance:fuel",out.transfer_var(3, 1, 10))
+                self.assignValueOutput("output:Performance:range",out.transfer_var(3, 11, 17))
+                self.assignValueOutput("output:Performance:vapp",out.transfer_var(3, 18, 23))
+
+                # TODO - Again, there's got to be a better way
+                try:
+                    self.assignValueOutput("output:Performance:faroff",out.transfer_var(3, 24, 30))
+                except(RuntimeError, IndexError):
+                    self.assignValueOutput("output:Performance:faroff", 1.0e10)
+
+                self.assignValueOutput("output:Performance:farldg",out.transfer_var(3, 31, 37))
+                self.assignValueOutput("output:Performance:amfor",out.transfer_var(3, 38, 45))
+                self.assignValueOutput("output:Performance:ssfor",out.transfer_var(3, 46, 53))
+
+                self.assignValueOutput("output:Geometry:ar",out.transfer_var(3, 65, 70))
+                self.assignValueOutput("output:Geometry:sw",out.transfer_var(3, 80, 87))
+                self.assignValueOutput("output:Geometry:tr",out.transfer_var(3, 88, 93))
+                self.assignValueOutput("output:Geometry:sweep",out.transfer_var(3, 94, 99))
+                self.assignValueOutput("output:Geometry:tca",out.transfer_var(3, 100, 106))
+
+                if self.getValue("input:wtin:Basic:vmmo") > 0.:
+                    self.assignValueOutput("output:Performance:vmmo", self.getValue("input:wtin:Basic:vmmo"))
+                else:
+                    self.assignValueOutput("output:Performance:vmmo",out.transfer_var(3, 107, 112))
+
+            if self.getValueOutput("output:Weight:fuel") == 0.:
+                self.assignValueOutput("output:Weight:fuel",out.transfer_var(3, 1, 10))
+
+            if self.getValueOutput("output:Weight:rampwt") == 0.:
+                self.assignValueOutput("output:Weight:rampwt",out.transfer_var(3, 54, 64))
+
+            if self.getValueOutput("output:Weight:thrso") == 0.:
+                self.assignValueOutput("output:Weight:thrso",out.transfer_var(3, 72, 78))
+                self.assignValueOutput("output:Weight:thrsop",self.getValueOutput("output:Performance:thrso"))
+
+            if self.getValueOutput("output:Weight:wsr") == 0.:
+                self.assignValueOutput("output:Weight:wsr",out.transfer_var(3, 121, 126))
+
+            if self.getValueOutput("output:Weight:twr") == 0.:
+                self.assignValueOutput("output:Weight:twr",out.transfer_var(3, 127, 132))
+
+            out.set_delimiters(" ")
+
+            # Read off-design mission data
+
+            if ianal == 3:
+
+                ndim = 1 + noffdr + self.nrern0
+                self.assignValueOutput("output:Econ:sl",zeros(ndim))
+                self.assignValueOutput("output:Econ:blockt",zeros(ndim))
+                self.assignValueOutput("output:Econ:blockf",zeros(ndim))
+                self.assignValueOutput("output:Econ:blockNx",zeros(ndim))
+                self.assignValueOutput("output:Econ:wpayl",zeros(ndim))
+                self.assignValueOutput("output:Econ:wgross",zeros(ndim))
+                self.assignValueOutput("output:Econ:range",zeros(ndim))
+                self.assignValueOutput("output:Econ:vapp",zeros(ndim))
+                self.assignValueOutput("output:Econ:faroff",zeros(ndim))
+                self.assignValueOutput("output:Econ:farldg",zeros(ndim))
+                self.assignValueOutput("output:Econ:amfor",zeros(ndim))
+                self.assignValueOutput("output:Econ:ssfor",zeros(ndim))
+
+                for i in range(0, ndim):
+
+                    out.reset_anchor()
+                    out.mark_anchor( "CONFIGURATION DATA AFTER RESIZING", (nos-1)*(1 + noffdr) + 1 + i)
+
+                    self.assignValueOutput("output:Econ:wpayl",out.transfer_var(3,2),i)
+                    self.assignValueOutput("output:Econ:wgross",out.transfer_var(5, 3),i)
+
+                    out.mark_anchor( "DESIGN RANGE" )
+                    self.assignValueOutput("output:Econ:sl",out.transfer_var(0, 3),i)
+
+                    out.mark_anchor( "BLOCK TIME =" )
+                    self.assignValueOutput("output:Econ:blockt",out.transfer_var(0, 4),i)
+                    self.assignValueOutput("output:Econ:blockf",out.transfer_var(1, 4),i)
+                    self.assignValueOutput("output:Econ:blockNx",out.transfer_var(2, 6),i)
+
+                    out.mark_anchor( "#OBJ/VAR/CONSTR SUMMARY" );
+
+                    out.set_delimiters("columns")
+                    self.assignValueOutput("output:Econ:range",out.transfer_var(3, 11, 17),i)
+                    self.assignValueOutput("output:Econ:vapp",out.transfer_var(3, 18, 23),i)
+
+                    try:
+                        self.assignValueOutput("output:Econ:faroff",out.transfer_var(3, 24, 30),i)
+                    except (RuntimeError, IndexError):
+                        self.assignValueOutput("output:Econ:faroff",1.0e10,i)
+
+                    self.assignValueOutput("output:Econ:farldg",out.transfer_var(3, 31, 37),i)
+                    self.assignValueOutput("output:Econ:amfor",out.transfer_var(3, 38, 45),i)
+                    self.assignValueOutput("output:Econ:ssfor",out.transfer_var(3, 46, 53),i)
+
+                    out.set_delimiters(" ")
+
+
+
 
 
 
@@ -5579,23 +5514,5 @@ class FlopsWrapper(ExternalCode):
       
         '''Initializing all the output (unknown) variables'''
         self.loadOutputVars()
-
-
-
-"""testFile = './test/xflp5.in'
-
-
-#top.root.my_flops.load_model(testFile)
-        #top = Problem()
-        #top.root =  Group()
-        #top.root.add('my_flops',self)
-        #top.setup(check=False)
-top = Problem()
-top.root = Group()
-top.root.add('my_flops',FlopsWrapper())
-#top.setup(check=False)
-top.root.my_flops.load_model(testFile)
-
-top.root.my_flops.generate_input()"""
 
 
