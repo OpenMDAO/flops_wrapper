@@ -13,8 +13,8 @@ from __future__ import print_function
 #from namelist_util import Namelist
 from openmdao.util.namelist_util import Namelist, ToBool
 
-from openmdao.core import Component
-from openmdao.components import ExternalCode
+from openmdao.api import Component
+from openmdao.api import ExternalCode
 from numpy import int64 as numpy_int64
 from numpy import float64 as numpy_float64
 from numpy import str as numpy_str
@@ -24,6 +24,9 @@ from openmdao.core.group import Group
 from openmdao.util.file_wrap import FileParser
 import sys
 from six import iteritems, itervalues, iterkeys
+import os
+import numpy as np
+dirname = os.path.dirname(os.path.abspath(__file__))
 
 
     
@@ -32,7 +35,7 @@ class FlopsWrapper(ExternalCode):
     def __init__(self):
         '''Constructor for the FlopsWrapper component'''
         super(FlopsWrapper,self).__init__()
-
+        
         self.add_output('output:ERROR',val='none',pass_by_obj=True)
         self.add_output('output:HINT',val='none',pass_by_obj=True)
 
@@ -49,22 +52,7 @@ class FlopsWrapper(ExternalCode):
         #top.root =  Group()
         #top.root.add('my_flops',self)
         #top.setup(check=False)
-
-        # External Code public variables
-
-        self.input_filepath = 'flops.inp'
-        self.output_filepath = 'flops.out'
-        self.stderr = 'flops.err'
-
-        self.options['external_input_files'] = [self.input_filepath]
-        self.options['external_output_files'] = [self.output_filepath]
-        self.options['command'] = ['flops',self.input_filepath,self.output_filepath]
-
-        """self.external_files = [
-            FileMetadata(path=self.stdin, input=True),
-            FileMetadata(path=self.stdout),
-            FileMetadata(path=self.stderr),
-        ]"""
+        self.setInputOutput()
 
 
         # This stuff is global in the Java wrap.
@@ -76,6 +64,27 @@ class FlopsWrapper(ExternalCode):
         self.npcons0.append(0)
         self.nmseg = 0
 
+
+    def solve_nonlinear(self,params,unknowns,resids):
+      
+        self.generate_input() 
+        super(FlopsWrapper,self).solve_nonlinear(params,unknowns,resids)
+        self.parse_output()
+
+
+
+    def setInputOutput(self,input_filepath='flops.inp',output_filepath='flops.out',flops_exec='flops'):
+        # External Code public variables
+
+        self.input_filepath = input_filepath
+        self.output_filepath = output_filepath
+        self.flops_exec=flops_exec
+        #self.stderr = 'flops.err'
+
+        #self.options['external_input_files'] = [self.input_filepath]
+        #self.options['external_output_files'] = [self.output_filepath]
+        #self.options['command'] = ['flops',self.input_filepath,self.output_filepath]
+        self.options['command']=['python',dirname+'/local_flops.py',self.flops_exec,self.input_filepath,self.output_filepath]
 
     '''functions to manipulate inputs before setup()'''
     def assignValue(self,variable,value,index=None):
@@ -89,9 +98,9 @@ class FlopsWrapper(ExternalCode):
                     self.params[variable][index]=value
             else:
                 if index==None:
-                    self._params_dict[variable]['val']=value
+                    self._init_params_dict[variable]['val']=value
                 else:
-                    self._params_dict[variable]['val'][index]=value
+                    self._init_params_dict[variable]['val'][index]=value
     def getValue(self,variable,output=False):
             #support the modification of input variables before calling setup
             #comp -> component
@@ -99,7 +108,7 @@ class FlopsWrapper(ExternalCode):
             if hasattr(self.params, 'keys'):
                 val = self.params[variable]
             else:
-                val = self._params_dict[variable]['val']
+                val = self._init_params_dict[variable]['val']
             return val
 
     '''functions to manipulate outputs before setup()'''
@@ -324,7 +333,7 @@ class FlopsWrapper(ExternalCode):
         # OpenMDAO Public Variables
         if self.npcon0 > 0 and ianal == 3:
             self.add_output(strChain+'constraint',val=zeros(self.npcon0),typeVar='Array',pass_by_obj=True)
-            self.add_output(strChain+'value',val=zeros(self.npcon0),typeVar='Array')
+            self.add_output(strChain+'value',val=zeros(self.npcon0),typeVar='Array',pass_by_obj=True)
             self.add_output(strChain+'units',val=zeros(self.npcon0),typeVar='Array',pass_by_obj=True)
             self.add_output(strChain+'limit',val=zeros(self.npcon0),typeVar='Array')
             self.add_output(strChain+'weight',val=zeros(self.npcon0),typeVar='Array')
@@ -607,8 +616,11 @@ class FlopsWrapper(ExternalCode):
     # OpenMDAO Public Variables
         self.add_param(strChain+'ixfl',val=0,optionsVal=(0,1), desc='Generate mission summary plot files', aliases=('No', 'Yes'),typeVar='Enum')
         self.add_param(strChain+'npfile',val=0,optionsVal=(0,1,2), desc='Output takeoff and climb profiles for use with ANOPP preprocessor (andin)', aliases=('No', 'Yes', 'XFlops'),typeVar='Enum')
+        self.add_param(strChain+'lpfile',val=0,optionsVal=(0,1), desc='Approach and Landing Profile File for Noise Calculations (LPROF) 1, Detailed approach and landing profiles will be output on file LOFILE for use with ANOPP preprocessor. = 0, Otherwise',typeVar='Enum')
+
         self.add_param(strChain+'ipolp',val=0,optionsVal=(0,1,2), desc='Drag polar plot data', aliases=('None', 'Drag polars at existing Mach numbers', 'User specified Mach numbers'),typeVar='Enum')
         self.add_param(strChain+'polalt',val=0.0, units='ft', desc='Altitude for drag polar plots',typeVar='Float')
+        self.add_param(strChain+'nmach',val=0, desc=' Number of input Mach numbers for IPOLP = 2',typeVar='Int')
         self.add_param(strChain+'pmach',val=array([]), desc='Mach numbers for drag polar plot data',typeVar='Array')
         self.add_param(strChain+'ipltth',val=0,optionsVal=(0,1,2), desc='Generate engine plot data', aliases=('None', 'Initial engine', 'Final scaled engine'),typeVar='Enum')
         self.add_param(strChain+'iplths',val=0,optionsVal=(0,1), desc='Design history plot data', aliases=('No', 'Yes'),typeVar='Enum')
@@ -1184,18 +1196,16 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'fulfmx',val=0.0, desc='Total fuel capacity of fuselage (wing ',typeVar='Float')
         self.add_param(strChain+'ifufu',val=0, desc='= 1, Fuselage fuel capacity is adjusted to meet the required fuel capacity for the primary mission.  Use only if IRW = 1 in Namelist &MISSIN, and use with care - some passengers can',typeVar='Int')
         self.add_param(strChain+'fulaux',val=0.0, units='lb', desc='Auxiliary (external) fuel tank capacity (Fighters only)',typeVar='Float')
+        self.add_param(strChain+'fmxtot',val=-999., units='lb', desc='Total fuel capacity of the aircraft including wing,fuselage and auxiliary tanks, lb.  Used in generating payload-range diagram  (Default = FULWMX + FULFMX + FULAUX)',typeVar='Float')
+
+           
 
 
     def FlopsWrapper_input_wtin_Detailed_Wing(self):
         """Container for input:wtin:Detailed_Wing"""
         strChain = 'input:wtin:Detailed_Wing:'
 
-    # OpenMDAO Public Variables
-        self.add_param(strChain+'etaw',val=array([]), desc='Wing station location - fraction of semispan or distance from fuselage centerline.  Typically, goes from 0. to 1.  Input fixed distances (>1.1) are not scaled with changes in span.',typeVar='Array')
-        self.add_param(strChain+'chd',val=array([]), desc='Chord length - fraction of semispan or actual chord.   Actual chord lengths (>5.) are not scaled.',typeVar='Array')
-        self.add_param(strChain+'toc',val=array([]), desc='Thickness - chord ratio',typeVar='Array')
-        self.add_param(strChain+'swl',val=array([]), units='deg', desc='Sweep of load path.  Typically parallel to rear spar tending toward max t/c of airfoil.  The Ith value is used between wing stations I and I+1.',typeVar='Array')
-        self.add_param(strChain+'etae',val=array([0.3, 0.6, 0.0, 0.0]), dtype=array([]), desc='Engine locations - fraction of semispan or distance from fuselage centerline.  Actual distances are not scaled with changes in span.  NEW/2 values are input',typeVar='Array')
+        self.add_param(strChain+'etae',val=array([0.3, 0.6, 0.0, 0.0]), dtype=array([]), desc='Engine locations - fraction of semispan or distance from fuselage centerline.  Actual distances are not scaled with changes in span.  NEW/2 values are input',typeVar='Array',pass_by_obj=True)
         self.add_param(strChain+'pctl',val=1.0, desc='Fraction of load carried by defined wing',typeVar='Float')
         self.add_param(strChain+'arref',val=0.0, desc='Reference aspect ratio (Default = AR in &CONFIN)',typeVar='Float')
         self.add_param(strChain+'tcref',val=0.0, desc='Reference thickness-chord ratio (Default = TCA in &CONFIN)',typeVar='Float')
@@ -1203,6 +1213,17 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'pdist',val=2.0, desc='Pressure distribution indicator\n= 0., Input distribution - see below\n= 1., Triangular distribution\n= 2., Elliptical distribution\n= 3., Rectangular distribution PDIST is a continuous variable, i.e., a value of 1.5 would be half way between triangular and elliptical.\nCAUTION - the constants in the wing weight calculations were correlated with existing aircraft assuming an elliptical distribution.  Use the default value unless you have a good reason not to.',typeVar='Float')
         self.add_param(strChain+'etap',val=array([]), desc='Fraction of wing semispan',typeVar='Array')
         self.add_param(strChain+'pval',val=array([]), desc='Relative spanwise pressure at ETAP(J)',typeVar='Array')
+        # OpenMDAO Public Variables
+        self.add_param(strChain+'etaw',val=array([]), desc='Wing station location - fraction of semispan or distance from fuselage centerline.  Typically, goes from 0. to 1.  Input fixed distances (>1.1) are not scaled with changes in span.',typeVar='Array',pass_by_obj = True)
+
+
+        self.add_param(strChain+'chd',val=array([]), desc='Chord length - fraction of semispan or actual chord.   Actual chord lengths (>5.) are not scaled.',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'toc',val=array([]), desc='Thickness - chord ratio',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'swl',val=array([]), units='deg', desc='Sweep of load path.  Typically parallel to rear spar tending toward max t/c of airfoil.  The Ith value is used between wing stations I and I+1.',typeVar='Array',pass_by_obj=True)
+
+
+
+
 
 
     def FlopsWrapper_input_wtin_Crew_Payload(self):
@@ -1221,6 +1242,9 @@ class FlopsWrapper(ExternalCode):
         self.add_param(strChain+'cargf',val=0.0, desc='Military cargo aircraft floor factor = 0., Passenger transport\n= 1., Military cargo transport floor',typeVar='Float')
         self.add_param(strChain+'cargow',val=0.0, units='lb', desc='Cargo carried in wing (Weight of wing-mounted external stores for fighters)',typeVar='Float')
         self.add_param(strChain+'cargof',val=0.0, units='lb', desc='Cargo (other than passenger baggage) carried in fuselage (Fuselage external stores for fighters)',typeVar='Float')
+        self.add_param('input:wtin:Crew_optional:paylmx',val=-999., units='lb', desc='Maximum payload for the aircraft, including passengers and cargo, lb.  Used in generating payload-range diagram',typeVar='Float')
+
+
 
 
     def FlopsWrapper_input_wtin_Center_of_Gravity(self):
@@ -2442,24 +2466,24 @@ class FlopsWrapper(ExternalCode):
         strChain = 'input:confin:Design_Variables:'
 
     # OpenMDAO Public Variables
-        self.add_param(strChain+'gw',val=array([]), units='lb', desc='GW(0)=Ramp weight (Required.  If IRW = 1, a good initial guess must be input.)\nGW(1)=Activity status, active if > 0\nGW(2)=Lower bound\nGW(3)=Upper bound\nGW(4)=Optimization scale factor',typeVar='Array,float')
-        self.add_param(strChain+'ar',val=array([]), desc='AR(0)=Wing aspect ratio\nAR(1)=Activity status, active if > 0\nAR(2)=Lower bound\nAR(3)=Upper bound\nAR(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'thrust',val=array([]), units='lb', desc='THRUST(0)=Maximum rated thrust per engine, or thrust-weight ratio if TWR = -1.\nTHRUST(1)=Activity status, active if > 0\nTHRUST(2)=Lower bound\nTHRUST(3)=Upper bound\nTHRUST(4)=Optimization scale factor',typeVar='Array,float')
-        self.add_param(strChain+'sw',val=array([]), units='ft*ft', desc='SW(0)=Reference wing area, or wing loading if WSR = -1.\nSW(1)=Activity status, active if > 0\nSW(2)=Lower bound\nSW(3)=Upper bound\nSW(4)=Optimization scale factor',typeVar='Array,float')
-        self.add_param(strChain+'tr',val=array([]), desc='TR(0)=Taper ratio of the wing (Required)\nTR(1)=Activity status, active if > 0\nTR(2)=Lower bound\nTR(3)=Upper bound\nTR(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'sweep',val=array([]), units='deg', desc='SWEEP(0)=Quarter-chord sweep angle of the wing (Required)\nSWEEP(1)=Activity status, active if > 0\nSWEEP(2)=Lower bound\nSWEEP(3)=Upper bound\nSWEEP(4)=Optimization scale factor',typeVar='Array,float')
-        self.add_param(strChain+'tca',val=array([]), desc='TCA(0)=Wing thickness-chord ratio (weighted average) (Required)\nTCA(1)=Activity status, active if > 0\nTCA(2)=Lower bound\nTCA(3)=Upper bound\nTCA(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'vcmn',val=array([]), desc='VCMN(0)=Cruise Mach number (Required)\nVCMN(1)=Activity status, active if > 0\nVCMN(2)=Lower bound\nVCMN(3)=Upper bound\nVCMN(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'ch',val=array([]), units='ft', desc='CH(0)=Maximum cruise altitude (Required)\nCH(1)=Activity status, active if > 0\nCH(2)=Lower bound\nCH(3)=Upper bound\nCH(4)=Optimization scale factor',typeVar='Array,float')
-        self.add_param(strChain+'varth',val=array([]), desc='VARTH(0)=Thrust derating factor for takeoff noise Fraction of full thrust used in takeoff\nVARTH(1)=Activity status, active if > 0\nVARTH(2)=Lower bound\nVARTH(3)=Upper bound\nVARTH(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'rotvel',val=array([]), desc='ROTVEL(0)=Rotation velocity for takeoff noise abatement (default is minimum required to meet takeoff performance constraints)\nROTVEL(1)=Activity status, active if > 0\nROTVEL(2)=Lower bound\nROTVEL(3)=Upper bound\nROTVEL(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'plr',val=array([]), desc='PLR(0)=Thrust fraction after programmed lapse rate (default thrust is specified in each segment)\nPLR(1)=Activity status, active if > 0\nPLR(2)=Lower bound\nPLR(3)=Upper bound\nPLR(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'etit',val=array([]), units='degR', desc='ETIT(0)=Engine design point turbine entry temperature\nETIT(1)=Activity status, active if > 0\nETIT(2)=Lower bound\nETIT(3)=Upper bound\nETIT(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'eopr',val=array([]), desc='EOPR(0)=Overall pressure ratio\nEOPR(1)=Activity status, active if > 0\nEOPR(2)=Lower bound\nEOPR(3)=Upper bound\nEOPR(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'efpr',val=array([]), desc='EFPR(0)=Fan pressure ratio (turbofans only)\nEFPR(1)=Activity status, active if > 0\nEFPR(2)=Lower bound\nEFPR(3)=Upper bound\nEFPR(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'ebpr',val=array([]), desc='EBPR(0)=Bypass ratio (turbofans only)\nEBPR(1)=Activity status, active if > 0\nEBPR(2)=Lower bound\nEBPR(3)=Upper bound\nEBPR(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'ettr',val=array([]), desc='ETTR(0)=Engine throttle ratio defined as the ratio of the maximum allowable turbine inlet temperature divided by the design point turbine inlet temperature.\nIf ETTR is greater than ETIT, it is assumed to be the maximum allowable turbine inlet temperature.\nETTR(1)=Activity status, active if > 0\nETTR(2)=Lower bound\nETTR(3)=Upper bound\nETTR(4)=Optimization scale factor',typeVar='Array')
-        self.add_param(strChain+'ebla',val=array([]), units='deg', desc='EBLA(0)=Blade angle for fixed pitch propeller\nEBLA(1)=Activity status, active if > 0\nEBLA(2)=Lower bound\nEBLA(3)=Upper bound\nEBLA(4)=Optimization scale factor',typeVar='Array')
+        self.add_param(strChain+'gw',val=array([]), units='lb', desc='GW(0)=Ramp weight (Required.  If IRW = 1, a good initial guess must be input.)\nGW(1)=Activity status, active if > 0\nGW(2)=Lower bound\nGW(3)=Upper bound\nGW(4)=Optimization scale factor',typeVar='Array,float',pass_by_obj=True)
+        self.add_param(strChain+'ar',val=array([]), desc='AR(0)=Wing aspect ratio\nAR(1)=Activity status, active if > 0\nAR(2)=Lower bound\nAR(3)=Upper bound\nAR(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'thrust',val=array([]), units='lb', desc='THRUST(0)=Maximum rated thrust per engine, or thrust-weight ratio if TWR = -1.\nTHRUST(1)=Activity status, active if > 0\nTHRUST(2)=Lower bound\nTHRUST(3)=Upper bound\nTHRUST(4)=Optimization scale factor',typeVar='Array,float',pass_by_obj=True)
+        self.add_param(strChain+'sw',val=array([]), units='ft*ft', desc='SW(0)=Reference wing area, or wing loading if WSR = -1.\nSW(1)=Activity status, active if > 0\nSW(2)=Lower bound\nSW(3)=Upper bound\nSW(4)=Optimization scale factor',typeVar='Array,float',pass_by_obj=True)
+        self.add_param(strChain+'tr',val=array([]), desc='TR(0)=Taper ratio of the wing (Required)\nTR(1)=Activity status, active if > 0\nTR(2)=Lower bound\nTR(3)=Upper bound\nTR(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'sweep',val=array([]), units='deg', desc='SWEEP(0)=Quarter-chord sweep angle of the wing (Required)\nSWEEP(1)=Activity status, active if > 0\nSWEEP(2)=Lower bound\nSWEEP(3)=Upper bound\nSWEEP(4)=Optimization scale factor',typeVar='Array,float',pass_by_obj=True)
+        self.add_param(strChain+'tca',val=array([]), desc='TCA(0)=Wing thickness-chord ratio (weighted average) (Required)\nTCA(1)=Activity status, active if > 0\nTCA(2)=Lower bound\nTCA(3)=Upper bound\nTCA(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'vcmn',val=array([]), desc='VCMN(0)=Cruise Mach number (Required)\nVCMN(1)=Activity status, active if > 0\nVCMN(2)=Lower bound\nVCMN(3)=Upper bound\nVCMN(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'ch',val=array([]), units='ft', desc='CH(0)=Maximum cruise altitude (Required)\nCH(1)=Activity status, active if > 0\nCH(2)=Lower bound\nCH(3)=Upper bound\nCH(4)=Optimization scale factor',typeVar='Array,float',pass_by_obj=True)
+        self.add_param(strChain+'varth',val=array([]), desc='VARTH(0)=Thrust derating factor for takeoff noise Fraction of full thrust used in takeoff\nVARTH(1)=Activity status, active if > 0\nVARTH(2)=Lower bound\nVARTH(3)=Upper bound\nVARTH(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'rotvel',val=array([]), desc='ROTVEL(0)=Rotation velocity for takeoff noise abatement (default is minimum required to meet takeoff performance constraints)\nROTVEL(1)=Activity status, active if > 0\nROTVEL(2)=Lower bound\nROTVEL(3)=Upper bound\nROTVEL(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'plr',val=array([]), desc='PLR(0)=Thrust fraction after programmed lapse rate (default thrust is specified in each segment)\nPLR(1)=Activity status, active if > 0\nPLR(2)=Lower bound\nPLR(3)=Upper bound\nPLR(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'etit',val=array([]), units='degR', desc='ETIT(0)=Engine design point turbine entry temperature\nETIT(1)=Activity status, active if > 0\nETIT(2)=Lower bound\nETIT(3)=Upper bound\nETIT(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'eopr',val=array([]), desc='EOPR(0)=Overall pressure ratio\nEOPR(1)=Activity status, active if > 0\nEOPR(2)=Lower bound\nEOPR(3)=Upper bound\nEOPR(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'efpr',val=array([]), desc='EFPR(0)=Fan pressure ratio (turbofans only)\nEFPR(1)=Activity status, active if > 0\nEFPR(2)=Lower bound\nEFPR(3)=Upper bound\nEFPR(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'ebpr',val=array([]), desc='EBPR(0)=Bypass ratio (turbofans only)\nEBPR(1)=Activity status, active if > 0\nEBPR(2)=Lower bound\nEBPR(3)=Upper bound\nEBPR(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'ettr',val=array([]), desc='ETTR(0)=Engine throttle ratio defined as the ratio of the maximum allowable turbine inlet temperature divided by the design point turbine inlet temperature.\nIf ETTR is greater than ETIT, it is assumed to be the maximum allowable turbine inlet temperature.\nETTR(1)=Activity status, active if > 0\nETTR(2)=Lower bound\nETTR(3)=Upper bound\nETTR(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
+        self.add_param(strChain+'ebla',val=array([]), units='deg', desc='EBLA(0)=Blade angle for fixed pitch propeller\nEBLA(1)=Activity status, active if > 0\nEBLA(2)=Lower bound\nEBLA(3)=Upper bound\nEBLA(4)=Optimization scale factor',typeVar='Array',pass_by_obj=True)
 
 
     def FlopsWrapper_input_confin_Basic(self):
@@ -2598,6 +2622,9 @@ class FlopsWrapper(ExternalCode):
         self.add_param('input:'+name+':icost', val=-1 )
         self.add_param('input:'+name+':wsr', val=-1. )
         self.add_param('input:'+name+':twr', val=-1. )
+        self.add_param('input:'+name+':iplrng', val=-999,typeVar='Int' )
+
+
 
 
         self.add_param('input:'+name+':missin:Basic:indr', val=-999)
@@ -2790,6 +2817,9 @@ class FlopsWrapper(ExternalCode):
         sb.add_comment("\n  ! Takeoff and Climb Profile File for Noise Calculations (NPROF)")
         sb.add_var("input:option:Plot_Files:npfile")
 
+        sb.add_comment("\n! Approach and Landing Profile File for Noise Calculations (LPROF)")
+        sb.add_var("input:option:Plot_Files:lpfile")
+
         sb.add_comment("\n  ! Drag Polar Plot File (POLPLOT)")
         sb.add_var("input:option:Plot_Files:ipolp")
         sb.add_var("input:option:Plot_Files:polalt")
@@ -2848,6 +2878,8 @@ class FlopsWrapper(ExternalCode):
         sb.add_container("input:wtin:Wing_Data")
 
         netaw = len(self.getValue("input:wtin:Detailed_Wing:etaw"))
+
+    
 
         if netaw > 0:
             sb.add_comment("\n  ! Detailed Wing Data")
@@ -2922,6 +2954,9 @@ class FlopsWrapper(ExternalCode):
         sb.add_var("input:wtin:Fuel_System:fulfmx")
         sb.add_var("input:wtin:Fuel_System:ifufu")
         sb.add_var("input:wtin:Fuel_System:fulaux")
+        fmxtot = self.getValue("input:wtin:Fuel_System:fmxtot")
+        if fmxtot>-999.:
+            sb.add_var("input:wtin:Fuel_System:fmxtot")
 
         fuscla = self.getValue("input:wtin:Fuel_System:fuscla")
         if fuscla > 0.000001:
@@ -2933,6 +2968,11 @@ class FlopsWrapper(ExternalCode):
 
         sb.add_comment("\n  ! Crew and Payload Data")
         sb.add_container("input:wtin:Crew_Payload")
+
+        paylmx = self.getValue("input:wtin:Crew_optional:paylmx")
+        if paylmx>-999.:
+            sb.add_var("input:wtin:Crew_optional:paylmx")
+
 
         sb.add_comment("\n  ! Override Parameters")
         sb.add_container("input:wtin:Override")
@@ -3537,6 +3577,7 @@ class FlopsWrapper(ExternalCode):
         #-------------------
 
         # One or more &PCONIN namelists may have been created by the user.
+        #print('cheCKING  PCONIN',npcon,ianal)
         if npcon > 0 and ianal == 3:
 
             for i in range(0, npcon):
@@ -4072,6 +4113,7 @@ class FlopsWrapper(ExternalCode):
                 sb.add_var("input:syntin:Variables:flto")
             if self.getValue("input:syntin:Variables:flldg")> 0:
                 sb.add_var("input:syntin:Variables:flldg")
+            
 
             sb.add_var("input:syntin:Variables:exfcap")
             if igenen == 1:
@@ -4149,6 +4191,7 @@ class FlopsWrapper(ExternalCode):
                 re_icost  = self.getValue("input:rerun%s:icost" % (i))
                 re_wsr    = self.getValue("input:rerun%s:wsr" % (i))
                 re_twr    = self.getValue("input:rerun%s:twr" % (i))
+                re_iplrng = self.getValue("input:rerun%s:iplrng" %(i))
 
                 if re_desrng > 0.:
                     sb.add_var("input:rerun%s:desrng" % (i))
@@ -4176,6 +4219,8 @@ class FlopsWrapper(ExternalCode):
                     sb.add_var("input:rerun%s:wsr" % (i))
                 if re_twr == 0.:
                     sb.add_var("input:rerun%s:twr" % (i))
+                if re_iplrng > -999:
+                    sb.add_var("input:rerun%s:iplrng" %(i))
 
                 re_indr   = self.getValue("input:rerun%s:missin:Basic:indr" % (i))
                 re_fact   = self.getValue("input:rerun%s:missin:Basic:fact" % (i))
@@ -4624,8 +4669,8 @@ class FlopsWrapper(ExternalCode):
         except RuntimeError:
             pass
         else:
-            assignValueOutput('output:ERROR',out.transfer_line(0))
-            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
+            self.assignValueOutput('output:ERROR',out.transfer_line(0))
+            raise RuntimeError('Error during FLOPS execution.\n %s' % out.transfer_line(0))
 
         out.reset_anchor()
         try:
@@ -4634,7 +4679,7 @@ class FlopsWrapper(ExternalCode):
             pass
         else:
             assignValueOutput('output:ERROR',out.transfer_line(0))
-            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR)
+            raise RuntimeError('Error during FLOPS execution.\n %s' % out.transfer_line(0))
 
         out.reset_anchor()
         try:
@@ -4642,8 +4687,8 @@ class FlopsWrapper(ExternalCode):
         except RuntimeError:
             pass
         else:
-            assignValueOutput('output:ERROR',out.transfer_line(0))
-            raise RuntimeError('Error during FLOPS execution.\n %s' % ERROR + \
+            self.assignValueOutput('output:ERROR',out.transfer_line(0))
+            raise RuntimeError('Error during FLOPS execution.\n %s' % out.transfer_line(0) + \
                   '\n\nCheck links from "Engine" to "Flops". Make sure EIFILE' + \
                   'points to an existing file (default is "ENGDECK.txt" in UserDir.\n\n*****************')
 
@@ -4653,7 +4698,7 @@ class FlopsWrapper(ExternalCode):
         except RuntimeError:
             pass
         else:
-            assignValueOutput('output:ERROR',out.transfer_line(0))
+            self.assignValueOutput('output:ERROR',out.transfer_line(0))
 
             # TODO - Why does MC wrapper do this?
             # commented out for now
@@ -5250,6 +5295,7 @@ class FlopsWrapper(ExternalCode):
                       "WTIN" : [ "input:wtin:Basic", \
                                  "input:wtin:Center_of_Gravity", \
                                  "input:wtin:Crew_Payload", \
+                                 "input:wtin:Crew_optional", \
                                  "input:wtin:Detailed_Wing", \
                                  "input:wtin:Fuel_System", \
                                  "input:wtin:Fuselage", \
@@ -5322,7 +5368,7 @@ class FlopsWrapper(ExternalCode):
         ignore = ["netaw", "itank", "nob", "nparam", "nfcon", "npcon"]
 
         sb.parse_file()
-
+    
 
         self.assignValue('input:title',sb.title)
 
@@ -5340,16 +5386,18 @@ class FlopsWrapper(ExternalCode):
         if len(unlisted_groups) > 0:
             #for i, group in unlisted_groups.iteritems():
             for i,group in iter(unlisted_groups.items()):
+            
                 if group.lower().count('pconin'):
-                 
+                    
                     self.add_pconin()
                     rule_dict = { "PCONIN" : ["input:pconin"+str(self.npcon0-1)] }
-
+                
 
                     ne, nu, nv = sb.load_model(rule_dict, ignore, i)
                     for var in nv:
                         unlinked_vars.append(var)
-
+                   
+                   
                 elif group.lower().count('rerun'):
 
                     self.add_rerun()
@@ -5391,7 +5439,7 @@ class FlopsWrapper(ExternalCode):
 
                     num_mission += 1
 
-
+            self.assignValue('input:missin:Basic:npcon',self.npcon0)
         # Mission segments are also a challenge.
         # The remaining empty groups should be mission segments or comments.
 
@@ -5514,5 +5562,4 @@ class FlopsWrapper(ExternalCode):
       
         '''Initializing all the output (unknown) variables'''
         self.loadOutputVars()
-
 
