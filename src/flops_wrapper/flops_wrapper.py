@@ -275,6 +275,7 @@ class FlopsWrapper(ExternalCode):
         """Container for output.Performance.Segments"""
         strChain = "output:Performance:Segments:"
         mission = self.getValue("input:mission_definition:mission")
+        mission = ' '.join(mission)
 
         ianal  = self.getValue("input:option:Program_Control:ianal")
         msumpt = self.getValue("input:missin:Basic:msumpt")
@@ -287,42 +288,42 @@ class FlopsWrapper(ExternalCode):
                          mission.count('DESCENT')
             # OpenMDAO Public Variables
             self.add_output(strChain+'segment',val=array(['']*(local_nmseg),dtype='<U20'),typeVar='Array',pass_by_obj=True)
-            self.add_output(strChain+'weights',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'alts',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'machs',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'thrusts',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'totmaxs',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'lods',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'sfcs',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'engparms',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'weighte',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'alte',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'mache',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'thruste',val=zeros(local_nmseg),typeVar='Array,float')
-            self.add_output(strChain+'totmaxe',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'lode',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'sfce',val=zeros(local_nmseg),typeVar='Array')
-            self.add_output(strChain+'engparme',val=zeros(local_nmseg),typeVar='Array')
+            self.add_output(strChain+'weights',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'alts',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'machs',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'thrusts',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'totmaxs',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'lods',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'sfcs',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'engparms',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'weighte',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'alte',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'mache',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'thruste',val=zeros(local_nmseg),typeVar='Array,float',pass_by_obj=True)
+            self.add_output(strChain+'totmaxe',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'lode',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'sfce',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'engparme',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
 
         else:
             # OpenMDAO Public Variables
-            self.add_output(strChain+'segment',val=array([]),typeVar='Array')
-            self.add_output(strChain+'weights',val=array([]),typeVar='Array')
-            self.add_output(strChain+'alts',val=array([]),typeVar='Array')
-            self.add_output(strChain+'machs',val=array([]),typeVar='Array')
-            self.add_output(strChain+'thrusts',val=array([]),typeVar='Array')
-            self.add_output(strChain+'totmaxs',val=array([]),typeVar='Array')
-            self.add_output(strChain+'lods',val=array([]),typeVar='Array')
-            self.add_output(strChain+'sfcs',val=array([]),typeVar='Array')
-            self.add_output(strChain+'engparms',val=array([]),typeVar='Array')
-            self.add_output(strChain+'weighte',val=array([]),typeVar='Array')
-            self.add_output(strChain+'alte',val=array([]),typeVar='Array')
-            self.add_output(strChain+'mache',val=array([]),typeVar='Array')
-            self.add_output(strChain+'thruste',val=array([]),typeVar='Array,float')
-            self.add_output(strChain+'totmaxe',val=array([]),typeVar='Array')
-            self.add_output(strChain+'lode',val=array([]),typeVar='Array')
-            self.add_output(strChain+'sfce',val=array([]),typeVar='Array')
-            self.add_output(strChain+'engparme',val=array([]),typeVar='Array')
+            self.add_output(strChain+'segment',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'weights',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'alts',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'machs',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'thrusts',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'totmaxs',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'lods',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'sfcs',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'engparms',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'weighte',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'alte',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'mache',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'thruste',val=array([]),typeVar='Array,float',pass_by_obj=True)
+            self.add_output(strChain+'totmaxe',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'lode',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'sfce',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'engparme',val=array([]),typeVar='Array',pass_by_obj=True)
 
 
 
@@ -461,32 +462,32 @@ class FlopsWrapper(ExternalCode):
         if ianal == 3:
             ndim = 1 + noffdr + self.nrern0
             # OpenMDAO Public Variables
-            self.add_output(strChain+'sl',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'blockt',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'blockf',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'blockNx',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'wpayl',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'wgross',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'range',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'vapp',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'faroff',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'farldg',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'amfor',val=zeros(ndim),typeVar='Array')
-            self.add_output(strChain+'ssfor',val=zeros(ndim),typeVar='Array')
+            self.add_output(strChain+'sl',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'blockt',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'blockf',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'blockNx',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'wpayl',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'wgross',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'range',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'vapp',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'faroff',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'farldg',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'amfor',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'ssfor',val=zeros(ndim),typeVar='Array',pass_by_obj=True)
         else:
             # OpenMDAO Public Variables
-            self.add_output(strChain+'sl',val=array([]),typeVar='Array')
-            self.add_output(strChain+'blockt',val=array([]),typeVar='Array')
-            self.add_output(strChain+'blockf',val=array([]),typeVar='Array')
-            self.add_output(strChain+'blockNx',val=array([]),typeVar='Array')
-            self.add_output(strChain+'wpayl',val=array([]),typeVar='Array')
-            self.add_output(strChain+'wgross',val=array([]),typeVar='Array')
-            self.add_output(strChain+'range',val=array([]),typeVar='Array')
-            self.add_output(strChain+'vapp',val=array([]),typeVar='Array')
-            self.add_output(strChain+'faroff',val=array([]),typeVar='Array')
-            self.add_output(strChain+'farldg',val=array([]),typeVar='Array')
-            self.add_output(strChain+'amfor',val=array([]),typeVar='Array')
-            self.add_output(strChain+'ssfor',val=array([]),typeVar='Array')
+            self.add_output(strChain+'sl',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'blockt',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'blockf',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'blockNx',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'wpayl',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'wgross',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'range',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'vapp',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'faroff',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'farldg',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'amfor',val=array([]),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'ssfor',val=array([]),typeVar='Array',pass_by_obj=True)
 
 
 
@@ -3562,16 +3563,17 @@ class FlopsWrapper(ExternalCode):
             #----------------------
 
             mission = self.getValue("input:mission_definition:mission")
+            missionjoin = ' '.join(mission)
 
             for seg in mission:
                 sb.add_group(seg)
-
-            self.nmseg = mission.count('CLIMB') + mission.count('CRUISE') + \
-                         mission.count('REFUEL') + mission.count('RELEASE') + \
-                         mission.count('ACCEL') + mission.count('TURN') + \
-                         mission.count('COMBAT') + mission.count('HOLD') + \
-                         mission.count('DESCENT')
-
+            
+            self.nmseg = missionjoin.count('CLIMB') + missionjoin.count('CRUISE') + \
+                         missionjoin.count('REFUEL') + missionjoin.count('RELEASE') + \
+                         missionjoin.count('ACCEL') + missionjoin.count('TURN') + \
+                         missionjoin.count('COMBAT') + missionjoin.count('HOLD') + \
+                         missionjoin.count('DESCENT')
+           
         #-------------------
         # Namelist &PCONIN
         #-------------------
