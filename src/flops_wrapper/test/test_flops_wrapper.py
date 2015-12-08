@@ -64,6 +64,7 @@ class FLOPSWrapperTestCase(unittest.TestCase):
                     try:
                         self.assertEqual(line1, line2)
                     except AssertionError as err:
+                  
                         raise AssertionError("line %d doesn't match file %s: %s"
                                              % (lnum, infile_name, err))
                     lnum += 1

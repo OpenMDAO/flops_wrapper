@@ -65,14 +65,14 @@
  'input:confin:Basic:vtvc' = 0.1945
  'input:confin:Basic:wsr' = 0.0
  'input:confin:Design_Variables:ar' = [ 8.108  1.   ]
- 'input:confin:Design_Variables:ch' = [ 40000.]
+ 'input:confin:Design_Variables:ch' = 40000.0
  'input:confin:Design_Variables:ebla' = []
  'input:confin:Design_Variables:ebpr' = []
  'input:confin:Design_Variables:efpr' = []
  'input:confin:Design_Variables:eopr' = []
  'input:confin:Design_Variables:etit' = []
  'input:confin:Design_Variables:ettr' = []
- 'input:confin:Design_Variables:gw' = [ 250000.]
+ 'input:confin:Design_Variables:gw' = 250000.0
  'input:confin:Design_Variables:plr' = []
  'input:confin:Design_Variables:rotvel' = []
  'input:confin:Design_Variables:sw' = [  2.27200000e+03   1.00000000e+00]
@@ -81,7 +81,7 @@
  'input:confin:Design_Variables:thrust' = [  4.75000000e+04   1.00000000e+00]
  'input:confin:Design_Variables:tr' = [ 0.267]
  'input:confin:Design_Variables:varth' = []
- 'input:confin:Design_Variables:vcmn' = [ 0.8]
+ 'input:confin:Design_Variables:vcmn' = 0.8
  'input:confin:Objective:oarea' = 0.0
  'input:confin:Objective:ofc' = 0.0
  'input:confin:Objective:off' = 0.0
@@ -410,7 +410,7 @@
  'input:missin:Cruise:flrcr' = [ 1.]
  'input:missin:Cruise:fnox' = [ 0.]
  'input:missin:Cruise:hpmin' = [ 1000.]
- 'input:missin:Cruise:ifeath' = [0]
+ 'input:missin:Cruise:ifeath' = 0
  'input:missin:Cruise:ioc' = [1]
  'input:missin:Cruise:ncruse' = 1
  'input:missin:Cruise:rcin' = 100.0
@@ -704,7 +704,9 @@
  'input:option:Plot_Files:ipltth' = 0
  'input:option:Plot_Files:ipolp' = 0
  'input:option:Plot_Files:ixfl' = 0
+ 'input:option:Plot_Files:lpfile' = 0
  'input:option:Plot_Files:msfile' = 
+ 'input:option:Plot_Files:nmach' = 0
  'input:option:Plot_Files:nofile' = 
  'input:option:Plot_Files:npfile' = 0
  'input:option:Plot_Files:pmach' = []
@@ -726,7 +728,7 @@
  'input:proin:alpro' = []
  'input:proin:cdpro' = []
  'input:proin:clpro' = []
- 'input:proin:dflap' = [  1.   2.   3.   4.   5.   6.   7.   8.   9.  10.]
+ 'input:proin:dflap' = [ 1  2  3  4  5  6  7  8  9 10]
  'input:proin:flapid' = []
  'input:proin:fzf' = 1.25
  'input:proin:gamlim' = 0.0
@@ -917,6 +919,7 @@
  'input:wtin:Crew_Payload:npt' = 180
  'input:wtin:Crew_Payload:nstu' = 5
  'input:wtin:Crew_Payload:wppass' = 165.0
+ 'input:wtin:Crew_optional:paylmx' = -999.0
  'input:wtin:Detailed_Wing:arref' = 0.0
  'input:wtin:Detailed_Wing:chd' = []
  'input:wtin:Detailed_Wing:etae' = [ 0.3  0.6  0.   0. ]
@@ -929,6 +932,7 @@
  'input:wtin:Detailed_Wing:swl' = []
  'input:wtin:Detailed_Wing:tcref' = 0.0
  'input:wtin:Detailed_Wing:toc' = []
+ 'input:wtin:Fuel_System:fmxtot' = -999.0
  'input:wtin:Fuel_System:fswref' = -1.0
  'input:wtin:Fuel_System:fuelrf' = 0.0
  'input:wtin:Fuel_System:fulaux' = 0.0
@@ -1183,7 +1187,6 @@
  'output:Weight:paylod' = 41000.0
  'output:Weight:rampwt' = 214190.2
  'output:Weight:thrso' = 33270.1
- 'output:Weight:thrsop' = []
  'output:Weight:twr' = 0.3107
  'output:Weight:wac' = 2394.0
  'output:Weight:wai' = 230.0

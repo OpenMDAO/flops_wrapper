@@ -19,6 +19,9 @@ SUBSONIC TRANSPORT 5 VARIABLE OPTIMIZATION EXAMPLE PROBLEM
   ! Takeoff and Climb Profile File for Noise Calculations (NPROF)
   npfile = 0
   
+  ! Approach and Landing Profile File for Noise Calculations (LPROF)
+  lpfile = 0
+  
   ! Drag Polar Plot File (POLPLOT)
   ipolp = 0
   polalt = 0.0
