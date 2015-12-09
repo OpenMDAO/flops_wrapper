@@ -287,7 +287,7 @@ class FlopsWrapper(ExternalCode):
                          mission.count('COMBAT') + mission.count('HOLD') + \
                          mission.count('DESCENT')
             # OpenMDAO Public Variables
-            self.add_output(strChain+'segment',val=array(['']*(local_nmseg),dtype='<U20'),typeVar='Array',pass_by_obj=True)
+            self.add_output(strChain+'segment',val=array(['']*(local_nmseg),dtype='<S20'),typeVar='Array',pass_by_obj=True)
             self.add_output(strChain+'weights',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
             self.add_output(strChain+'alts',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
             self.add_output(strChain+'machs',val=zeros(local_nmseg),typeVar='Array',pass_by_obj=True)
