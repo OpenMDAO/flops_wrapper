@@ -9,7 +9,3 @@ can fix it.
 Note: this installation does not include FLOPS. You must obtain that separately
 through the proper channels.
 
-To view the Sphinx documentation for this distribution, type:
-
-openmdao docs flops_wrapper
-
