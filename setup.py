@@ -103,7 +103,7 @@ kwargs = {'author': 'Kenneth T. Moore',
  'package_dir': {'': 'src'},
  'packages': ['flops_wrapper', 'flops_wrapper.test'],
  'url': 'https://github.com/OpenMDAO-Plugins/flops_wrapper',
- 'version': '1.x',
+ 'version': '1.0',
  'zip_safe': False}
 
 
