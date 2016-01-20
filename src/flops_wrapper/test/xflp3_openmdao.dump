@@ -1360,6 +1360,7 @@ the reported reserve fuel weight of 44119 for baseline airplane.
  'output:Performance:Segments:alts' = [     0.  56554.  65531.]
  'output:Performance:Segments:engparme' = [ 4.876  3.254  0.96 ]
  'output:Performance:Segments:engparms' = [ 1.6    3.816  0.71 ]
+ 'output:Performance:Segments:ex_pow' = [  1638.8   4446.1 -15547.8]
  'output:Performance:Segments:lode' = [ 9.281  8.966  9.225]
  'output:Performance:Segments:lods' = [ 5.575  9.281  8.966]
  'output:Performance:Segments:mache' = [ 2.4  2.4  0.3]

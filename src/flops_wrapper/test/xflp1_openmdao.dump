@@ -1270,6 +1270,7 @@
  'output:Performance:Segments:alts' = []
  'output:Performance:Segments:engparme' = []
  'output:Performance:Segments:engparms' = []
+ 'output:Performance:Segments:ex_pow' = []
  'output:Performance:Segments:lode' = []
  'output:Performance:Segments:lods' = []
  'output:Performance:Segments:mache' = []
