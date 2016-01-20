@@ -1135,6 +1135,7 @@
  'output:Performance:Segments:alts' = [     0.  37830.  40000.]
  'output:Performance:Segments:engparme' = [ 0.  0.  0.]
  'output:Performance:Segments:engparms' = [ 0.  0.  0.]
+ 'output:Performance:Segments:ex_pow' = [ 4746.    134.7 -2943.6]
  'output:Performance:Segments:lode' = [ 15.939  15.786  15.603]
  'output:Performance:Segments:lods' = [ 13.4    15.939  15.786]
  'output:Performance:Segments:mache' = [ 0.8  0.8  0.3]
